@@ -1,5 +1,7 @@
 package org.jboss.resteasy.test;
 
+import java.util.Hashtable;
+
 import org.jboss.resteasy.plugins.server.embedded.SecurityDomain;
 import org.jboss.resteasy.plugins.server.tjws.TJWSEmbeddedJaxrsServer;
 import org.jboss.resteasy.spi.ResteasyDeployment;
@@ -19,9 +21,19 @@ public class TJWSServletContainer
 
    public static ResteasyDeployment start(String bindPath) throws Exception
    {
-      return start(bindPath, null);
+      return start(bindPath, (Hashtable<String,String>) null);
    }
 
+   public static ResteasyDeployment start(String bindPath, Hashtable<String,String> initParams) throws Exception
+   {
+      return start(bindPath, null, initParams, null);
+   }
+
+   public static ResteasyDeployment start(String bindPath, Hashtable<String,String> initParams, Hashtable<String,String> contextParams) throws Exception
+   {
+      return start(bindPath, null, initParams, contextParams);
+   }
+      
    public static void start(ResteasyDeployment deployment) throws Exception
    {
       tjws = new TJWSEmbeddedJaxrsServer();
@@ -46,6 +58,26 @@ public class TJWSServletContainer
       tjws.setPort(TestPortProvider.getPort());
       tjws.setRootResourcePath(bindPath);
       tjws.setSecurityDomain(domain);
+      tjws.start();
+      return tjws.getDeployment();
+   }
+   
+   public static ResteasyDeployment start(String bindPath, SecurityDomain domain, Hashtable<String,String> initParams, Hashtable<String,String> contextParams) throws Exception
+   {
+      ResteasyDeployment deployment = new ResteasyDeployment();
+      deployment.setSecurityEnabled(true);
+      return start(bindPath, domain, deployment, initParams, contextParams);
+   }
+
+   public static ResteasyDeployment start(String bindPath, SecurityDomain domain, ResteasyDeployment deployment, Hashtable<String,String> initParams, Hashtable<String,String> contextParams) throws Exception
+   {
+      tjws = new TJWSEmbeddedJaxrsServer();
+      tjws.setDeployment(deployment);
+      tjws.setPort(TestPortProvider.getPort());
+      tjws.setRootResourcePath(bindPath);
+      tjws.setSecurityDomain(domain);
+      tjws.setInitParameters(initParams);
+      tjws.setContextParameters(contextParams);
       tjws.start();
       return tjws.getDeployment();
    }

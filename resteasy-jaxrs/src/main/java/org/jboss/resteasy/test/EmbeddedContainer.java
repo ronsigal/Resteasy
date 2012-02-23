@@ -4,6 +4,7 @@ import org.jboss.resteasy.plugins.server.embedded.SecurityDomain;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 
 import java.lang.reflect.Method;
+import java.util.Hashtable;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -74,7 +75,17 @@ public class EmbeddedContainer
 
    }
 
-
+   public static ResteasyDeployment start(Hashtable<String,String> initParams, Hashtable<String,String> contextParams) throws Exception
+   {
+      return start("/", initParams, contextParams);
+   }
+   
+   public static ResteasyDeployment start(String bindPath, Hashtable<String,String> initParams, Hashtable<String,String> contextParams) throws Exception
+   {
+      Method start = bootstrap.getMethod("start", String.class, Hashtable.class, Hashtable.class);
+      return (ResteasyDeployment) start.invoke(null, bindPath, initParams, contextParams);
+   }
+   
    public static void stop() throws Exception
    {
       Method stop = bootstrap.getMethod("stop");

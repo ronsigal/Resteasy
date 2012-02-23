@@ -1,5 +1,7 @@
 package org.jboss.resteasy.plugins.server.tjws;
 
+import java.util.Hashtable;
+
 import Acme.Serve.Serve;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.plugins.server.embedded.EmbeddedJaxrsServer;
@@ -18,6 +20,8 @@ public class TJWSEmbeddedJaxrsServer extends TJWSServletServer implements Embedd
    protected TJWSServletDispatcher servlet = new TJWSServletDispatcher();
 
    protected String rootResourcePath = "";
+   protected Hashtable<String,String> initParameters;
+   protected Hashtable<String,String> contextParameters;
 
    public void setRootResourcePath(String rootResourcePath)
    {
@@ -37,10 +41,32 @@ public class TJWSEmbeddedJaxrsServer extends TJWSServletServer implements Embedd
    {
       this.deployment = deployment;
    }
+   
+   public Hashtable<String,String> getInitParameters()
+   {
+      return initParameters;
+   }
+   
+   public void setInitParameters(Hashtable<String,String> initParameters)
+   {
+      this.initParameters = initParameters;
+   }
+   
+   public Hashtable<String,String> getContextParameters()
+   {
+      return contextParameters;
+   }
+   
+   public void setContextParameters(Hashtable<String,String> contextParameters)
+   {
+      this.contextParameters = contextParameters;
+   }
 
    @Override
    public void start()
    {
+      server.setInitParams(getContextParameters());
+      deployment.setServletContext(server);
       deployment.start();
       server.setAttribute(ResteasyProviderFactory.class.getName(), deployment.getProviderFactory());
       server.setAttribute(Dispatcher.class.getName(), deployment.getDispatcher());

@@ -23,7 +23,7 @@ import java.util.Properties;
  */
 public class TJWSServletServer
 {
-   protected Serve server = new Serve();
+   protected ExtendedServe server = new ExtendedServe();
    protected Properties props = new Properties();
    private final static Logger logger = LoggerFactory.getLogger(TJWSServletServer.class);
 

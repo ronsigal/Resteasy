@@ -11,6 +11,7 @@ import org.jboss.resteasy.util.GetRestful;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Provider;
@@ -53,6 +54,7 @@ public class ResteasyDeployment
    protected Dispatcher dispatcher;
    protected ResteasyProviderFactory providerFactory;
    protected String paramMapping;
+   protected ServletContext servletContext;
    private final static Logger logger = LoggerFactory.getLogger(ResteasyDeployment.class);
 
    public void start()
@@ -70,6 +72,9 @@ public class ResteasyDeployment
       {
          ResteasyProviderFactory.setInstance(providerFactory);
       }
+      
+      ResteasyProviderFactory.getContextDataMap().put(ServletContext.class, getServletContext());
+      
       if (asyncJobServiceEnabled)
       {
          AsynchronousDispatcher asyncDispatcher = new AsynchronousDispatcher(providerFactory);
@@ -550,4 +555,15 @@ public class ResteasyDeployment
    {
       this.paramMapping = paramMapping;
    }
+
+   public ServletContext getServletContext()
+   {
+      return servletContext;
+   }
+
+   public void setServletContext(ServletContext servletContext)
+   {
+      this.servletContext = servletContext;
+   }
+   
 }
