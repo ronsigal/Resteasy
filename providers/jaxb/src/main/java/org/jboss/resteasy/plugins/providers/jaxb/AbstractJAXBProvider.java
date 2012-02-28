@@ -98,7 +98,7 @@ public abstract class AbstractJAXBProvider<T> extends AbstractEntityProvider<T>
          Unmarshaller unmarshaller = jaxb.createUnmarshaller();
          unmarshaller = decorateUnmarshaller(type, annotations, mediaType, unmarshaller);
          
-         if (!isExpandEntityReferences())
+         if (suppressExpandEntityExpansion())
          {
             return processWithoutEntityExpansion(unmarshaller, entityStream);
          }
@@ -228,6 +228,11 @@ public abstract class AbstractJAXBProvider<T> extends AbstractEntityProvider<T>
    public void setExpandEntityReferences(boolean expandEntityReferences)
    {
       this.expandEntityReferences = expandEntityReferences;
+   }
+   
+   protected boolean suppressExpandEntityExpansion()
+   {
+      return !isExpandEntityReferences();
    }
    
    protected T processWithoutEntityExpansion(Unmarshaller unmarshaller, InputStream entityStream) throws JAXBException
