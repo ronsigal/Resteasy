@@ -5,7 +5,6 @@ import javax.ws.rs.core.Response;
 /**
  * Thrown by RESTEasy when HTTP Unauthorized (401) is encountered
  */
-@Deprecated
 public class UnauthorizedException extends LoggableFailure
 {
    public UnauthorizedException()

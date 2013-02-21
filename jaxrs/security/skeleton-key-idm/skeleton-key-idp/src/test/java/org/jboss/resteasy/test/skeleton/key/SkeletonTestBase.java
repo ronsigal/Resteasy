@@ -7,20 +7,20 @@ import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.jwt.JsonSerialization;
-import org.jboss.resteasy.skeleton.key.SkeletonKeyContextResolver;
 import org.jboss.resteasy.skeleton.key.idm.adapters.infinispan.InfinispanIDM;
-import org.jboss.resteasy.skeleton.key.idm.service.RealmFactory;
-import org.jboss.resteasy.skeleton.key.idm.service.TokenManagement;
 import org.jboss.resteasy.skeleton.key.representations.idm.PublishedRealmRepresentation;
 import org.jboss.resteasy.skeleton.key.representations.idm.RealmRepresentation;
+import org.jboss.resteasy.skeleton.key.idm.service.RealmFactory;
+import org.jboss.resteasy.skeleton.key.SkeletonKeyContextResolver;
+import org.jboss.resteasy.skeleton.key.idm.service.TokenManagement;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.AfterClass;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,7 +49,7 @@ public class SkeletonTestBase extends BaseResourceTest
       deployment.getRegistry().addSingletonResource(tokenManagement);
       RealmRepresentation r = loadJson(realmJson);
 
-      client = new ResteasyClientBuilder().build();
+      client = new ResteasyClient();
       WebTarget target = client.target(generateURL("/realms"));
       Response response = target.request().post(Entity.json(r));
       Assert.assertEquals(201, response.getStatus());

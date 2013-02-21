@@ -3,18 +3,15 @@ package org.jboss.resteasy.client.jaxrs;
 import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
 import org.jboss.resteasy.client.jaxrs.internal.ClientWebTarget;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
-import org.jboss.resteasy.spi.NotImplementedYetException;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
-import javax.net.ssl.SSLContext;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,19 +26,19 @@ public class ResteasyClient implements Client
    protected ClientConfiguration configuration;
 
 
-   ResteasyClient()
+   public ResteasyClient()
    {
       this(ResteasyProviderFactory.getInstance());
    }
 
-   ResteasyClient(ResteasyProviderFactory factory)
+   public ResteasyClient(ResteasyProviderFactory factory)
    {
       configuration = new ClientConfiguration(factory);
-      httpEngine = new ApacheHttpClient4Engine();
+      httpEngine = new ApacheHttpClient4Engine(configuration());
       asyncInvocationExecutor = Executors.newFixedThreadPool(10);
    }
 
-   ResteasyClient(ClientHttpEngine httpEngine)
+   public ResteasyClient(ClientHttpEngine httpEngine)
    {
       this.httpEngine = httpEngine;
       configuration = new ClientConfiguration(ResteasyProviderFactory.getInstance());
@@ -49,7 +46,7 @@ public class ResteasyClient implements Client
 
    }
 
-   ResteasyClient(ClientHttpEngine httpEngine, ExecutorService asyncInvocationExecutor, ClientConfiguration configuration)
+   public ResteasyClient(ClientHttpEngine httpEngine, ExecutorService asyncInvocationExecutor, ClientConfiguration configuration)
    {
       this.httpEngine = httpEngine;
       this.asyncInvocationExecutor = asyncInvocationExecutor;
@@ -80,85 +77,9 @@ public class ResteasyClient implements Client
    }
 
    @Override
-   public Configuration getConfiguration()
+   public Configuration configuration()
    {
       return configuration;
-   }
-
-   @Override
-   public SSLContext getSslContext()
-   {
-      throw new NotImplementedYetException();
-   }
-
-   @Override
-   public ResteasyClient property(String name, Object value)
-   {
-      configuration.property(name, value);
-      return this;
-   }
-
-   @Override
-   public ResteasyClient register(Class<?> componentClass)
-   {
-      configuration.register(componentClass);
-      return this;
-   }
-
-   @Override
-   public ResteasyClient register(Class<?> componentClass, int priority)
-   {
-      configuration.register(componentClass, priority);
-      return this;
-   }
-
-   @Override
-   public ResteasyClient register(Class<?> componentClass, Class<?>... contracts)
-   {
-      configuration.register(componentClass, contracts);
-      return this;
-   }
-
-   @Override
-   public ResteasyClient register(Class<?> componentClass, Map<Class<?>, Integer> contracts)
-   {
-      configuration.register(componentClass, contracts);
-      return this;
-   }
-
-   @Override
-   public ResteasyClient register(Object component)
-   {
-      configuration.register(component);
-      return this;
-   }
-
-   @Override
-   public ResteasyClient register(Object component, int priority)
-   {
-      configuration.register(component, priority);
-      return this;
-   }
-
-   @Override
-   public ResteasyClient register(Object component, Class<?>... contracts)
-   {
-      configuration.register(component, contracts);
-      return this;
-   }
-
-   @Override
-   public ResteasyClient register(Object component, Map<Class<?>, Integer> contracts)
-   {
-      configuration.register(component, contracts);
-      return this;
-   }
-
-   @Override
-   public ResteasyClient replaceWith(Configuration config)
-   {
-      configuration.replaceWith(config);
-      return this;
    }
 
    @Override
@@ -192,5 +113,4 @@ public class ResteasyClient implements Client
       WebTarget target = target(link);
       return target.request(link.getType());
    }
-
 }

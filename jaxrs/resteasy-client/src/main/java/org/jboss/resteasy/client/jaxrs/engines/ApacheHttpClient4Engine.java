@@ -1,7 +1,15 @@
 package org.jboss.resteasy.client.jaxrs.engines;
 
 import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.AllowAllHostnameVerifier;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.SingleClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -10,7 +18,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.params.HttpClientParams;
+import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HttpContext;
 import org.jboss.resteasy.client.core.SelfExpandingBufferredInputStream;
@@ -19,11 +29,25 @@ import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.jboss.resteasy.util.CaseInsensitiveMap;
 
-import javax.ws.rs.ProcessingException;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.ws.rs.MessageProcessingException;
+import javax.ws.rs.client.ClientException;
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +67,12 @@ public class ApacheHttpClient4Engine implements ClientHttpEngine
    {
       this.httpClient = new DefaultHttpClient();
       this.createdHttpClient = true;
+   }
+
+   public ApacheHttpClient4Engine(Configuration configuration)
+   {
+      this.httpClient = new DefaultHttpClient();
+      this.createdHttpClient = false;
    }
 
    public ApacheHttpClient4Engine(HttpClient httpClient)
@@ -91,7 +121,7 @@ public class ApacheHttpClient4Engine implements ClientHttpEngine
    }
 
    @SuppressWarnings("unchecked")
-   public ClientResponse invoke(ClientInvocation request)
+   public ClientResponse invoke(ClientInvocation request) throws ClientException
    {
       String uri = request.getUri().toString();
       final HttpRequestBase httpMethod = createHttpMethod(uri, request.getMethod());
@@ -104,10 +134,10 @@ public class ApacheHttpClient4Engine implements ClientHttpEngine
       }
       catch (Exception e)
       {
-         throw new ProcessingException("Unable to invoke request", e);
+         throw new ClientException("Unable to invoke request", e);
       }
 
-      ClientResponse response = new ClientResponse(request.getClientConfiguration())
+      ClientResponse response = new ClientResponse(request.getConfiguration())
       {
          InputStream stream;
          InputStream hc4Stream;
@@ -172,7 +202,7 @@ public class ApacheHttpClient4Engine implements ClientHttpEngine
       response.setProperties(request.getMutableProperties());
       response.setStatus(res.getStatusLine().getStatusCode());
       response.setHeaders(extractHeaders(res));
-      response.setClientConfiguration(request.getClientConfiguration());
+      response.setConfiguration(request.getConfiguration());
       return response;
    }
 
@@ -213,7 +243,7 @@ public class ApacheHttpClient4Engine implements ClientHttpEngine
 
       if (request.getEntity() != null)
       {
-         if (httpMethod instanceof HttpGet) throw new ProcessingException("A GET request cannot have a body.");
+         if (httpMethod instanceof HttpGet) throw new MessageProcessingException("A GET request cannot have a body.");
 
          ByteArrayOutputStream baos = new ByteArrayOutputStream();
          request.getDelegatingOutputStream().setDelegate(baos);

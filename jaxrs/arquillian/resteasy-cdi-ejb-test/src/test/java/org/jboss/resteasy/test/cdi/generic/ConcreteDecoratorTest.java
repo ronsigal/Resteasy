@@ -75,6 +75,7 @@ public class ConcreteDecoratorTest
       return war;
    }
 
+   @SuppressWarnings("deprecation")
    @Test
    public void testConcreteConcreteDecorator() throws Exception
    {

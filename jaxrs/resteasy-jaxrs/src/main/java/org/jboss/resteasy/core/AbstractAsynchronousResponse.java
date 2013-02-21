@@ -4,19 +4,15 @@ import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
 
-import javax.ws.rs.container.CompletionCallback;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.ResumeCallback;
 import javax.ws.rs.container.TimeoutHandler;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.WriterInterceptor;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -32,7 +28,7 @@ public abstract class AbstractAsynchronousResponse implements ResteasyAsynchrono
    protected WriterInterceptor[] writerInterceptors;
    protected Annotation[] annotations;
    protected TimeoutHandler timeoutHandler;
-   protected List<CompletionCallback> completionCallbacks = new ArrayList<CompletionCallback>();
+   protected List<ResumeCallback> resumeCallbacks = new ArrayList<ResumeCallback>();
 
    protected AbstractAsynchronousResponse(SynchronousDispatcher dispatcher, HttpRequest request, HttpResponse response)
    {
@@ -41,10 +37,8 @@ public abstract class AbstractAsynchronousResponse implements ResteasyAsynchrono
       this.response = response;
    }
 
-
-
    @Override
-   public Collection<Class<?>> register(Class<?> callback) throws NullPointerException
+   public boolean register(Class<?> callback) throws NullPointerException
    {
       if (callback == null) throw new NullPointerException("Callback was null");
       Object cb = dispatcher.getProviderFactory().createProviderInstance(callback);
@@ -52,40 +46,40 @@ public abstract class AbstractAsynchronousResponse implements ResteasyAsynchrono
    }
 
    @Override
-   public Collection<Class<?>> register(Object callback) throws NullPointerException
+   public boolean register(Object callback) throws NullPointerException
    {
       if (callback == null) throw new NullPointerException("Callback was null");
-      ArrayList<Class<?>> registered = new ArrayList<Class<?>>();
-      if (callback instanceof CompletionCallback)
+      boolean registered = false;
+      if (callback instanceof ResumeCallback)
       {
-         completionCallbacks.add((CompletionCallback) callback);
-         registered.add(CompletionCallback.class);
+         registered = true;
+         resumeCallbacks.add((ResumeCallback)callback);
       }
       return registered;
    }
 
    @Override
-   public Map<Class<?>, Collection<Class<?>>> register(Class<?> callback, Class<?>... callbacks) throws NullPointerException
+   public boolean[] register(Class<?> callback, Class<?>... callbacks) throws NullPointerException
    {
-      Map<Class<?>, Collection<Class<?>>> map = new HashMap<Class<?>, Collection<Class<?>>>();
-      map.put(callback, register(callback));
-      for (Class<?> call : callbacks)
+      boolean[] results = new boolean[1 + callbacks.length];
+      results[0] = register(callback);
+      for (int i = 0; i < callbacks.length; i++)
       {
-         map.put(call, register(call));
+         results[i + 1] = register(callbacks[i]);
       }
-      return map;
+      return results;
    }
 
    @Override
-   public Map<Class<?>, Collection<Class<?>>> register(Object callback, Object... callbacks) throws NullPointerException
+   public boolean[] register(Object callback, Object... callbacks) throws NullPointerException
    {
-      Map<Class<?>, Collection<Class<?>>> map = new HashMap<Class<?>, Collection<Class<?>>>();
-      map.put(callback.getClass(), register(callback));
-      for (Object call : callbacks)
+      boolean[] results = new boolean[1 + callbacks.length];
+      results[0] = register(callback);
+      for (int i = 0; i < callbacks.length; i++)
       {
-         map.put(call.getClass(), register(call));
+         results[i + 1] = register(callbacks[i]);
       }
-      return map;
+      return results;
    }
 
    @Override
@@ -142,54 +136,58 @@ public abstract class AbstractAsynchronousResponse implements ResteasyAsynchrono
       this.annotations = annotations;
    }
 
-   protected void completionCallbacks(Throwable throwable)
+   protected void sendResponse(Response response) throws IllegalStateException
    {
-      for (CompletionCallback callback : completionCallbacks)
-      {
-         callback.onComplete(throwable);
-      }
+      dispatcher.asynchronousDelivery(this.request, this.response, response);
    }
 
-   protected boolean internalResume(Object entity)
+   protected void sendResponseObject(Object entity, int status)
    {
-      Response response = null;
       if (entity == null)
       {
-         response = Response.noContent().build();
+         sendResponse(Response.status(status).build());
       }
       else if (entity instanceof Response)
       {
-         response = (Response) entity;
+         sendResponse((Response) entity);
       }
       else
       {
          if (method == null) throw new IllegalStateException("Unknown media type for response entity");
          MediaType type = method.resolveContentType(request, entity);
-         response = Response.ok(entity, type).build();
+         sendResponse(Response.status(status).entity(entity).type(type).build());
       }
-      try
-      {
-         dispatcher.asynchronousDelivery(this.request, this.response, response);
-      }
-      catch (Throwable e)
-      {
-         return internalResume(e);
-      }
-      completionCallbacks(null);
-      return true;
+
    }
 
-   protected boolean internalResume(Throwable exc)
+   @Override
+   public void resume(Object entity) throws IllegalStateException
    {
-      try
+      if (entity == null)
       {
-         dispatcher.asynchronousExceptionDelivery(request, response, exc);
+         sendResponse(Response.noContent().build());
       }
-      finally
+      else if (entity instanceof Response)
       {
-         completionCallbacks(exc);
+         sendResponse((Response) entity);
       }
-      return true;
+      else
+      {
+         if (method == null) throw new IllegalStateException("Unknown media type for response entity");
+         MediaType type = method.resolveContentType(request, entity);
+         sendResponse(Response.ok(entity, type).build());
+      }
    }
+
+   @Override
+   public void resume(Throwable exc) throws IllegalStateException
+   {
+      dispatcher.handleException(request, response, exc);
+   }
+
+
+
+
+
 
 }

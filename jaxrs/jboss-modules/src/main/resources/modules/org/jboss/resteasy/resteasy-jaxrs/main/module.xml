@@ -40,9 +40,10 @@
         <module name="javax.servlet.api"/>
         <module name="javax.validation.api"/>
         <module name="org.hibernate.validator"/>
+        <module name="javax.mail.api"/>
 
         <!-- exported -->
         <module name="org.apache.httpcomponents" export="true"/>
-        <module name="org.apache.commons.io"/>
+        <module name="org.bouncycastle" export="true"/>
     </dependencies>
 </module>

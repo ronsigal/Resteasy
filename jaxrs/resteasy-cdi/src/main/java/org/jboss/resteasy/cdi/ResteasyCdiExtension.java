@@ -3,7 +3,6 @@ package org.jboss.resteasy.cdi;
 import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.util.GetRestful;
 
-import javax.decorator.Decorator;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Observes;
@@ -31,9 +30,9 @@ import java.util.Map;
  * builds the sessionBeanInterface map which maps Session Bean classes to a
  * local interface. This map is used in CdiInjectorFactory during lookup of
  * Sesion Bean JAX-RS components.
- *
+ * 
  * @author Jozef Hartinger
- *
+ * 
  */
 public class ResteasyCdiExtension implements Extension
 {
@@ -66,7 +65,7 @@ public class ResteasyCdiExtension implements Extension
    /**
     * Set a default scope for each CDI bean which is a JAX-RS Resource, Provider
     * or Application subclass.
-    *
+    * 
     */
    public <T> void observeResources(@Observes ProcessAnnotatedType<T> event, BeanManager beanManager)
    {
@@ -93,7 +92,7 @@ public class ResteasyCdiExtension implements Extension
             log.debug("Discovered CDI bean which is a JAX-RS provider {0}.", type.getJavaClass().getCanonicalName());
             event.setAnnotatedType(wrapAnnotatedType(type, applicationScopedLiteral));
          }
-         else if (GetRestful.isRootResource(type.getJavaClass()) && !type.isAnnotationPresent(Decorator.class))
+         else if (GetRestful.isRootResource(type.getJavaClass()))
          {
             log.debug("Discovered CDI bean which is a JAX-RS resource {0}.", type.getJavaClass().getCanonicalName());
             event.setAnnotatedType(wrapAnnotatedType(type, requestScopedLiteral));

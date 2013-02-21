@@ -42,7 +42,7 @@ public class EventResource
    @Inject BookReader bookReader;
    @Inject private Logger log;
    
-   @POST
+   @GET
    @Path("test")
    @Produces(MediaType.TEXT_PLAIN)
    public Response test()

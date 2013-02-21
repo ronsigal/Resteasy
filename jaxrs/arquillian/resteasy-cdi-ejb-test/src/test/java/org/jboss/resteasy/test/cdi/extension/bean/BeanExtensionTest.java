@@ -64,7 +64,7 @@ public class BeanExtensionTest
    {
       log.info("starting testBostonBeans()");
       ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-extension-test/rest/extension/boston/");
-      ClientResponse<?> response = request.post();
+      ClientResponse<?> response = request.get();
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
       response.releaseConnection();

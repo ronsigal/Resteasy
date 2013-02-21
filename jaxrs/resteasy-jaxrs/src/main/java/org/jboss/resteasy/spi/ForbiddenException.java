@@ -5,7 +5,6 @@ import javax.ws.rs.core.Response;
 /**
  * Thrown by RESTEasy when HTTP Unauthorized (403) is encountered
  */
-@Deprecated
 public class ForbiddenException extends LoggableFailure
 {
    public ForbiddenException()

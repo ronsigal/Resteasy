@@ -1,7 +1,6 @@
 package org.jboss.resteasy.test.nextgen.client;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,7 +47,7 @@ public class ContextTest extends BaseResourceTest
    @Test
    public void testEcho()
    {
-      ResteasyClient client = new ResteasyClientBuilder().build();
+      ResteasyClient client = new ResteasyClient();
 
       ResourceInterface proxy = client.target(generateBaseUrl()).proxy(ResourceInterface.class);
       Assert.assertEquals("content", proxy.echo(null));

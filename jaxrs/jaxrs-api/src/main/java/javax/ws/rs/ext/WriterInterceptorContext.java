@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,6 @@ package javax.ws.rs.ext;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
@@ -62,16 +61,13 @@ public interface WriterInterceptorContext extends InterceptorContext {
     /**
      * Proceed to the next interceptor in the chain.
      *
-     * Interceptors MUST explicitly call this method to continue the execution chain;
-     * the call to this method in the last interceptor of the chain will invoke
-     * the wrapped {@link javax.ws.rs.ext.MessageBodyWriter#writeTo} method.
+     * Interceptors MUST explicitly call this method to continue the execution
+     * chain; the call to this method in the last interceptor of the chain will
+     * invoke {@link javax.ws.rs.ext.MessageBodyWriter#writeTo} method.
      *
-     * @throws java.io.IOException if an IO error arises or is thrown by the wrapped
-     *                             {@code MessageBodyWriter.writeTo} method.
-     * @throws javax.ws.rs.WebApplicationException
-     *                             thrown by the wrapped {@code MessageBodyWriter.writeTo} method.
+     * @throws IOException if an IO exception arises.
      */
-    void proceed() throws IOException, WebApplicationException;
+    void proceed() throws IOException;
 
     /**
      * Get object to be written as HTTP entity.
@@ -88,16 +84,14 @@ public interface WriterInterceptorContext extends InterceptorContext {
     void setEntity(Object entity);
 
     /**
-     * Get the output stream for the object to be written. The JAX-RS runtime
-     * is responsible for closing the output stream.
+     * Get the output stream for the object to be written.
      *
      * @return output stream for the object to be written.
      */
     OutputStream getOutputStream();
 
     /**
-     * Update the output stream for the object to be written. The JAX-RS
-     * runtime is responsible for closing the output stream.
+     * Update the output stream for the object to be written.
      *
      * @param os new output stream for the object to be written.
      */

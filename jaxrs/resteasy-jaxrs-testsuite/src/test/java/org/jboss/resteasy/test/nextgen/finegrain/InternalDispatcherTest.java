@@ -4,7 +4,6 @@ import junit.framework.Assert;
 import org.jboss.resteasy.annotations.ClientResponseType;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.core.MessageBodyParameterInjector;
 import org.jboss.resteasy.spi.BadRequestException;
@@ -223,7 +222,7 @@ public class InternalDispatcherTest
       dispatcher = EmbeddedContainer.start().getDispatcher();
             forwardingResource = new ForwardingResource();
             dispatcher.getRegistry().addSingletonResource(forwardingResource);
-      client = new ResteasyClientBuilder().build();
+      client = new ResteasyClient();
    }
 
    @Before

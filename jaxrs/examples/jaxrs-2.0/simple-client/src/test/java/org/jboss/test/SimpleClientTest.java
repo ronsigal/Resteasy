@@ -3,7 +3,6 @@ package org.jboss.test;
 import junit.framework.Assert;
 import org.jboss.example.jaxrs2.async.Customer;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
@@ -11,7 +10,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.ClientException;
+import javax.ws.rs.client.ClientFactory;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
@@ -29,7 +29,7 @@ public class SimpleClientTest
    public void testResponse() throws Exception
    {
       // fill out a query param and execute a get request
-      Client client = ClientBuilder.newClient();
+      Client client = ClientFactory.newClient();
       WebTarget target = client.target("http://localhost:9095/customers");
       Response response = target.queryParam("name", "Bill").request().get();
       try
@@ -48,7 +48,7 @@ public class SimpleClientTest
    public void testCustomer() throws Exception
    {
       // fill out a query param and execute a get request
-      Client client = ClientBuilder.newClient();
+      Client client = ClientFactory.newClient();
       WebTarget target = client.target("http://localhost:9095/customers");
       try
       {
@@ -67,7 +67,7 @@ public class SimpleClientTest
    public void testTemplate() throws Exception
    {
       // fill out a path param and execute a get request
-      Client client = ClientBuilder.newClient();
+      Client client = ClientFactory.newClient();
       WebTarget target = client.target("http://localhost:9095/customers/{id}");
       Response response = target.resolveTemplate("id", "12345").request().get();
       try
@@ -87,7 +87,7 @@ public class SimpleClientTest
    public void testAsync() throws Exception
    {
       // fill out a query param and execute a get request
-      Client client = ClientBuilder.newClient();
+      Client client = ClientFactory.newClient();
       WebTarget target = client.target("http://localhost:9095/customers");
       try
       {
@@ -107,7 +107,7 @@ public class SimpleClientTest
    public void testAsyncCallback() throws Exception
    {
       // fill out a query param and execute a get request
-      Client client = ClientBuilder.newClient();
+      Client client = ClientFactory.newClient();
       WebTarget target = client.target("http://localhost:9095/customers");
       try
       {
@@ -123,7 +123,7 @@ public class SimpleClientTest
             }
 
             @Override
-            public void failed(Throwable error)
+            public void failed(ClientException error)
             {
                latch.countDown();
             }
@@ -149,9 +149,9 @@ public class SimpleClientTest
    @Test
    public void testProxy() throws Exception
    {
-      ResteasyClient client = new ResteasyClientBuilder().build();
+      ResteasyClient client = new ResteasyClient();
       // or you can do...
-      // ResteasyClient client = (ResteasyClient)ClientBuilder.newClient();
+      // ResteasyClient client = (ResteasyClient)ClientFactory.newClient();
       CustomerProxy proxy = client.target("http://localhost:9095").proxy(CustomerProxy.class);
       Customer cust = proxy.getCustomer("Monica");
       Assert.assertEquals("Monica", cust.getName());

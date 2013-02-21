@@ -1,7 +1,6 @@
 package org.jboss.resteasy.test.nextgen.client;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.test.BaseResourceTest;
@@ -57,7 +56,7 @@ public class TestDefaultMediaTypes extends BaseResourceTest
 	public static void setUp() throws Exception
 	{
 		addPerRequestResource(FooImpl.class);
-      client = new ResteasyClientBuilder().build();
+      client = new ResteasyClient();
 	}
 
    @AfterClass

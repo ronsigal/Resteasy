@@ -3,7 +3,6 @@ package org.jboss.resteasy.tests.signature;
 import org.jboss.resteasy.annotations.security.doseta.Signed;
 import org.jboss.resteasy.annotations.security.doseta.Verify;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.security.doseta.DKIMSignature;
 import org.jboss.resteasy.security.doseta.DosetaKeyRepository;
@@ -59,7 +58,7 @@ public class SigningTest
       repository.setKeyStorePassword("password");
       repository.setUseDns(false);
       repository.start();
-      client = new ResteasyClientBuilder().build();
+      client = new ResteasyClient();
    }
 
    @AfterClass
@@ -77,7 +76,7 @@ public class SigningTest
 
       WebTarget target = client.target("http://localhost:9095/signed");
       Invocation.Builder request = target.request();
-      request.property(Verifier.class.getName(), verifier);
+      request.configuration().setProperty(Verifier.class.getName(), verifier);
       Response response = request.get();
 
       System.out.println(response.getHeaderString(DKIMSignature.DKIM_SIGNATURE));
@@ -97,7 +96,7 @@ public class SigningTest
 
       WebTarget target = client.target("http://localhost:9095/signed/bad-signature");
       Invocation.Builder request = target.request();
-      request.property(Verifier.class.getName(), verifier);
+      request.configuration().setProperty(Verifier.class.getName(), verifier);
       Response response = request.get();
 
       System.out.println(response.getHeaderString(DKIMSignature.DKIM_SIGNATURE));
@@ -127,7 +126,7 @@ public class SigningTest
       contentSignature.setSelector("test");
       contentSignature.setDomain("samplezone.org");
       Invocation.Builder request = target.request();
-      request.property(KeyRepository.class.getName(), repository);
+      request.configuration().setProperty(KeyRepository.class.getName(), repository);
 
       request.header(DKIMSignature.DKIM_SIGNATURE, contentSignature);
       Response response = request.post(Entity.text("hello world"));
@@ -144,7 +143,7 @@ public class SigningTest
 
       WebTarget target = client.target("http://localhost:9095/signed/expires-minute");
       Invocation.Builder request = target.request();
-      request.property(Verifier.class.getName(), verifier);
+      request.configuration().setProperty(Verifier.class.getName(), verifier);
       Response response = request.get();
 
       System.out.println(response.getHeaderString(DKIMSignature.DKIM_SIGNATURE));
@@ -169,7 +168,7 @@ public class SigningTest
 
       WebTarget target = client.target("http://localhost:9095/signed/expires-short");
       Invocation.Builder request = target.request();
-      request.property(Verifier.class.getName(), verifier);
+      request.configuration().setProperty(Verifier.class.getName(), verifier);
       Response response = request.get();
 
       System.out.println(response.getHeaderString(DKIMSignature.DKIM_SIGNATURE));
@@ -193,7 +192,7 @@ public class SigningTest
    public void testProxy() throws Exception
    {
       ResteasyWebTarget target = client.target("http://localhost:9095");
-      target.property(KeyRepository.class.getName(), repository);
+      target.configuration().setProperty(KeyRepository.class.getName(), repository);
       SigningProxy proxy = target.proxy(SigningProxy.class);
       String output = proxy.hello();
       proxy.postSimple("hello world");

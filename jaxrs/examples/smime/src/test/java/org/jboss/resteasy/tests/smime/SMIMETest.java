@@ -1,7 +1,6 @@
 package org.jboss.resteasy.tests.smime;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.security.PemUtils;
 import org.jboss.resteasy.security.smime.EnvelopedInput;
 import org.jboss.resteasy.security.smime.EnvelopedOutput;
@@ -39,7 +38,7 @@ public class SMIMETest
 
       InputStream privatePem = Thread.currentThread().getContextClassLoader().getResourceAsStream("private.pem");
       privateKey = PemUtils.decodePrivateKey(privatePem);
-      client = new ResteasyClientBuilder().build();
+      client = new ResteasyClient();
 
 
    }

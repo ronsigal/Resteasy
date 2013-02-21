@@ -2,8 +2,6 @@ package org.jboss.resteasy.plugins.interceptors;
 
 import org.jboss.resteasy.annotations.interception.HeaderDecoratorPrecedence;
 
-import javax.annotation.Priority;
-import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
@@ -15,7 +13,7 @@ import java.io.IOException;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-@Priority(Priorities.HEADER_DECORATOR)
+@HeaderDecoratorPrecedence
 public class CacheControlFilter implements ContainerResponseFilter
 {
    protected CacheControl cacheControl;

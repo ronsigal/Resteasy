@@ -1,5 +1,6 @@
 package org.jboss.resteasy.skeleton.key;
 
+import java.security.KeyStore;
 import java.security.Principal;
 
 /**

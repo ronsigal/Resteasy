@@ -38,7 +38,7 @@ public class SkeletonKeyClientBuilder
    {
       admin = (ResteasyWebTarget)uri;
       WebTarget target = uri.path("tokens");
-      Mappers.registerContextResolver(target);
+      Mappers.registerContextResolver(target.configuration());
       tokenFactory = ProxyBuilder.builder(TokenFactory.class, target).build();
       return this;
    }
@@ -72,7 +72,7 @@ public class SkeletonKeyClientBuilder
          }
       };
 
-      target.register(tokenFilter);
+      target.configuration().register(tokenFilter);
       return access;
    }
 
@@ -92,7 +92,7 @@ public class SkeletonKeyClientBuilder
          }
       };
 
-      target.register(tokenFilter);
+      target.configuration().register(tokenFilter);
       return access;
    }
 
@@ -124,7 +124,7 @@ public class SkeletonKeyClientBuilder
    public SkeletonKeyAdminClient admin()
    {
       ResteasyWebTarget clone = admin.clone();
-      Mappers.registerContextResolver(clone);
+      Mappers.registerContextResolver(clone.configuration());
       authenticateTarget("Skeleton Key", clone);
       return clone.proxy(SkeletonKeyAdminClient.class);
    }

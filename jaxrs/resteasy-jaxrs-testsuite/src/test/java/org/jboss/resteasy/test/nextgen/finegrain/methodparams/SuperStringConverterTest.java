@@ -2,7 +2,6 @@ package org.jboss.resteasy.test.nextgen.finegrain.methodparams;
 
 import org.jboss.resteasy.client.jaxrs.ProxyBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.spi.StringConverter;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
@@ -131,25 +130,19 @@ public class SuperStringConverterTest extends BaseResourceTest
    @Test
    public void testPerson() throws Exception
    {
-      ResteasyClient client = new ResteasyClientBuilder().build();
-      client.register(PersonConverter.class);
-      client.register(CompanyConverter.class);
+      ResteasyClient client = new ResteasyClient();
 
       MyClient proxy = ProxyBuilder.builder(MyClient.class, client.target(generateBaseUrl())).build();
       Person person = new Person("name");
       proxy.put(person);
-      client.close();
    }
 
    @Test
    public void testCompany() throws Exception
    {
-      ResteasyClient client = new ResteasyClientBuilder().build();
-      client.register(PersonConverter.class);
-      client.register(CompanyConverter.class);
+      ResteasyClient client = new ResteasyClient();
       MyClient proxy = ProxyBuilder.builder(MyClient.class, client.target(generateBaseUrl())).build();
       Company company = new Company("name");
       proxy.putCompany(company);
-      client.close();
    }
 }

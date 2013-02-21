@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,8 +41,8 @@ package javax.ws.rs.container;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Collection;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -80,10 +80,8 @@ public interface ContainerRequestContext {
      * Custom property names should follow the same convention as package names.
      * </p>
      * <p>
-     * In a Servlet container, the properties are synchronized with the {@code ServletRequest}
-     * and expose all the attributes available in the {@code ServletRequest}. Any modifications
-     * of the properties are also reflected in the set of properties of the associated
-     * {@code ServletRequest}.
+     * In a Servlet container, the properties are backed by the {@code ServletRequest} and
+     * contain all the attributes available in the {@code ServletRequest}.
      * </p>
      *
      * @param name a {@code String} specifying the name of the property.
@@ -93,24 +91,24 @@ public interface ContainerRequestContext {
      */
     public Object getProperty(String name);
 
+
     /**
-     * Returns an immutable {@link java.util.Collection collection} containing the property
-     * names available within the context of the current request/response exchange context.
+     * Returns an {@link Enumeration enumeration} containing the property names
+     * available within the context of the current request/response exchange context.
      * <p>
      * Use the {@link #getProperty} method with a property name to get the value of
      * a property.
      * </p>
      * <p>
-     * In a Servlet container, the properties are synchronized with the {@code ServletRequest}
-     * and expose all the attributes available in the {@code ServletRequest}. Any modifications
-     * of the properties are also reflected in the set of properties of the associated
-     * {@code ServletRequest}.
+     * In a Servlet container, the properties are backed by the {@code ServletRequest} and
+     * contain all the attributes available in the {@code ServletRequest}.
      * </p>
      *
-     * @return an immutable {@link java.util.Collection collection} of property names.
+     * @return an {@link Enumeration enumeration} of property names.
      * @see #getProperty
      */
-    public Collection<String> getPropertyNames();
+    public Enumeration<String> getPropertyNames();
+
 
     /**
      * Binds an object to a given property name in the current request/response
@@ -129,10 +127,8 @@ public interface ContainerRequestContext {
      * {@link #removeProperty(String)} method.
      * </p>
      * <p>
-     * In a Servlet container, the properties are synchronized with the {@code ServletRequest}
-     * and expose all the attributes available in the {@code ServletRequest}. Any modifications
-     * of the properties are also reflected in the set of properties of the associated
-     * {@code ServletRequest}.
+     * In a Servlet container, the properties are backed by the {@code ServletRequest} and
+     * contain all the attributes available in the {@code ServletRequest}.
      * </p>
      *
      * @param name   a {@code String} specifying the name of the property.
@@ -145,10 +141,8 @@ public interface ContainerRequestContext {
      * exchange context. After removal, subsequent calls to {@link #getProperty}
      * to retrieve the property value will return {@code null}.
      * <p>
-     * In a Servlet container, the properties are synchronized with the {@code ServletRequest}
-     * and expose all the attributes available in the {@code ServletRequest}. Any modifications
-     * of the properties are also reflected in the set of properties of the associated
-     * {@code ServletRequest}.
+     * In a Servlet container, the properties are backed by the {@code ServletRequest} and
+     * contain all the attributes available in the {@code ServletRequest}.
      * </p>
      *
      * @param name a {@code String} specifying the name of the property to be removed.
@@ -181,7 +175,7 @@ public interface ContainerRequestContext {
      *                               request filter.
      * @see #setRequestUri(java.net.URI, java.net.URI)
      */
-    public void setRequestUri(URI requestUri);
+    public void setRequestUri(URI requestUri) throws IllegalStateException;
 
     /**
      * Set a new request URI using a new base URI to resolve the application-specific
@@ -199,7 +193,7 @@ public interface ContainerRequestContext {
      *                               request filter.
      * @see #setRequestUri(java.net.URI)
      */
-    public void setRequestUri(URI baseUri, URI requestUri);
+    public void setRequestUri(URI baseUri, URI requestUri) throws IllegalStateException;
 
     /**
      * Get the injectable request information.
@@ -229,7 +223,7 @@ public interface ContainerRequestContext {
      *                               request filter.
      * @see javax.ws.rs.HttpMethod
      */
-    public void setMethod(String method);
+    public void setMethod(String method) throws IllegalStateException;
 
     /**
      * Get the mutable request headers multivalued map.
@@ -318,21 +312,19 @@ public interface ContainerRequestContext {
     public boolean hasEntity();
 
     /**
-     * Get the entity input stream. The JAX-RS runtime is responsible for
-     * closing the input stream.
+     * Get the entity input stream.
      *
      * @return entity input stream.
      */
     public InputStream getEntityStream();
 
     /**
-     * Set a new entity input stream. The JAX-RS runtime is responsible for
-     * closing the intput stream.
+     * Set a new entity input stream.
      *
      * @param input new entity input stream.
      * @throws IllegalStateException in case the method is invoked from a response filter.
      */
-    public void setEntityStream(InputStream input);
+    public void setEntityStream(InputStream input) throws IllegalStateException;
 
     /**
      * Get the injectable security context information for the current request.
@@ -353,7 +345,7 @@ public interface ContainerRequestContext {
      * @param context new injectable request security context information.
      * @throws IllegalStateException in case the method is invoked from a response filter.
      */
-    public void setSecurityContext(SecurityContext context);
+    public void setSecurityContext(SecurityContext context) throws IllegalStateException;
 
     /**
      * Abort the filter chain with a response.
@@ -365,5 +357,5 @@ public interface ContainerRequestContext {
      * @param response response to be sent back to the client.
      * @throws IllegalStateException in case the method is invoked from a response filter.
      */
-    public void abortWith(Response response);
+    public void abortWith(Response response) throws IllegalStateException;
 }

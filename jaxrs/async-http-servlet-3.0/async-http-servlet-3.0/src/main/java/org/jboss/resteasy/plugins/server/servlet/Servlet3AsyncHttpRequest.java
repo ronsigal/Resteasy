@@ -68,16 +68,16 @@ public class Servlet3AsyncHttpRequest extends HttpServletInputMessage
          }
 
          @Override
-         public boolean resume(Object entity)
+         public void resume(Object entity) throws IllegalStateException
          {
             synchronized (responseLock)
             {
-               if (done) return false;
-               if (cancelled) return false;
+               if (done) throw new IllegalStateException("Response processing is finished");
+               if (cancelled) throw new IllegalStateException("Response processing is cancelled");
                AsyncContext asyncContext = getAsyncContext();
                try
                {
-                  return internalResume(entity);
+                  super.resume(entity);
                }
                finally
                {
@@ -89,16 +89,16 @@ public class Servlet3AsyncHttpRequest extends HttpServletInputMessage
          }
 
          @Override
-         public boolean resume(Throwable exc)
+         public void resume(Throwable exc) throws IllegalStateException
          {
             synchronized (responseLock)
             {
-               if (done) return false;
-               if (cancelled) return false;
+               if (done) throw new IllegalStateException("Response processing is finished");
+               if (cancelled) throw new IllegalStateException("Response processing is cancelled");
                AsyncContext asyncContext = getAsyncContext();
                try
                {
-                  return internalResume(exc);
+                  super.resume(exc);
                }
                finally
                {
@@ -115,74 +115,69 @@ public class Servlet3AsyncHttpRequest extends HttpServletInputMessage
          }
 
          @Override
-         public boolean setTimeout(long time, TimeUnit unit) throws IllegalStateException
+         public void setTimeout(long time, TimeUnit unit) throws IllegalStateException
          {
-            synchronized (responseLock)
-            {
-               if (done || cancelled) return false;
-            }
             AsyncContext asyncContext = getAsyncContext();
             asyncContext.setTimeout(unit.toMillis(time));
-            return true;
          }
 
          @Override
-         public boolean cancel()
+         public void cancel()
          {
             synchronized (responseLock)
             {
-               if (done || cancelled) return false;
+               if (done || cancelled) return;
                done = true;
                cancelled = true;
-               AsyncContext asyncContext = getAsyncContext();
-               try
-               {
-                  return internalResume(Response.status(Response.Status.SERVICE_UNAVAILABLE).build());
-               }
-               finally
-               {
-                  asyncContext.complete();
-               }
+            }
+            AsyncContext asyncContext = getAsyncContext();
+            try
+            {
+               sendResponse(Response.status(Response.Status.SERVICE_UNAVAILABLE).build());
+            }
+            finally
+            {
+               asyncContext.complete();
             }
          }
 
          @Override
-         public boolean cancel(int retryAfter)
+         public void cancel(int retryAfter)
          {
             synchronized (responseLock)
             {
-               if (done || cancelled) return false;
+               if (done || cancelled) return;
                done = true;
                cancelled = true;
-               AsyncContext asyncContext = getAsyncContext();
-               try
-               {
-                  return internalResume(Response.status(Response.Status.SERVICE_UNAVAILABLE).header(HttpHeaders.RETRY_AFTER, retryAfter).build());
-               }
-               finally
-               {
-                  asyncContext.complete();
-               }
+            }
+            AsyncContext asyncContext = getAsyncContext();
+            try
+            {
+               sendResponse(Response.status(Response.Status.SERVICE_UNAVAILABLE).header(HttpHeaders.RETRY_AFTER, retryAfter).build());
+            }
+            finally
+            {
+               asyncContext.complete();
             }
          }
 
          @Override
-         public boolean cancel(Date retryAfter)
+         public void cancel(Date retryAfter)
          {
             synchronized (responseLock)
             {
-               if (done || cancelled) return false;
+               if (done || cancelled) return;
                done = true;
                cancelled = true;
-               AsyncContext asyncContext = getAsyncContext();
-               try
-               {
-                  return internalResume(Response.status(Response.Status.SERVICE_UNAVAILABLE).header(HttpHeaders.RETRY_AFTER, retryAfter).build());
-               }
-               finally
-               {
-                  asyncContext.complete();
-               }
+            }
+            AsyncContext asyncContext = getAsyncContext();
+            try
+            {
+               sendResponse(Response.status(Response.Status.SERVICE_UNAVAILABLE).header(HttpHeaders.RETRY_AFTER, retryAfter).build());
+            }
+            finally
+            {
+               asyncContext.complete();
             }
          }
 

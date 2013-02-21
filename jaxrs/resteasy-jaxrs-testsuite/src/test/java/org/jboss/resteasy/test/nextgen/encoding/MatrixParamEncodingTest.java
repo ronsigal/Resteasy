@@ -1,7 +1,6 @@
 package org.jboss.resteasy.test.nextgen.encoding;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.specimpl.UriBuilderImpl;
 import org.jboss.resteasy.spi.ResteasyDeployment;
@@ -61,7 +60,7 @@ public class MatrixParamEncodingTest
    {
       deployment = EmbeddedContainer.start();
       deployment.getRegistry().addPerRequestResource(TestResource.class);
-      client = new ResteasyClientBuilder().build();
+      client = new ResteasyClient();
    }
    
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,11 +41,8 @@ package javax.ws.rs.client;
 
 import java.net.URI;
 
-import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
-
-import javax.net.ssl.SSLContext;
 
 /**
  * Client is the main entry point to the fluent API used to build and execute client
@@ -59,10 +56,10 @@ import javax.net.ssl.SSLContext;
  * resources.
  *
  * @author Marek Potociar
- * @see javax.ws.rs.core.Configurable
+ * @see Configuration
  * @since 2.0
  */
-public interface Client extends Configurable<Client> {
+public interface Client {
 
     /**
      * Close client instance and all it's associated resources. Subsequent calls
@@ -74,7 +71,15 @@ public interface Client extends Configurable<Client> {
      * produced by the client instance. Invoking any method on such targets once the client
      * is closed would result in an {@link IllegalStateException} being thrown.
      */
-    public void close();
+    void close();
+
+    /**
+     * Get access to the underlying {@link Configuration configuration} of the
+     * client instance.
+     *
+     * @return a mutable client configuration.
+     */
+    public Configuration configuration();
 
     /**
      * Build a new web resource target.
@@ -84,7 +89,7 @@ public interface Client extends Configurable<Client> {
      * @throws IllegalArgumentException in case the supplied string is not a valid URI template.
      * @throws NullPointerException     in case the supplied argument is {@code null}.
      */
-    public WebTarget target(String uri);
+    WebTarget target(String uri) throws IllegalArgumentException, NullPointerException;
 
     /**
      * Build a new web resource target.
@@ -93,7 +98,7 @@ public interface Client extends Configurable<Client> {
      * @return web resource target bound to the provided URI.
      * @throws NullPointerException in case the supplied argument is {@code null}.
      */
-    public WebTarget target(URI uri);
+    WebTarget target(URI uri) throws NullPointerException;
 
     /**
      * Build a new web resource target.
@@ -102,7 +107,7 @@ public interface Client extends Configurable<Client> {
      * @return web resource target bound to the provided URI.
      * @throws NullPointerException in case the supplied argument is {@code null}.
      */
-    public WebTarget target(UriBuilder uriBuilder);
+    WebTarget target(UriBuilder uriBuilder) throws NullPointerException;
 
     /**
      * Build a new web resource target.
@@ -111,7 +116,7 @@ public interface Client extends Configurable<Client> {
      * @return web resource target bound to the linked web resource.
      * @throws NullPointerException in case the supplied argument is {@code null}.
      */
-    public WebTarget target(Link link);
+    WebTarget target(Link link) throws NullPointerException;
 
     /**
      * <p>Build an invocation builder from a link. It uses the URI and the type
@@ -122,12 +127,6 @@ public interface Client extends Configurable<Client> {
      * @return newly created invocation builder.
      * @throws NullPointerException     in case link is {@code null}.
      */
-    public Invocation.Builder invocation(Link link);
+    Invocation.Builder invocation(Link link) throws NullPointerException;
 
-    /**
-     * Get the SSL context configured to be used with the current client run-time.
-     *
-     * @return SSL context configured to be used with the current client run-time.
-     */
-    public SSLContext getSslContext();
 }

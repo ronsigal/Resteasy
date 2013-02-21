@@ -14,7 +14,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
 
 /**
  * @author <a href="mailto:sduskis@gmail.com">Solomon Duskis</a>
@@ -75,15 +74,9 @@ public class ResteasyHandlerMapping implements HandlerMapping, Ordered, Initiali
          }
          else
          {
-            Response response = dispatcher.preprocess(httpRequest);
-            if (response != null)
-            {
-               requestWrapper.setAbortedResponse(response);
-            }
-            else
-            {
-               requestWrapper.setInvoker(getInvoker(httpRequest));
-            }
+            // todo not sure how to propagate aborted responses.  Man i hate this code Solomon!
+            dispatcher.preprocess(httpRequest);
+            requestWrapper.setInvoker(getInvoker(httpRequest));
          }
          return new HandlerExecutionChain(requestWrapper, interceptors);
       }

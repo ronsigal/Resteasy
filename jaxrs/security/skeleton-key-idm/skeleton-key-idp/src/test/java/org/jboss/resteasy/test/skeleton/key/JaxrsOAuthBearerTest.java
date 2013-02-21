@@ -2,12 +2,11 @@ package org.jboss.resteasy.test.skeleton.key;
 
 import junit.framework.Assert;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.plugins.interceptors.RoleBasedSecurityFeature;
+import org.jboss.resteasy.skeleton.key.representations.AccessTokenResponse;
 import org.jboss.resteasy.skeleton.key.RealmConfiguration;
 import org.jboss.resteasy.skeleton.key.ResourceMetadata;
 import org.jboss.resteasy.skeleton.key.jaxrs.JaxrsBearerTokenFilter;
-import org.jboss.resteasy.skeleton.key.representations.AccessTokenResponse;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -19,7 +18,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Configurable;
-import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
@@ -44,7 +42,7 @@ public class JaxrsOAuthBearerTest extends SkeletonTestBase
       resourceMetadata.setResourceName("Application");
       resourceMetadata.setRealmKey(realmInfo.getPublicKey());
       config.setAuthUrl(UriBuilder.fromUri(realmInfo.getAuthorizationUrl()));
-      config.setClient(new ResteasyClientBuilder().build());
+      config.setClient(new ResteasyClient());
       config.setCodeUrl(config.getClient().target(realmInfo.getCodeUrl()));
       config.setSslRequired(false);
       config.setClientId("loginclient");
@@ -54,7 +52,7 @@ public class JaxrsOAuthBearerTest extends SkeletonTestBase
       deployment.getProviderFactory().register(new DynamicFeature()
       {
          @Override
-         public void configure(ResourceInfo resourceInfo, FeatureContext configurable)
+         public void configure(ResourceInfo resourceInfo, Configurable configurable)
          {
             if (resourceInfo.getResourceClass().equals(MyApplication.class))
             {

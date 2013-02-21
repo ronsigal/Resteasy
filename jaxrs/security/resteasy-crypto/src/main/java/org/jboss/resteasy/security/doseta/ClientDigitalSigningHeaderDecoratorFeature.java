@@ -3,28 +3,24 @@ package org.jboss.resteasy.security.doseta;
 import org.jboss.resteasy.annotations.security.doseta.Signed;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
-import javax.annotation.Priority;
-import javax.annotation.Priority;
+import javax.ws.rs.BindingPriority;
 import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.Priorities;
-import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Configurable;
-import javax.ws.rs.core.FeatureContext;
 import java.io.IOException;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-@ConstrainedTo(RuntimeType.CLIENT)
+@ConstrainedTo(ConstrainedTo.Type.CLIENT)
 public class ClientDigitalSigningHeaderDecoratorFeature implements DynamicFeature
 {
    @Override
-   public void configure(ResourceInfo resourceInfo, FeatureContext configurable)
+   public void configure(ResourceInfo resourceInfo, Configurable configurable)
    {
       Signed signed = resourceInfo.getResourceMethod().getAnnotation(Signed.class);
       if (signed == null)
@@ -40,7 +36,7 @@ public class ClientDigitalSigningHeaderDecoratorFeature implements DynamicFeatur
     * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
     * @version $Revision: 1 $
     */
-   @Priority(Priorities.HEADER_DECORATOR)
+   @BindingPriority(BindingPriority.HEADER_DECORATOR)
    public static class DigitalSigningHeaderDecorator extends AbstractDigitalSigningHeaderDecorator implements ClientRequestFilter
    {
       public DigitalSigningHeaderDecorator(Signed signed)

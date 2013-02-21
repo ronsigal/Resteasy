@@ -8,6 +8,7 @@ import org.jboss.resteasy.util.CaseInsensitiveMap;
 import org.jboss.resteasy.util.DateUtil;
 import org.jboss.resteasy.util.HttpResponseCodes;
 
+import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
@@ -87,31 +88,7 @@ public class BuiltResponse extends Response
    @Override
    public StatusType getStatusInfo()
    {
-      StatusType statusType = Status.fromStatusCode(status);
-      if (statusType == null)
-      {
-         statusType = new StatusType()
-         {
-            @Override
-            public int getStatusCode()
-            {
-               return status;
-            }
-
-            @Override
-            public Status.Family getFamily()
-            {
-               return Status.Family.OTHER;
-            }
-
-            @Override
-            public String getReasonPhrase()
-            {
-               return "Unknown Code";
-            }
-         };
-      }
-      return statusType;
+      return Status.fromStatusCode(status);
    }
 
    @Override
@@ -176,13 +153,13 @@ public class BuiltResponse extends Response
    }
 
    @Override
-   public <T> T readEntity(Class<T> type, Annotation[] annotations)
+   public <T> T readEntity(Class<T> type, Annotation[] annotations) throws MessageProcessingException
    {
       return readEntity(type, null, annotations);
    }
 
    @Override
-   public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations)
+   public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws MessageProcessingException
    {
       return readEntity((Class<T>) entityType.getRawType(), entityType.getType(), annotations);
    }
@@ -194,7 +171,7 @@ public class BuiltResponse extends Response
    }
 
    @Override
-   public <T> T readEntity(GenericType<T> entityType)
+   public <T> T readEntity(GenericType<T> entityType) throws MessageProcessingException
    {
       return readEntity((Class<T>) entityType.getRawType(), entityType.getType(), null);
    }
@@ -212,14 +189,14 @@ public class BuiltResponse extends Response
    }
 
    @Override
-   public boolean bufferEntity()
+   public boolean bufferEntity() throws MessageProcessingException
    {
       // no-op
       return false;
    }
 
    @Override
-   public void close()
+   public void close() throws MessageProcessingException
    {
       // no-op
    }
@@ -389,7 +366,7 @@ public class BuiltResponse extends Response
    public Link.Builder getLinkBuilder(String relation)
    {
       Link link = getLinkHeaders().getLinkByRelationship(relation);
-      Link.Builder builder = new LinkBuilderImpl();
+      Link.Builder builder = new Link.Builder();
       for (Map.Entry<String, String> entry : link.getParams().entrySet())
       {
          builder.param(entry.getKey(), entry.getValue());

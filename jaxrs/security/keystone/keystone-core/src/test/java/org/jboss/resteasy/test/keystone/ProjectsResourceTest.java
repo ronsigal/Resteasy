@@ -2,7 +2,6 @@ package org.jboss.resteasy.test.keystone;
 
 import junit.framework.Assert;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.keystone.model.Project;
 import org.jboss.resteasy.keystone.server.SkeletonKeyApplication;
@@ -65,7 +64,7 @@ public class ProjectsResourceTest
    public void testProjects()
    {
       String newProject = "{ \"project\" : { \"name\" : \"Resteasy\", \"description\" : \"The Best of REST\", \"enabled\" : true } }";
-      ResteasyClient client = new ResteasyClientBuilder().providerFactory(deployment.getProviderFactory()).build();
+      ResteasyClient client = new ResteasyClient(deployment.getProviderFactory());
       Response response = client.target(generateURL("/projects")).request().post(Entity.json(newProject));
       Assert.assertEquals(response.getStatus(), 201);
       response.close();
@@ -89,7 +88,7 @@ public class ProjectsResourceTest
    public void testProjectsId()
    {
       String newProject = "{ \"project\" : { \"id\" : \"5\", \"name\" : \"Resteasy\", \"description\" : \"The Best of REST\", \"enabled\" : true } }";
-      ResteasyClient client = new ResteasyClientBuilder().providerFactory(deployment.getProviderFactory()).build();
+      ResteasyClient client = new ResteasyClient(deployment.getProviderFactory());
       Response response = client.target(generateURL("/projects")).request().post(Entity.json(newProject));
       Assert.assertEquals(response.getStatus(), 201);
       response.close();

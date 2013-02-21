@@ -2,7 +2,6 @@ package org.jboss.resteasy.test.nextgen.finegrain.client;
 
 import org.jboss.resteasy.client.jaxrs.ProxyBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.ReadFromStream;
@@ -90,8 +89,7 @@ public class InputStreamResourceTest
    @Test
    public void testClientResponse() throws Exception
    {
-      ResteasyClient resteasyClient = new ResteasyClientBuilder().build();
-      Client client = ProxyBuilder.builder(Client.class, resteasyClient.target(generateBaseUrl())).build();
+      Client client = ProxyBuilder.builder(Client.class, new ResteasyClient().target(generateBaseUrl())).build();
 
       Assert.assertEquals("hello", client.getAsString());
       Response is = client.getAsInputStream();
@@ -102,7 +100,6 @@ public class InputStreamResourceTest
       Assert.assertEquals("new value", client.getAsString());
       client.postInputStream(new ByteArrayInputStream("new value 2".getBytes()));
       Assert.assertEquals("new value 2", client.getAsString());
-      resteasyClient.close();
 
    }
 }

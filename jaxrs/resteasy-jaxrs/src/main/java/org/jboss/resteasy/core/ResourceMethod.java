@@ -16,7 +16,6 @@ import org.jboss.resteasy.spi.ResourceFactory;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.jboss.resteasy.spi.validation.GeneralValidator;
-import org.jboss.resteasy.util.FeatureContextDelegate;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.jboss.resteasy.util.Types;
 import org.jboss.resteasy.util.WeightedMediaType;
@@ -102,7 +101,7 @@ public class ResourceMethod implements ResourceInvoker, JaxrsInterceptorRegistry
       this.resourceMethodProviderFactory = new ResteasyProviderFactory(providerFactory);
       for (DynamicFeature feature : providerFactory.getServerDynamicFeatures())
       {
-         feature.configure(resourceInfo, new FeatureContextDelegate(resourceMethodProviderFactory));
+         feature.configure(resourceInfo, resourceMethodProviderFactory);
       }
 
       this.methodInjector = injector.createMethodInjector(clazz, method, resourceMethodProviderFactory);
@@ -185,7 +184,7 @@ public class ResourceMethod implements ResourceInvoker, JaxrsInterceptorRegistry
       this.resourceMethodProviderFactory = new ResteasyProviderFactory(parentProviderFactory);
       for (DynamicFeature feature : parentProviderFactory.getServerDynamicFeatures())
       {
-         feature.configure(resourceInfo, new FeatureContextDelegate(resourceMethodProviderFactory));
+         feature.configure(resourceInfo, resourceMethodProviderFactory);
       }
       if (registry.getIntf().equals(WriterInterceptor.class))
       {

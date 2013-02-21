@@ -6,10 +6,9 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.ClientExecutionContext;
 import org.jboss.resteasy.spi.interception.ClientExecutionInterceptor;
 
-import javax.annotation.Priority;
-import javax.ws.rs.Priorities;
-import javax.ws.rs.ProcessingException;
+import javax.ws.rs.BindingPriority;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -36,7 +35,7 @@ import java.util.List;
  */
 @Provider
 @DecoderPrecedence
-@Priority(Priorities.ENTITY_CODER)
+@BindingPriority(BindingPriority.ENTITY_CODER)
 public class DigitalSigningInterceptor implements WriterInterceptor, ClientExecutionInterceptor, ContainerResponseFilter, ClientRequestFilter
 {
 
@@ -80,7 +79,7 @@ public class DigitalSigningInterceptor implements WriterInterceptor, ClientExecu
          }
          catch (Exception e)
          {
-            throw new ProcessingException(e);
+            throw new ClientException(e);
          }
       }
 

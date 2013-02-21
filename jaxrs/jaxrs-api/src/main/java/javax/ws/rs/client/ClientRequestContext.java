@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,13 +43,12 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.Collection;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -90,17 +89,17 @@ public interface ClientRequestContext {
 
 
     /**
-     * Returns an immutable {@link Collection collection} containing the property names
+     * Returns an {@link java.util.Enumeration enumeration} containing the property names
      * available within the context of the current request/response exchange context.
      * <p>
      * Use the {@link #getProperty} method with a property name to get the value of
      * a property.
      * </p>
      *
-     * @return an immutable {@link Collection collection} of property names.
+     * @return an {@link java.util.Enumeration enumeration} of property names.
      * @see #getProperty
      */
-    public Collection<String> getPropertyNames();
+    public Enumeration<String> getPropertyNames();
 
 
     /**
@@ -300,7 +299,7 @@ public interface ClientRequestContext {
      * type is required.
      *
      * @param entity      entity object.
-     * @param annotations annotations attached to the entity instance.
+     * @param annotations annotations attached to the entity.
      * @param mediaType   entity media type.
      * @see MessageBodyWriter
      */
@@ -310,31 +309,22 @@ public interface ClientRequestContext {
             final MediaType mediaType);
 
     /**
-     * Get the annotations attached to the entity instance.
-     * <p>
-     * Note that the returned annotations array contains only those annotations
-     * explicitly attached to entity instance (such as the ones attached using
-     * {@link Entity#Entity(Object, javax.ws.rs.core.MediaType, java.lang.annotation.Annotation[])} method).
-     * The entity instance annotations array does not include annotations declared on the entity
-     * implementation class or its ancestors.
-     * </p>
+     * Get the annotations attached to the entity.
      *
-     * @return annotations attached to the entity instance.
+     * @return entity annotations.
      */
     public Annotation[] getEntityAnnotations();
 
 
     /**
-     * Get the entity output stream. The JAX-RS runtime is responsible for
-     * closing the output stream.
+     * Get the entity output stream.
      *
      * @return entity output stream.
      */
     public OutputStream getEntityStream();
 
     /**
-     * Set a new entity output stream. The JAX-RS runtime is responsible for
-     * closing the output stream.
+     * Set a new entity output stream.
      *
      * @param outputStream new entity output stream.
      */
@@ -348,9 +338,9 @@ public interface ClientRequestContext {
     public Client getClient();
 
     /**
-     * Get the immutable configuration of the request.
+     * Get the configuration of the request.
      *
-     * @return immutable request configuration.
+     * @return request configuration.
      */
     public Configuration getConfiguration();
 

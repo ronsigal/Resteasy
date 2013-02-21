@@ -2,7 +2,6 @@ package org.jboss.resteasy.test.nextgen.client.cache;
 
 import org.jboss.resteasy.annotations.cache.Cache;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.client.jaxrs.cache.BrowserCache;
 import org.jboss.resteasy.client.jaxrs.cache.BrowserCacheFeature;
@@ -142,9 +141,9 @@ public class ClientCacheTest extends BaseResourceTest
    @Test
    public void testProxy() throws Exception
    {
-      ResteasyClient client = new ResteasyClientBuilder().build();
+      ResteasyClient client = new ResteasyClient();
       ResteasyWebTarget target = client.target(generateBaseUrl());
-      target.register(BrowserCacheFeature.class);
+      target.configuration().register(BrowserCacheFeature.class);
 
       MyProxy proxy = target.proxy(MyProxy.class);
       String rtn = null;
@@ -214,10 +213,10 @@ public class ClientCacheTest extends BaseResourceTest
    @Test
    public void testMaxSize() throws Exception
    {
-      ResteasyClient client = new ResteasyClientBuilder().build();
+      ResteasyClient client = new ResteasyClient();
       ResteasyWebTarget target = client.target(generateBaseUrl());
-      target.register(BrowserCacheFeature.class);
-      LightweightBrowserCache cache = (LightweightBrowserCache)target.getConfiguration().getProperty(BrowserCache.class.getName());
+      target.configuration().register(BrowserCacheFeature.class);
+      LightweightBrowserCache cache = (LightweightBrowserCache)target.configuration().getProperty(BrowserCache.class.getName());
       cache.setMaxBytes(20);
       MyProxy proxy = target.proxy(MyProxy.class);
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,7 +43,6 @@ import java.lang.reflect.ReflectPermission;
 import java.net.URL;
 
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Variant.VariantListBuilder;
@@ -162,7 +161,7 @@ public abstract class RuntimeDelegate {
      * @throws SecurityException if there is a security manager and the permission
      *                           ReflectPermission("suppressAccessChecks") has not been granted.
      */
-    public static void setInstance(final RuntimeDelegate rd) {
+    public static void setInstance(final RuntimeDelegate rd) throws SecurityException {
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkPermission(suppressAccessChecksPermission);
@@ -249,7 +248,7 @@ public abstract class RuntimeDelegate {
          * @throws IllegalArgumentException if the supplied string cannot be
          *                                  parsed or is {@code null}.
          */
-        public T fromString(String value);
+        public T fromString(String value) throws IllegalArgumentException;
 
         /**
          * Convert the supplied value to a String.
@@ -259,14 +258,6 @@ public abstract class RuntimeDelegate {
          * @throws IllegalArgumentException if the supplied object cannot be
          *                                  serialized or is {@code null}.
          */
-        public String toString(T value);
+        public String toString(T value) throws IllegalArgumentException;
     }
-
-    /**
-     * Create a new instance of a {@link javax.ws.rs.core.Link.Builder}.
-     *
-     * @return new {@code Link.Builder} instance.
-     * @see javax.ws.rs.core.Link.Builder
-     */
-    public abstract Link.Builder createLinkBuilder();
 }

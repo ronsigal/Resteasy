@@ -64,11 +64,6 @@ public class ResteasyHandlerAdapter extends
          }
          return null;
       }
-      if (requestWrapper.getAbortedResponse() != null)
-      {
-         ServerResponseWriter.writeNomapResponse(((BuiltResponse) requestWrapper.getAbortedResponse()), requestWrapper.getHttpRequest(), response, dispatcher.getProviderFactory());
-         return null;
-      }
       HttpRequest request = requestWrapper.getHttpRequest();
       if (dispatcher instanceof AsynchronousDispatcher)
       {
@@ -97,7 +92,7 @@ public class ResteasyHandlerAdapter extends
          }
          catch (Exception e)
          {
-            dispatcher.writeException(request, response, e);
+            dispatcher.handleInvokerException(request, response, e);
          }
 
          if (jaxrsResponse == null)
@@ -115,7 +110,7 @@ public class ResteasyHandlerAdapter extends
          }
          catch (Exception e)
          {
-            dispatcher.writeException(request, response, e);
+            dispatcher.handleWriteResponseException(request, response, e);
             return null;
          }
       }

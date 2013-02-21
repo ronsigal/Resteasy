@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,11 +60,8 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps an {@link ClientException} thrown in case of an invocation processing
      * failure.
-     * Note that in case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @return invocation response {@link Future future}.
@@ -76,14 +73,11 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
-     * §     * </p>
+     * </p>
      *
      * @param <T>          response entity type.
      * @param responseType Java type the response entity will be converted to.
@@ -96,13 +90,10 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          generic response entity type.
@@ -117,14 +108,11 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the generic type of the supplied response callback is not
      * {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>      generic response entity type.
@@ -140,17 +128,11 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps an {@link ClientException} thrown in case of an invocation processing
      * failure.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
-     * @param entity request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *               Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *               {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *               the entity variant information.
+     * @param entity request entity.
      * @return invocation response {@link Future future}.
      */
     Future<Response> put(Entity<?> entity);
@@ -160,20 +142,14 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          response entity type.
-     * @param entity       request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *                     Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *                     {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *                     the entity variant information.
+     * @param entity       request entity.
      * @param responseType Java type the response entity will be converted to.
      * @return invocation response {@link Future future}.
      */
@@ -184,20 +160,14 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          generic response entity type.
-     * @param entity       request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *                     Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *                     {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *                     the entity variant information.
+     * @param entity       request entity.
      * @param responseType representation of a generic Java type the response
      *                     entity will be converted to.
      * @return invocation response {@link Future future}.
@@ -209,21 +179,15 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the generic type of the supplied response callback is not
      * {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>      generic response entity type.
-     * @param entity   request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *                 Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *                 {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *                 the entity variant information.
+     * @param entity   request entity.
      * @param callback asynchronous invocation callback.
      * @return invocation response {@link Future future}.
      */
@@ -236,20 +200,13 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps an {@link ClientException} thrown in case of an invocation processing
      * failure.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
-     * @param entity request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *               Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *               {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *               the entity variant information.
+     * @param entity request entity.
      * @return invocation response {@link Future future}.
-     * @throws javax.ws.rs.ProcessingException
-     *          in case the invocation processing has failed.
+     * @throws ClientException in case the invocation processing has failed.
      */
     Future<Response> post(Entity<?> entity);
 
@@ -258,20 +215,14 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          response entity type.
-     * @param entity       request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *                     Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *                     {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *                     the entity variant information.
+     * @param entity       request entity.
      * @param responseType Java type the response entity will be converted to.
      * @return invocation response {@link Future future}.
      */
@@ -282,20 +233,14 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          generic response entity type.
-     * @param entity       request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *                     Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *                     {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *                     the entity variant information.
+     * @param entity       request entity.
      * @param responseType representation of a generic Java type the response
      *                     entity will be converted to.
      * @return invocation response {@link Future future}.
@@ -307,21 +252,15 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the generic type of the supplied response callback is not
      * {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>      generic response entity type.
-     * @param entity   request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *                 Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *                 {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *                 the entity variant information.
+     * @param entity   request entity.
      * @param callback asynchronous invocation callback.
      * @return invocation response {@link Future future}.
      */
@@ -334,11 +273,8 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps an {@link ClientException} thrown in case of an invocation processing
      * failure.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @return invocation response {@link Future future}.
@@ -350,13 +286,10 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          response entity type.
@@ -370,13 +303,10 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          generic response entity type.
@@ -391,14 +321,11 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the generic type of the supplied response callback is not
      * {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>      generic response entity type.
@@ -414,11 +341,8 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps an {@link ClientException} thrown in case of an invocation processing
      * failure.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @return invocation response {@link Future future}.
@@ -430,11 +354,8 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps an {@link ClientException} thrown in case of an invocation processing
      * failure.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param callback asynchronous invocation callback.
@@ -449,11 +370,8 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps an {@link ClientException} thrown in case of an invocation processing
      * failure.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @return invocation response {@link Future future}.
@@ -465,13 +383,10 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          response entity type.
@@ -485,13 +400,10 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          generic response entity type.
@@ -506,14 +418,11 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the generic type of the supplied response callback is not
      * {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>      generic response entity type.
@@ -529,11 +438,8 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps an {@link ClientException} thrown in case of an invocation processing
      * failure.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @return invocation response {@link Future future}.
@@ -545,13 +451,10 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          response entity type.
@@ -565,13 +468,10 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          generic response entity type.
@@ -586,14 +486,11 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the generic type of the supplied response callback is not
      * {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>      generic response entity type.
@@ -609,11 +506,8 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps an {@link ClientException} thrown in case of an invocation processing
      * failure.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param name method name.
@@ -626,13 +520,10 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          response entity type.
@@ -647,13 +538,10 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          generic response entity type.
@@ -669,14 +557,11 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the generic type of the supplied response callback is not
      * {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>      generic response entity type.
@@ -691,18 +576,12 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps an {@link ClientException} thrown in case of an invocation processing
      * failure.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param name   method name.
-     * @param entity request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *               Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *               {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *               the entity variant information.
+     * @param entity request entity.
      * @return invocation response {@link Future future}.
      */
     Future<Response> method(String name, Entity<?> entity);
@@ -712,21 +591,15 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          response entity type.
      * @param name         method name.
-     * @param entity       request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *                     Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *                     {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *                     the entity variant information.
+     * @param entity       request entity.
      * @param responseType Java type the response entity will be converted to.
      * @return invocation response {@link Future future}.
      */
@@ -737,21 +610,15 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the specified response type is not {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>          generic response entity type.
      * @param name         method name.
-     * @param entity       request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *                     Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *                     {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *                     the entity variant information.
+     * @param entity       request entity.
      * @param responseType representation of a generic Java type the response
      *                     entity will be converted to.
      * @return invocation response {@link Future future}.
@@ -763,22 +630,16 @@ public interface AsyncInvoker {
      * <p>
      * Note that calling the {@link java.util.concurrent.Future#get()} method on the returned
      * {@code Future} instance may throw an {@link java.util.concurrent.ExecutionException}
-     * that wraps either a {@link javax.ws.rs.ProcessingException} thrown in case of an invocation processing
+     * that wraps either an {@link ClientException} thrown in case of an invocation processing
      * failure or a {@link WebApplicationException} or one of its subclasses thrown in case the
      * received response status code is not {@link javax.ws.rs.core.Response.Status.Family#SUCCESSFUL
      * successful} and the generic type of the supplied response callback is not
      * {@link javax.ws.rs.core.Response}.
-     * In case a processing of a properly received response fails, the wrapped processing exception
-     * will be of {@link ResponseProcessingException} type and will contain the {@link Response}
-     * instance whose processing has failed.
      * </p>
      *
      * @param <T>      generic response entity type.
      * @param name     method name.
-     * @param entity   request entity, including it's full {@link javax.ws.rs.core.Variant} information.
-     *                 Any variant-related HTTP headers previously set (namely {@code Content-Type},
-     *                 {@code Content-Language} and {@code Content-Encoding}) will be overwritten using
-     *                 the entity variant information.
+     * @param entity   request entity.
      * @param callback asynchronous invocation callback.
      * @return invocation response {@link Future future}.
      */

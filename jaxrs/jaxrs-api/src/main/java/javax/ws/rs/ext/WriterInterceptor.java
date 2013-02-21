@@ -61,17 +61,16 @@ package javax.ws.rs.ext;
 public interface WriterInterceptor {
 
     /**
-     * Interceptor method wrapping calls to {@link MessageBodyWriter#writeTo} method.
+     * Interceptor method wrapping calls to {@link MessageBodyWriter#writeTo}.
      * The parameters of the wrapped method called are available from {@code context}.
      * Implementations of this method SHOULD explicitly call
      * {@link WriterInterceptorContext#proceed} to invoke the next interceptor in the chain,
-     * and ultimately the wrapped {@code MessageBodyWriter.writeTo} method.
+     * and ultimately the wrapped method.
      *
      * @param context invocation context.
-     * @throws java.io.IOException if an IO error arises or is thrown by the wrapped
-     *                             {@code MessageBodyWriter.writeTo} method.
+     * @throws java.io.IOException if an IO error arises.
      * @throws javax.ws.rs.WebApplicationException
-     *                             thrown by the wrapped {@code MessageBodyWriter.writeTo} method.
+     *                             thrown by wrapped method.
      */
     void aroundWriteTo(WriterInterceptorContext context)
             throws java.io.IOException, javax.ws.rs.WebApplicationException;

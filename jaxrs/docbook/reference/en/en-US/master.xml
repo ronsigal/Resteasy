@@ -46,7 +46,6 @@
                 <!ENTITY JBoss SYSTEM "modules/JBoss.xml">
                 <!ENTITY Interceptors SYSTEM "modules/Interceptors.xml">
                 <!ENTITY Books SYSTEM "modules/Books.xml">
-                <!ENTITY OAuth2 SYSTEM "modules/OAuth2.xml">
                 <!ENTITY Authentication SYSTEM "modules/Authentication.xml">
                 <!ENTITY CDI SYSTEM "modules/CDI.xml">
                 <!ENTITY Signature SYSTEM "modules/signature.xml">
@@ -59,7 +58,7 @@
    <bookinfo>
       <title>RESTEasy JAX-RS</title>
       <subtitle>RESTFul Web Services for Java</subtitle>
-      <releaseinfo>3.0-beta-4</releaseinfo>
+      <releaseinfo>3.0-beta-2</releaseinfo>
    </bookinfo>
 
    <toc/>
@@ -127,7 +126,6 @@
    &RESTEasy_Embedded_Container;
    &RESTEasy_Server-side_Mock_Framework;
    &Securing_JAX-RS_and_RESTeasy;
-   &OAuth2;
    &Authentication;
    &Signature;
    &SMIME;

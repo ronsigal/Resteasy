@@ -6,6 +6,7 @@ import org.bouncycastle.openssl.PEMWriter;
 import org.jboss.resteasy.security.PemUtils;
 import org.jboss.resteasy.skeleton.key.RSATokenVerifier;
 import org.jboss.resteasy.skeleton.key.ResourceMetadata;
+import org.jboss.resteasy.skeleton.key.SkeletonKeyTokenVerification;
 import org.jboss.resteasy.skeleton.key.representations.AccessTokenResponse;
 import org.jboss.resteasy.skeleton.key.representations.SkeletonKeyToken;
 import org.jboss.resteasy.skeleton.key.representations.idm.RequiredCredentialRepresentation;
@@ -20,6 +21,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.security.Security;
+import java.security.cert.X509Certificate;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>

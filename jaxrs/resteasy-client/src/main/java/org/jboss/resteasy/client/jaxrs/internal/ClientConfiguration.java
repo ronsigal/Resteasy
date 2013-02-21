@@ -4,12 +4,11 @@ import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
 import org.jboss.resteasy.spi.HeaderValueProcessor;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
-import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.core.Configurable;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -30,7 +29,7 @@ import java.util.Set;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public class ClientConfiguration implements Configuration, Configurable<ClientConfiguration>, Providers, HeaderValueProcessor
+public class ClientConfiguration implements Configuration, Providers, HeaderValueProcessor
 {
    protected ResteasyProviderFactory providerFactory;
 
@@ -47,11 +46,6 @@ public class ClientConfiguration implements Configuration, Configurable<ClientCo
    {
       this(parent.getProviderFactory());
       setProperties(parent.getProperties());
-   }
-
-   public void setProperties(Map<String, Object> newProps)
-   {
-      providerFactory.setProperties(newProps);
    }
 
    protected ResteasyProviderFactory getProviderFactory()
@@ -149,27 +143,45 @@ public class ClientConfiguration implements Configuration, Configurable<ClientCo
    }
 
    @Override
-   public Set<Class<?>> getClasses()
+   public Collection<Feature> getEnabledFeatures()
+   {
+      return providerFactory.getEnabledFeatures();
+   }
+
+   @Override
+   public Set<Class<?>> getFeatureClasses()
+   {
+      return providerFactory.getFeatureClasses();
+   }
+
+   @Override
+   public Set<Object> getFeatureInstances()
+   {
+      return providerFactory.getFeatureInstances();
+   }
+
+   @Override
+   public Set<Class<?>> getProviderClasses()
    {
       return providerFactory.getProviderClasses();
    }
 
    @Override
-   public Set<Object> getInstances()
+   public Set<Object> getProviderInstances()
    {
       return providerFactory.getProviderInstances();
    }
 
    @Override
-   public ClientConfiguration replaceWith(Configuration configuration)
+   public Configuration updateFrom(Configurable configuration)
    {
       providerFactory = new ResteasyProviderFactory();
       setProperties(configuration.getProperties());
-      for (Class c : configuration.getClasses())
+      for (Class c : configuration.getProviderClasses())
       {
          register(c);
       }
-      for (Object obj : configuration.getInstances())
+      for (Object obj : configuration.getProviderInstances())
       {
          register(obj);
       }
@@ -177,113 +189,72 @@ public class ClientConfiguration implements Configuration, Configurable<ClientCo
    }
 
    @Override
-   public ClientConfiguration register(Class<?> providerClass)
+   public Configuration register(Class<?> providerClass)
    {
       providerFactory.register(providerClass);
       return this;
    }
 
    @Override
-   public ClientConfiguration register(Object provider)
+   public Configuration register(Object provider)
    {
       providerFactory.register(provider);
       return this;
    }
 
    @Override
-   public ClientConfiguration register(Class<?> providerClass, int priority)
+   public Configuration register(Class<?> providerClass, int bindingPriority)
    {
-      providerFactory.register(providerClass, priority);
+      providerFactory.register(providerClass, bindingPriority);
       return this;
    }
 
    @Override
-   public ClientConfiguration register(Object provider, int Priority)
+   public <T> Configuration register(Class<T> providerClass, Class<? super T>... contracts)
    {
-      providerFactory.register(provider, Priority);
+      providerFactory.register(providerClass, contracts);
       return this;
    }
 
    @Override
-   public ClientConfiguration property(String name, Object value)
+   public <T> Configuration register(Class<T> providerClass, int bindingPriority, Class<? super T>... contracts)
    {
-      providerFactory.property(name, value);
+      providerFactory.register(providerClass, bindingPriority, contracts);
       return this;
    }
 
    @Override
-   public Configuration getConfiguration()
+   public Configuration register(Object provider, int bindingPriority)
    {
+      providerFactory.register(provider, bindingPriority);
       return this;
    }
 
    @Override
-   public ClientConfiguration register(Class<?> componentClass, Class<?>... contracts)
+   public <T> Configuration register(Object provider, Class<? super T>... contracts)
    {
-      providerFactory.register(componentClass, contracts);
+      providerFactory.register(provider, contracts);
       return this;
    }
 
    @Override
-   public ClientConfiguration register(Class<?> componentClass, Map<Class<?>, Integer> contracts)
+   public <T> Configuration register(Object provider, int bindingPriority, Class<? super T>... contracts)
    {
-      providerFactory.register(componentClass, contracts);
+      providerFactory.register(provider, bindingPriority, contracts);
       return this;
    }
 
    @Override
-   public ClientConfiguration register(Object component, Class<?>... contracts)
+   public Configuration setProperties(Map<String, ? extends Object> properties)
    {
-      providerFactory.register(component, contracts);
+      providerFactory.setProperties(properties);
       return this;
    }
 
    @Override
-   public ClientConfiguration register(Object component, Map<Class<?>, Integer> contracts)
+   public Configuration setProperty(String name, Object value)
    {
-      providerFactory.register(component, contracts);
+      providerFactory.setProperty(name, value);
       return this;
-   }
-
-   @Override
-   public RuntimeType getRuntimeType()
-   {
-      return RuntimeType.CLIENT;
-   }
-
-   @Override
-   public Collection<String> getPropertyNames()
-   {
-      return providerFactory.getProperties().keySet();
-   }
-
-   @Override
-   public boolean isEnabled(Feature feature)
-   {
-      return providerFactory.isEnabled(feature);
-   }
-
-   @Override
-   public boolean isEnabled(Class<? extends Feature> featureClass)
-   {
-      return providerFactory.isEnabled(featureClass);
-   }
-
-   @Override
-   public boolean isRegistered(Object component)
-   {
-      return providerFactory.isRegistered(component);
-   }
-
-   @Override
-   public boolean isRegistered(Class<?> componentClass)
-   {
-      return providerFactory.isRegistered(componentClass);
-   }
-
-   @Override
-   public Map<Class<?>, Integer> getContracts(Class<?> componentClass)
-   {
-      return providerFactory.getContracts(componentClass);
    }
 }

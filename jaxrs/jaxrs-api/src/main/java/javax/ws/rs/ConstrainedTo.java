@@ -53,20 +53,20 @@ import java.lang.annotation.Target;
  * the JAX-RS runtime will enforce the specified usage restriction.
  * <p>
  * The following example illustrates restricting a {@link javax.ws.rs.ext.MessageBodyReader}
- * provider implementation to run only as part of a {@link RuntimeType#CLIENT JAX-RS client run-time}:
+ * provider implementation to run only as part of a {@link Type#CLIENT JAX-RS client run-time}:
  * </p>
  * <pre>
- *  &#064;ConstrainedTo(RuntimeType.CLIENT)
+ *  &#064;ConstrainedTo(Type.CLIENT)
  *  public class MyReader implements MessageBodyReader {
  *      ...
  *  }
  * </pre>
  * <p>
  * The following example illustrates restricting a {@link javax.ws.rs.ext.WriterInterceptor}
- * provider implementation to run only as part of a {@link RuntimeType#SERVER JAX-RS server run-time}:
+ * provider implementation to run only as part of a {@link Type#SERVER JAX-RS server run-time}:
  * </p>
  * <pre>
- *  &#064;ConstrainedTo(RuntimeType.SERVER)
+ *  &#064;ConstrainedTo(Type.SERVER)
  *  public class MyWriterInterceptor implements WriterInterceptor {
  *      ...
  *  }
@@ -83,7 +83,7 @@ import java.lang.annotation.Target;
  * </p>
  * <pre>
  *  // reported as invalid and ignored by JAX-RS runtime
- *  &#064;ConstrainedTo(RuntimeType.SERVER)
+ *  &#064;ConstrainedTo(Type.SERVER)
  *  public class MyFilter implements ClientRequestFilter {
  *      ...
  *  }
@@ -98,8 +98,24 @@ import java.lang.annotation.Target;
 public @interface ConstrainedTo {
 
     /**
-     * Define the {@link RuntimeType constraint type} to be placed on a JAX-RS provider.
+     * Enumeration of applicable JAX-RS provider constraint types.
      */
-    RuntimeType value();
+    public static enum Type {
+        /**
+         * Constraint type that restricts a JAX-RS provider to be only applied as part of
+         * a JAX-RS client run-time.
+         */
+        CLIENT,
+        /**
+         * Constraint type that restricts a JAX-RS provider to be only applied as part of
+         * a JAX-RS server run-time.
+         */
+        SERVER
+    }
+
+    /**
+     * Define the {@link Type constraint type} to be placed on a JAX-RS provider.
+     */
+    Type value();
 }
 

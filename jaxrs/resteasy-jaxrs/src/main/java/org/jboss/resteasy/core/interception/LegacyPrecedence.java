@@ -2,8 +2,7 @@ package org.jboss.resteasy.core.interception;
 
 import org.jboss.resteasy.annotations.interception.Precedence;
 
-import javax.annotation.Priority;
-import javax.ws.rs.Priorities;
+import javax.ws.rs.BindingPriority;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +51,7 @@ public class LegacyPrecedence
             }
          }
       }
-      return Priorities.USER;
+      return BindingPriority.USER;
    }
 
    public void addPrecedence(String precedent, int order)

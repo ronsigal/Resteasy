@@ -7,15 +7,15 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.DelegatingOutputStream;
 import org.jboss.resteasy.util.Types;
 
-import javax.ws.rs.ProcessingException;
+import javax.ws.rs.MessageProcessingException;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientException;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.client.Configuration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
-import javax.ws.rs.client.ResponseProcessingException;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -66,7 +66,7 @@ public class ClientInvocation implements Invocation
       this.headers = headers;
    }
 
-   public ClientConfiguration getClientConfiguration()
+   public ClientConfiguration getConfiguration()
    {
       return configuration;
    }
@@ -246,13 +246,13 @@ public class ClientInvocation implements Invocation
 
 
    @Override
-   public Configuration getConfiguration()
+   public Configuration configuration()
    {
       return configuration;
    }
 
    @Override
-   public Response invoke()
+   public Response invoke() throws ClientException
    {
       Providers current = ResteasyProviderFactory.getContextData(Providers.class);
       ResteasyProviderFactory.pushContext(Providers.class, configuration);
@@ -273,17 +273,9 @@ public class ClientInvocation implements Invocation
                      else return new AbortedResponse(configuration, requestContext.getAbortedWithResponse());
                   }
                }
-               catch (ProcessingException e)
-               {
-                  throw e;
-               }
-               catch (WebApplicationException e)
-               {
-                  throw e;
-               }
                catch (Throwable e)
                {
-                  throw new ProcessingException(e);
+                  throw new ClientException(e);
                }
             }
          }
@@ -300,13 +292,13 @@ public class ClientInvocation implements Invocation
                {
                   filter.filter(requestContext, responseContext);
                }
-               catch (ResponseProcessingException e)
+               catch (ClientException e)
                {
                   throw e;
                }
                catch (Throwable e)
                {
-                  throw new ResponseProcessingException(response, e);
+                  throw new ClientException(e);
                }
             }
          }
@@ -320,14 +312,14 @@ public class ClientInvocation implements Invocation
    }
 
    @Override
-   public <T> T invoke(Class<T> responseType)
+   public <T> T invoke(Class<T> responseType) throws ClientException, WebApplicationException
    {
       Response response = invoke();
       return response.readEntity(responseType);
    }
 
    @Override
-   public <T> T invoke(GenericType<T> responseType)
+   public <T> T invoke(GenericType<T> responseType)throws ClientException, WebApplicationException
    {
       Response response = invoke();
       return response.readEntity(responseType);
@@ -421,14 +413,28 @@ public class ClientInvocation implements Invocation
       public T get() throws InterruptedException, ExecutionException
       {
          Response response = future.get();
-         return response.readEntity(type);
+         try
+         {
+            return response.readEntity(type);
+         }
+         catch (MessageProcessingException e)
+         {
+            throw new ExecutionException(e);
+         }
       }
 
       @Override
       public T get(long l, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException
       {
          Response response = future.get(l, timeUnit);
-         return response.readEntity(type);
+         try
+         {
+            return response.readEntity(type);
+         }
+         catch (MessageProcessingException e)
+         {
+            throw new ExecutionException(e);
+         }
       }
    }
 
@@ -468,9 +474,13 @@ public class ClientInvocation implements Invocation
                   cb.completed((T) res);
                   return res;
                }
-               catch (Throwable e)
+               catch (ClientException e)
                {
                   cb.failed(e);
+               }
+               catch (Throwable e)
+               {
+                  cb.failed(new ClientException("MPE", e));
                }
                return null;
             }
@@ -497,9 +507,13 @@ public class ClientInvocation implements Invocation
                   cb.completed(obj);
                   return obj;
                }
-               catch (Throwable e)
+               catch (ClientException e)
                {
                   cb.failed(e);
+               }
+               catch (Throwable e)
+               {
+                  cb.failed(new ClientException("MPE", e));
                }
                return null;
             }
@@ -508,73 +522,4 @@ public class ClientInvocation implements Invocation
       }
    }
 
-   @Override
-   public Invocation property(String name, Object value)
-   {
-      configuration.property(name, value);
-      return this;
-   }
-
-   @Override
-   public Invocation register(Class<?> componentClass)
-   {
-      configuration.register(componentClass);
-      return this;
-   }
-
-   @Override
-   public Invocation register(Class<?> componentClass, int priority)
-   {
-      configuration.register(componentClass, priority);
-      return this;
-   }
-
-   @Override
-   public Invocation register(Class<?> componentClass, Class<?>... contracts)
-   {
-      configuration.register(componentClass, contracts);
-      return this;
-   }
-
-   @Override
-   public Invocation register(Class<?> componentClass, Map<Class<?>, Integer> contracts)
-   {
-      configuration.register(componentClass, contracts);
-      return this;
-   }
-
-   @Override
-   public Invocation register(Object component)
-   {
-      configuration.register(component);
-      return this;
-   }
-
-   @Override
-   public Invocation register(Object component, int priority)
-   {
-      configuration.register(component, priority);
-      return this;
-   }
-
-   @Override
-   public Invocation register(Object component, Class<?>... contracts)
-   {
-      configuration.register(component, contracts);
-      return this;
-   }
-
-   @Override
-   public Invocation register(Object component, Map<Class<?>, Integer> contracts)
-   {
-      configuration.register(component, contracts);
-      return this;
-   }
-
-   @Override
-   public Invocation replaceWith(Configuration config)
-   {
-      configuration.replaceWith(config);
-      return this;
-   }
 }

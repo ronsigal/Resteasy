@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,6 @@ package javax.ws.rs.ext;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
@@ -63,29 +62,24 @@ public interface ReaderInterceptorContext extends InterceptorContext {
      * Proceed to the next interceptor in the chain. Return the result of the
      * next interceptor invoked. Interceptors MUST explicitly call this method
      * to continue the execution chain; the call to this method in the
-     * last interceptor of the chain will invoke the wrapped
+     * last interceptor of the chain will invoke
      * {@link javax.ws.rs.ext.MessageBodyReader#readFrom}.
      *
-     * @return result of next interceptor invoked.
-     * @throws IOException if an IO error arises or is
-     *                     thrown by the wrapped {@code MessageBodyReader.readFrom} method.
-     * @throws javax.ws.rs.WebApplicationException
-     *                     thrown by the wrapped {@code MessageBodyReader.readFrom} method.
+     * @return result of next interceptor invoked
+     * @throws IOException if an IO error arises
      */
-    public Object proceed() throws IOException, WebApplicationException;
+    public Object proceed() throws IOException;
 
     /**
-     * Get the input stream of the object to be read. The JAX-RS runtime is responsible
-     * for closing the input stream.
+     * Get the input stream of the object to be read.
      *
      * @return input stream of the object to be read
      */
     public InputStream getInputStream();
 
     /**
-     * Update the input stream of the object to be read. For example, by wrapping
-     * it with another input stream. The JAX-RS runtime is responsible for closing
-     * the input stream.
+     * Update the input stream of the object to be read.
+     * For example, by wrapping it with another input stream
      *
      * @param is new input stream
      */

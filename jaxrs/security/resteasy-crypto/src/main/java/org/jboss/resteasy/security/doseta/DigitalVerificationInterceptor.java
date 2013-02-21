@@ -3,8 +3,7 @@ package org.jboss.resteasy.security.doseta;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.InputStreamToByteArray;
 
-import javax.annotation.Priority;
-import javax.ws.rs.Priorities;
+import javax.ws.rs.BindingPriority;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
@@ -20,7 +19,7 @@ import java.util.List;
  * @version $Revision: 1 $
  */
 @Provider
-@Priority(Priorities.ENTITY_CODER)
+@BindingPriority(BindingPriority.ENTITY_CODER)
 public class DigitalVerificationInterceptor implements ReaderInterceptor
 {
    @Override
