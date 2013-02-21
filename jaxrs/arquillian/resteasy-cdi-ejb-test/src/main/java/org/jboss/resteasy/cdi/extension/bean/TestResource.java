@@ -2,7 +2,7 @@ package org.jboss.resteasy.cdi.extension.bean;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
@@ -21,7 +21,7 @@ public class TestResource
 {  
    @Inject @Boston BostonHolder holder;
    
-   @GET
+   @POST
    @Path("boston")
    public Response setup()
    {

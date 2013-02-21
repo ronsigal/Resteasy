@@ -78,7 +78,7 @@ public class TestResource implements TestResourceIntf
    }
 
    @Override
-   @GET
+   @POST
    @Path("test")
    @Produces(MediaType.TEXT_PLAIN)
    public Response test()

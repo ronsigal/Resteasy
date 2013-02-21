@@ -102,7 +102,7 @@ public class DecoratorsTest
 
       // Test order of decorator invocations.
       request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/test/");
-      response = request.get();
+      response = request.post();
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
       response.releaseConnection();

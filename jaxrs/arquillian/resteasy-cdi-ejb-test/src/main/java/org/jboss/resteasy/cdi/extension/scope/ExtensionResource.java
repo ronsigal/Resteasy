@@ -4,7 +4,7 @@ import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
@@ -29,7 +29,7 @@ public class ExtensionResource
    @Inject private ObsolescentAfterTwoUses oo2;
    @Inject private ObsolescentAfterThreeUses oo3;
    
-   @GET
+   @POST
    @Path("setup")
    public Response setup()
    {
@@ -48,7 +48,7 @@ public class ExtensionResource
       }
    }
    
-   @GET
+   @POST
    @Path("test1")
    public Response test1()
    {
@@ -70,7 +70,7 @@ public class ExtensionResource
       }
    }
    
-   @GET
+   @POST
    @Path("test2")
    public Response test2()
    {
@@ -91,7 +91,7 @@ public class ExtensionResource
       }
    }
    
-   @GET
+   @POST
    @Path("test3")
    public Response test3()
    {
