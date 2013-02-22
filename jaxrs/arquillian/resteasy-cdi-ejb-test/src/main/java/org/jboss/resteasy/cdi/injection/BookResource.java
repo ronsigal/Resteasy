@@ -273,7 +273,7 @@ public class BookResource
       }
    }
    
-   @POST
+   @GET
    @Path("empty")
    public void empty()
    {
@@ -321,7 +321,7 @@ public class BookResource
       return book;
    }
    
-   @POST
+   @GET
    @Path("entityManager")
    public Response testEntityManager()
    {
@@ -355,7 +355,7 @@ public class BookResource
       return books;
    }
    
-   @POST
+   @GET
    @Path("session/test")
    public Response sessionTest(@Context HttpServletRequest request)
    {

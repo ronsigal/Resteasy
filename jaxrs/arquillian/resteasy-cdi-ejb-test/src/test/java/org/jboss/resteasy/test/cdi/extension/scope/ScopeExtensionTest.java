@@ -61,15 +61,15 @@ public class ScopeExtensionTest
    {
       log.info("starting testScope()");
       ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-extension-test/rest/extension/setup/");
-      ClientResponse<?> response = request.post();
+      ClientResponse<?> response = request.get();
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
       request = new ClientRequest("http://localhost:8080/resteasy-extension-test/rest/extension/test1/");
-      response = request.post();
+      response = request.get();
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
       request = new ClientRequest("http://localhost:8080/resteasy-extension-test/rest/extension/test2/");
-      response = request.post();
+      response = request.get();
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
    }

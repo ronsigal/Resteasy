@@ -109,7 +109,7 @@ public class InjectionTest
    {
       System.out.println("Dumping old records...");
       ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/empty/");
-      ClientResponse<?> response = request.post();
+      ClientResponse<?> response = request.get();
       invocationCounter++;
       response.releaseConnection();
    }
@@ -217,7 +217,7 @@ public class InjectionTest
 
       // Test EntityManager injected in BookResource
       request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/entityManager");
-      response = request.post();
+      response = request.get();
       invocationCounter++;
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
@@ -278,7 +278,7 @@ public class InjectionTest
 
       // Verify that the BookBag has been replaced by a new, empty one for the new session.
       request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/session/test/");
-      response = request.post();
+      response = request.get();
       invocationCounter++;
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
@@ -301,7 +301,6 @@ public class InjectionTest
       ClientResponse<?> response = request.post();
       invocationCounter++;
       log.info("status: " + response.getStatus());
-      log.info(response.getEntity(String.class));
       Assert.assertEquals(200, response.getStatus());
       
       // Verify that the received book title is the one that was sent.
