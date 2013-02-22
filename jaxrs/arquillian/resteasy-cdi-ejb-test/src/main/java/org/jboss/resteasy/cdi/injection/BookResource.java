@@ -273,7 +273,7 @@ public class BookResource
       }
    }
    
-   @GET
+   @GET 
    @Path("empty")
    public void empty()
    {

@@ -95,7 +95,7 @@ public class EventsTest
       Assert.assertEquals(book, result);
 
       request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/test/");
-      response = request.get();
+      response = request.get(); 
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
       response.releaseConnection();

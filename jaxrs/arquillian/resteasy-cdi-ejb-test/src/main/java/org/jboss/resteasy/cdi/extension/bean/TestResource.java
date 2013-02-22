@@ -21,7 +21,7 @@ public class TestResource
 {  
    @Inject @Boston BostonHolder holder;
    
-   @GET
+   @GET 
    @Path("boston")
    public Response setup()
    {

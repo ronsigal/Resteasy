@@ -76,7 +76,7 @@ public class TestResource implements TestResourceIntf
       log.info("leaving TestResource.lookupBookById(" + id + ")");
       return book;
    }
-
+ 
    @Override
    @GET
    @Path("test")

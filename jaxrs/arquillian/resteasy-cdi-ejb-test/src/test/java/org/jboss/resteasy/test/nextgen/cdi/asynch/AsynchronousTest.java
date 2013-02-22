@@ -33,7 +33,7 @@ import org.junit.runner.RunWith;
  * Copyright Dec 22, 2012
  */
 @RunWith(Arquillian.class)
-public class AsynchronousTest
+public class AsynchronousTest 
 {
    @Inject private Logger log;
    @Inject private AsynchronousStatelessLocal stateless;

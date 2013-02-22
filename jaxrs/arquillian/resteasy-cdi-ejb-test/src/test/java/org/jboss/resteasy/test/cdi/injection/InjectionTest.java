@@ -109,7 +109,7 @@ public class InjectionTest
    {
       System.out.println("Dumping old records...");
       ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/empty/");
-      ClientResponse<?> response = request.get();
+      ClientResponse<?> response = request.get(); 
       invocationCounter++;
       response.releaseConnection();
    }

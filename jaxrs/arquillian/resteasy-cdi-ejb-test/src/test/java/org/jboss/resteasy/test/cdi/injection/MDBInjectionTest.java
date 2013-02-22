@@ -98,7 +98,7 @@ public class MDBInjectionTest
       Book book = new Book(23, title);
       request.body(Constants.MEDIA_TYPE_TEST_XML, book);
       ClientResponse<?> response = request.post();
-      log.info("status: " + response.getStatus());
+      log.info("status: " + response.getStatus()); 
       Assert.assertEquals(200, response.getStatus());
       
       // Verify that the received book title is the one that was sent.

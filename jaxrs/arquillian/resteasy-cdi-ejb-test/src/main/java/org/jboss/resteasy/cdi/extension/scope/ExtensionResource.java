@@ -4,7 +4,7 @@ import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.ws.rs.GET;
+import javax.ws.rs.GET; 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
