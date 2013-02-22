@@ -1,13 +1,9 @@
 package org.jboss.resteasy.test.keystone;
 
 import junit.framework.Assert;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
-import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.keystone.model.User;
 import org.jboss.resteasy.keystone.server.SkeletonKeyApplication;
 import org.jboss.resteasy.spi.ResteasyDeployment;
@@ -96,7 +92,7 @@ public class UsersResourceTest
    public void testUserId()
    {
       String newUser = "{ \"user\" : { \"id\" : \"5\", \"username\" : \"wburke\", \"name\" : \"Bill Burke\", \"email\" : \"bburke@redhat.com\", \"enabled\" : true, \"credentials\" : { \"password\" : \"geheim\" }} }";
-      ResteasyClient client = new ResteasyClient(deployment.getProviderFactory());
+      ResteasyClient client = new ResteasyClientBuilder().providerFactory(deployment.getProviderFactory()).build();
       Response response = client.target(generateURL("/users")).request().post(Entity.json(newUser));
       Assert.assertEquals(response.getStatus(), 201);
       response.close();

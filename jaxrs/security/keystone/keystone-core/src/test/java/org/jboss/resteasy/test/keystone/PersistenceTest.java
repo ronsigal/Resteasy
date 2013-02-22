@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import org.infinispan.Cache;
 import org.infinispan.manager.DefaultCacheManager;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.keystone.client.SkeletonKeyAdminClient;
 import org.jboss.resteasy.keystone.client.SkeletonKeyClientBuilder;
 import org.jboss.resteasy.keystone.model.Project;
@@ -112,8 +113,8 @@ public class PersistenceTest
       deployment.setApplicationClass(SApp.class.getName());
       ResteasyProviderFactory factory = new ResteasyProviderFactory();
       deployment.setProviderFactory(factory);
-      factory.setProperty(SkeletonKeyApplication.SKELETON_KEY_INFINISPAN_CONFIG_FILE, "cache.xml");
-      factory.setProperty(SkeletonKeyApplication.SKELETON_KEY_INFINISPAN_CACHE_NAME, "idp-store");
+      factory.property(SkeletonKeyApplication.SKELETON_KEY_INFINISPAN_CONFIG_FILE, "cache.xml");
+      factory.property(SkeletonKeyApplication.SKELETON_KEY_INFINISPAN_CACHE_NAME, "idp-store");
 
       EmbeddedContainer.start(deployment);
       app = ((SApp)deployment.getApplication()).app;
@@ -127,7 +128,7 @@ public class PersistenceTest
       init();
       stopDeployment();
       startDeployment();
-      ResteasyClient client = new ResteasyClient();
+      ResteasyClient client = new ResteasyClientBuilder().build();
       WebTarget target = client.target(generateBaseUrl());
       SkeletonKeyAdminClient admin = new SkeletonKeyClientBuilder().username("wburke").password("geheim").idp(target).admin();
 
@@ -173,7 +174,7 @@ public class PersistenceTest
       Assert.assertTrue(0 < app.getCache().size());
 
 
-      ResteasyClient client = new ResteasyClient();
+      ResteasyClient client = new ResteasyClientBuilder().build();
       WebTarget target = client.target(generateBaseUrl());
       SkeletonKeyAdminClient admin = new SkeletonKeyClientBuilder().username("wburke").password("geheim").idp(target).admin();
 

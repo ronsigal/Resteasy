@@ -9,12 +9,11 @@ import org.bouncycastle.cms.CMSSignedDataGenerator;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
-import org.jboss.resteasy.security.KeyTools;
-import org.jboss.resteasy.security.smime.PKCS7SignatureInput;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.keystone.client.SkeletonKeyAdminClient;
 import org.jboss.resteasy.keystone.client.SkeletonKeyClientBuilder;
 import org.jboss.resteasy.keystone.model.Authentication;
+import org.jboss.resteasy.keystone.model.Mappers;
 import org.jboss.resteasy.keystone.model.Project;
 import org.jboss.resteasy.keystone.model.Projects;
 import org.jboss.resteasy.keystone.model.Role;
@@ -22,6 +21,9 @@ import org.jboss.resteasy.keystone.model.StoredUser;
 import org.jboss.resteasy.keystone.model.User;
 import org.jboss.resteasy.keystone.server.Loader;
 import org.jboss.resteasy.keystone.server.SkeletonKeyApplication;
+import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
+import org.jboss.resteasy.security.KeyTools;
+import org.jboss.resteasy.security.smime.PKCS7SignatureInput;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -148,7 +150,7 @@ public class TokenTest
       // Use our own providerFactory to test json context provider
       ResteasyProviderFactory providerFactory = new ResteasyProviderFactory();
       RegisterBuiltin.register(providerFactory);
-      ResteasyClient client = new ResteasyClient(providerFactory);
+      ResteasyClient client = new ResteasyClientBuilder().providerFactory(providerFactory).build();
       WebTarget target = client.target(generateBaseUrl());
       SkeletonKeyAdminClient admin = new SkeletonKeyClientBuilder().username("wburke").password("geheim").idp(target).admin();
 
@@ -178,7 +180,7 @@ public class TokenTest
       // Use our own providerFactory to test json context provider
       ResteasyProviderFactory providerFactory = new ResteasyProviderFactory();
       RegisterBuiltin.register(providerFactory);
-      ResteasyClient client = new ResteasyClient(providerFactory);
+      ResteasyClient client = new ResteasyClientBuilder().providerFactory(providerFactory).build();
       WebTarget target = client.target(generateBaseUrl());
       SkeletonKeyAdminClient admin = new SkeletonKeyClientBuilder().username("wburke").password("geheim").idp(target).admin();
 
@@ -211,14 +213,14 @@ public class TokenTest
       {
          // assuming @RolesAllowed is on class level. Too lazy to test it all!
          String newUser = "{ \"user\" : { \"username\" : \"wburke\", \"name\" : \"Bill Burke\", \"email\" : \"bburke@redhat.com\", \"enabled\" : true, \"credentials\" : { \"password\" : \"geheim\" }} }";
-         ResteasyClient client = new ResteasyClient(deployment.getProviderFactory());
+         ResteasyClient client = new ResteasyClientBuilder().providerFactory(deployment.getProviderFactory()).build();
          Response response = client.target(generateURL("/users")).request().post(Entity.json(newUser));
          Assert.assertEquals(response.getStatus(), 403);
          response.close();
       }
       {
          String newRole = "{ \"role\" : { \"name\" : \"admin\"} }";
-         ResteasyClient client = new ResteasyClient(deployment.getProviderFactory());
+         ResteasyClient client = new ResteasyClientBuilder().providerFactory(deployment.getProviderFactory()).build();
          Response response = client.target(generateURL("/roles")).request().post(Entity.json(newRole));
          Assert.assertEquals(response.getStatus(), 403);
          response.close();
@@ -226,7 +228,7 @@ public class TokenTest
       }
       {
          String newProject = "{ \"project\" : { \"id\" : \"5\", \"name\" : \"Resteasy\", \"description\" : \"The Best of REST\", \"enabled\" : true } }";
-         ResteasyClient client = new ResteasyClient(deployment.getProviderFactory());
+         ResteasyClient client = new ResteasyClientBuilder().providerFactory(deployment.getProviderFactory()).build();
          Response response = client.target(generateURL("/projects")).request().post(Entity.json(newProject));
          Assert.assertEquals(response.getStatus(), 403);
          response.close();
@@ -237,8 +239,9 @@ public class TokenTest
    public void testCMD() throws Exception
    {
       Authentication auth = new SkeletonKeyClientBuilder().username("wburke").password("geheim").authentication("Skeleton Key");
-      ResteasyClient client = new ResteasyClient();
+      ResteasyClient client = new ResteasyClientBuilder().build();
       WebTarget target = client.target(generateBaseUrl());
+      Mappers.registerContextResolver(client);
       String tiny = target.path("tokens").path("url").request().post(Entity.json(auth), String.class);
       System.out.println(tiny);
       System.out.println("tiny.size: " + tiny.length());

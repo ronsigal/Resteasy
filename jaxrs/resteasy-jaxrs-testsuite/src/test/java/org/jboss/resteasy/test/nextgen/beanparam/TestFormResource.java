@@ -1,12 +1,7 @@
-/*
- * JBoss, the OpenSource J2EE webOS
- * 
- * Distributable under LGPL license.
- * See terms of license at gnu.org.
- */
 package org.jboss.resteasy.test.nextgen.beanparam;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
@@ -142,7 +137,7 @@ public class TestFormResource extends BaseResourceTest
    @Test
    public void testMultiValueParam() throws Exception
    {
-      ResteasyClient client = new ResteasyClient();
+      ResteasyClient client = new ResteasyClientBuilder().build();
       ResteasyWebTarget target = client.target(generateURL("/myform/server"));
       Response response = target.request().get();
       int status = response.getStatus();
@@ -168,7 +163,7 @@ public class TestFormResource extends BaseResourceTest
    @Test
    public void testProxy691() throws Exception
    {
-      ResteasyClient client = new ResteasyClient();
+      ResteasyClient client = new ResteasyClientBuilder().build();
       ResteasyWebTarget target = client.target(generateBaseUrl());
       MyFormProxy proxy = target.proxy(MyFormProxy.class);
       proxy.post(null);
@@ -177,7 +172,7 @@ public class TestFormResource extends BaseResourceTest
    @Test
    public void testProxy() throws Exception
    {
-      ResteasyClient client = new ResteasyClient();
+      ResteasyClient client = new ResteasyClientBuilder().build();
       ResteasyWebTarget target = client.target(generateBaseUrl());
       FormClientProxy proxy = target.proxy(FormClientProxy.class);
       ClientForm form = new ClientForm();
@@ -222,7 +217,7 @@ public class TestFormResource extends BaseResourceTest
       InputStream in = null;
       try
       {
-         ResteasyClient client = new ResteasyClient();
+         ResteasyClient client = new ResteasyClientBuilder().build();
          ResteasyWebTarget target = client.target(TEST_URI);
          Invocation.Builder request = target.request();
          request.header("custom-header", "42");

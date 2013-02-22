@@ -2,10 +2,11 @@ package org.jboss.resteasy.test.skeleton.key;
 
 import junit.framework.Assert;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.skeleton.key.idm.adapters.infinispan.InfinispanIDM;
-import org.jboss.resteasy.skeleton.key.representations.idm.RealmRepresentation;
-import org.jboss.resteasy.skeleton.key.idm.service.RealmFactory;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.skeleton.key.SkeletonKeyContextResolver;
+import org.jboss.resteasy.skeleton.key.idm.adapters.infinispan.InfinispanIDM;
+import org.jboss.resteasy.skeleton.key.idm.service.RealmFactory;
+import org.jboss.resteasy.skeleton.key.representations.idm.RealmRepresentation;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,7 +42,7 @@ public class RealmFactoryTest extends BaseResourceTest
    {
       RealmRepresentation realm = SkeletonTestBase.loadJson("testrealm.json");
 
-      Client client = new ResteasyClient();
+      Client client = new ResteasyClientBuilder().build();
       WebTarget target = client.target(generateURL("/realms"));
       Response response = target.request().post(Entity.json(realm));
       Assert.assertEquals(201, response.getStatus());
