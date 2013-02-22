@@ -6,7 +6,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
@@ -51,7 +51,7 @@ public class LinkTest extends BaseResourceTest
    @Test
    public void testRelativeLink() throws Exception
    {
-      WebTarget target = ClientFactory.newClient().target(generateURL("/products/333"));
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/products/333"));
       Response response = target.request().get();
       Product product = response.readEntity(Product.class);
       Assert.assertEquals(product.getLinks().get(0).getHref().getPath(), "/products/333/self");
@@ -62,7 +62,7 @@ public class LinkTest extends BaseResourceTest
    @Test
    public void testRelativeLink2() throws Exception
    {
-      WebTarget target = ClientFactory.newClient().target(generateURL("/products/333"));
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/products/333"));
       Response response = target.request().get();
       System.out.println(response.readEntity(String.class));
    }

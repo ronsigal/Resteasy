@@ -13,7 +13,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Date;
 
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -117,7 +117,7 @@ public class SmokeTest extends BaseResourceTest {
         }
         
         {
-           Builder builder = ClientFactory.newClient().target(generateURL("/entry2")).request();
+           Builder builder = ClientBuilder.newClient().target(generateURL("/entry2")).request();
            builder.header("Accept", MediaType.APPLICATION_ATOM_XML);
            builder.header("Content-Type", MediaType.APPLICATION_ATOM_XML);
            Response response = builder.get();
@@ -147,7 +147,7 @@ public class SmokeTest extends BaseResourceTest {
         }
 
         {
-           Builder builder = ClientFactory.newClient().target(generateURL("/entry4")).request();
+           Builder builder = ClientBuilder.newClient().target(generateURL("/entry4")).request();
            builder.header("Accept", MediaType.APPLICATION_XML);
            builder.header("Content-Type", MediaType.APPLICATION_XML);
            Response response = builder.get();

@@ -10,7 +10,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.ClientFactory;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -229,7 +229,7 @@ public class ResourceTest extends BaseResourceTest
    @Test
    public void testAtomFeed() throws Exception
    {
-      WebTarget target = ClientFactory.newClient().target(generateURL("/atom/feed"));
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/atom/feed"));
       Response response = target.request().get();
       Assert.assertEquals(200, response.getStatus());
       System.out.println(response.readEntity(String.class));
@@ -244,7 +244,7 @@ public class ResourceTest extends BaseResourceTest
    @Test
    public void testAtomEntry() throws Exception
    {
-      WebTarget target = ClientFactory.newClient().target(generateURL("/atom/entry"));
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/atom/entry"));
       Response response = target.request().get();
       Assert.assertEquals(200, response.getStatus());
       System.out.println(response.readEntity(String.class));
