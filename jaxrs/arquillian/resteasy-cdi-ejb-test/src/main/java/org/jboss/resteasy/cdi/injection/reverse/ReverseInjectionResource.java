@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
@@ -32,7 +33,7 @@ public class ReverseInjectionResource
    @Inject private Logger log;
    @Inject private BookResource resource;
 
-   @POST
+   @GET
    @Path("testScopes")
    public Response testScopes()
    {
@@ -40,7 +41,7 @@ public class ReverseInjectionResource
       return holder.testScopes() ? Response.ok().build() : Response.serverError().build();
    }
    
-   @POST
+   @GET
    @Path("setup")
    public Response setup()
    {
@@ -54,7 +55,7 @@ public class ReverseInjectionResource
       return Response.ok().build();
    }
 
-   @POST
+   @GET
    @Path("test")
    public Response test()
    {

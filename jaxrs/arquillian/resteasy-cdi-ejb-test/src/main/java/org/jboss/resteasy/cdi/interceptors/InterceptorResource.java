@@ -92,7 +92,7 @@ public class InterceptorResource
    }
    
    
-   @POST
+   @GET
    @Path("test")
    @Produces(MediaType.TEXT_PLAIN)
    @Interceptors ({Interceptor1.class})
