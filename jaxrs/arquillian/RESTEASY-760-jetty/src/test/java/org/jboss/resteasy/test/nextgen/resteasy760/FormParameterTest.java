@@ -44,12 +44,8 @@ public class FormParameterTest
    @Test
    public void testFormParamWithNoQueryParamPut() throws Exception
    {
-//      ClientRequest request = new ClientRequest("http://localhost:9090/RESTEASY-760/put/noquery/");
       WebTarget target = ClientBuilder.newClient().target("http://localhost:9090/RESTEASY-760/put/noquery/");
       Response response = target.request().put(Entity.form(new Form("formParam", "abc xyz")));
-//      request.formParameter("formParam", "abc xyz");
-//      request.header("Content-Type", "application/x-www-form-urlencoded");
-//      ClientResponse<String> response = request.put(String.class);
       assertTrue(response != null);
       System.out.println("response: " + response.readEntity(String.class));
       assertEquals("abc xyz", response.readEntity(String.class));
@@ -58,10 +54,6 @@ public class FormParameterTest
    @Test
    public void testFormParamWithNoQueryParamPutEncoded() throws Exception
    {
-//      ClientRequest request = new ClientRequest("http://localhost:9090/RESTEASY-760/put/noquery/encoded");
-//      request.formParameter("formParam", "abc xyz");
-//      request.header("Content-Type", "application/x-www-form-urlencoded");
-//      ClientResponse<String> response = request.put(String.class);
       WebTarget target = ClientBuilder.newClient().target("http://localhost:9090/RESTEASY-760/put/noquery/encoded");
       Response response = target.request().put(Entity.form(new Form("formParam", "abc xyz")));
       assertTrue(response != null);
