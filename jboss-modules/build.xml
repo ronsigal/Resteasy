@@ -49,6 +49,10 @@
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-jackson-provider" jandex="true"/>
         </module-def>
 
+        <module-def name="org.jboss.resteasy.resteasy-jackson2-provider">
+            <maven-resource group="org.jboss.resteasy" artifact="resteasy-jackson2-provider" jandex="true"/>
+        </module-def>
+
         <module-def name="org.jboss.resteasy.resteasy-jaxb-provider">
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-jaxb-provider" jandex="true"/>
         </module-def>
