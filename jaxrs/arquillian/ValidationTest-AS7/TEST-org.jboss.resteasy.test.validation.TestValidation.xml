@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite failures="2" time="0.786" errors="0" skipped="0" tests="2" name="org.jboss.resteasy.test.validation.TestValidation">
+  <properties>
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+    <property name="sun.boot.library.path" value="/opt/local/java/jdk1.7.0_21/jre/lib/amd64"/>
+    <property name="java.vm.version" value="23.21-b01"/>
+    <property name="java.vm.vendor" value="Oracle Corporation"/>
+    <property name="java.vendor.url" value="http://java.oracle.com/"/>
+    <property name="path.separator" value=":"/>
+    <property name="guice.disable.misplaced.annotation.check" value="true"/>
+    <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
+    <property name="file.encoding.pkg" value="sun.io"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.os.patch.level" value="unknown"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="user.dir" value="/home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest"/>
+    <property name="java.runtime.version" value="1.7.0_21-b11"/>
+    <property name="java.awt.graphicsenv" value="sun.awt.X11GraphicsEnvironment"/>
+    <property name="java.endorsed.dirs" value="/opt/local/java/jdk1.7.0_21/jre/lib/endorsed"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="line.separator" value="
+"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="os.name" value="Linux"/>
+    <property name="classworlds.conf" value="/opt/local/apache-maven-3.0.5/bin/m2.conf"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.class.version" value="51.0"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="os.version" value="3.6.11-1.fc16.x86_64"/>
+    <property name="user.home" value="/home/rsigal"/>
+    <property name="user.timezone" value="US/Eastern"/>
+    <property name="java.awt.printerjob" value="sun.print.PSPrinterJob"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.specification.version" value="1.7"/>
+    <property name="user.name" value="rsigal"/>
+    <property name="java.class.path" value="/opt/local/apache-maven-3.0.5/boot/plexus-classworlds-2.4.jar"/>
+    <property name="java.vm.specification.version" value="1.7"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.home" value="/opt/local/java/jdk1.7.0_21/jre"/>
+    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher clean test"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="user.language" value="en"/>
+    <property name="awt.toolkit" value="sun.awt.X11.XToolkit"/>
+    <property name="java.vm.info" value="mixed mode"/>
+    <property name="java.version" value="1.7.0_21"/>
+    <property name="java.ext.dirs" value="/opt/local/java/jdk1.7.0_21/jre/lib/ext:/usr/java/packages/lib/ext"/>
+    <property name="securerandom.source" value="file:/dev/./urandom"/>
+    <property name="sun.boot.class.path" value="/opt/local/java/jdk1.7.0_21/jre/lib/resources.jar:/opt/local/java/jdk1.7.0_21/jre/lib/rt.jar:/opt/local/java/jdk1.7.0_21/jre/lib/sunrsasign.jar:/opt/local/java/jdk1.7.0_21/jre/lib/jsse.jar:/opt/local/java/jdk1.7.0_21/jre/lib/jce.jar:/opt/local/java/jdk1.7.0_21/jre/lib/charsets.jar:/opt/local/java/jdk1.7.0_21/jre/lib/jfr.jar:/opt/local/java/jdk1.7.0_21/jre/classes"/>
+    <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="maven.home" value="/opt/local/apache-maven-3.0.5"/>
+    <property name="file.separator" value="/"/>
+    <property name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="sun.cpu.isalist" value=""/>
+  </properties>
+  <testcase time="0.734" classname="org.jboss.resteasy.test.validation.TestValidation" name="testViolationsBeforeReturnValue">
+    <failure message="expected:&lt;200&gt; but was:&lt;500&gt;" type="junit.framework.AssertionFailedError">junit.framework.AssertionFailedError: expected:&lt;200&gt; but was:&lt;500&gt;
+	at junit.framework.Assert.fail(Assert.java:47)
+	at junit.framework.Assert.failNotEquals(Assert.java:283)
+	at junit.framework.Assert.assertEquals(Assert.java:64)
+	at junit.framework.Assert.assertEquals(Assert.java:195)
+	at junit.framework.Assert.assertEquals(Assert.java:201)
+	at org.jboss.resteasy.test.validation.TestValidation.testViolationsBeforeReturnValue(TestValidation.java:170)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:44)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:41)
+	at org.jboss.arquillian.junit.Arquillian$6$1.invoke(Arquillian.java:270)
+	at org.jboss.arquillian.container.test.impl.execution.LocalTestExecuter.execute(LocalTestExecuter.java:60)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:94)
+	at org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:99)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:81)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:135)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:115)
+	at org.jboss.arquillian.core.impl.EventImpl.fire(EventImpl.java:67)
+	at org.jboss.arquillian.container.test.impl.execution.ContainerTestExecuter.execute(ContainerTestExecuter.java:38)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:94)
+	at org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:99)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:81)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createTestContext(TestContextHandler.java:89)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:94)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:88)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createClassContext(TestContextHandler.java:75)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:94)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:88)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createSuiteContext(TestContextHandler.java:60)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:94)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:88)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:135)
+	at org.jboss.arquillian.test.impl.EventTestRunnerAdaptor.test(EventTestRunnerAdaptor.java:111)
+	at org.jboss.arquillian.junit.Arquillian$6.evaluate(Arquillian.java:263)
+	at org.jboss.arquillian.junit.Arquillian$4.evaluate(Arquillian.java:226)
+	at org.jboss.arquillian.junit.Arquillian.multiExecute(Arquillian.java:314)
+	at org.jboss.arquillian.junit.Arquillian.access$100(Arquillian.java:46)
+	at org.jboss.arquillian.junit.Arquillian$5.evaluate(Arquillian.java:240)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:76)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:50)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:193)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:52)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:191)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:42)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:184)
+	at org.jboss.arquillian.junit.Arquillian$2.evaluate(Arquillian.java:185)
+	at org.jboss.arquillian.junit.Arquillian.multiExecute(Arquillian.java:314)
+	at org.jboss.arquillian.junit.Arquillian.access$100(Arquillian.java:46)
+	at org.jboss.arquillian.junit.Arquillian$3.evaluate(Arquillian.java:199)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:236)
+	at org.jboss.arquillian.junit.Arquillian.run(Arquillian.java:147)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:157)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:136)
+	at org.jboss.arquillian.junit.container.JUnitTestRunner.execute(JUnitTestRunner.java:65)
+	at org.jboss.arquillian.protocol.servlet.runner.ServletTestRunner.executeTest(ServletTestRunner.java:160)
+	at org.jboss.arquillian.protocol.servlet.runner.ServletTestRunner.execute(ServletTestRunner.java:126)
+	at org.jboss.arquillian.protocol.servlet.runner.ServletTestRunner.doGet(ServletTestRunner.java:90)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:687)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:790)
+	at io.undertow.servlet.handlers.ServletHandler.handleRequest(ServletHandler.java:87)
+	at io.undertow.servlet.handlers.FilterHandler$FilterChainImpl.doFilter(FilterHandler.java:130)
+	at io.undertow.websockets.jsr.JsrWebSocketFilter.doFilter(JsrWebSocketFilter.java:138)
+	at io.undertow.servlet.core.ManagedFilter.doFilter(ManagedFilter.java:56)
+	at io.undertow.servlet.handlers.FilterHandler$FilterChainImpl.doFilter(FilterHandler.java:132)
+	at io.undertow.servlet.handlers.FilterHandler.handleRequest(FilterHandler.java:85)
+	at io.undertow.servlet.handlers.security.ServletSecurityRoleHandler.handleRequest(ServletSecurityRoleHandler.java:56)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.servlet.handlers.security.SSLInformationAssociationHandler.handleRequest(SSLInformationAssociationHandler.java:116)
+	at io.undertow.servlet.handlers.ServletDispatchingHandler.handleRequest(ServletDispatchingHandler.java:36)
+	at org.wildfly.extension.undertow.security.SecurityContextAssociationHandler.handleRequest(SecurityContextAssociationHandler.java:79)
+	at io.undertow.security.handlers.AuthenticationCallHandler.handleRequest(AuthenticationCallHandler.java:52)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.security.handlers.AbstractConfidentialityHandler.handleRequest(AbstractConfidentialityHandler.java:46)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.servlet.handlers.security.CachedAuthenticatedSessionHandler.handleRequest(CachedAuthenticatedSessionHandler.java:66)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.security.handlers.SecurityInitialHandler.handleRequest(SecurityInitialHandler.java:71)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:26)
+	at org.wildfly.extension.undertow.security.SecurityContextCreationHandler.handleRequest(SecurityContextCreationHandler.java:56)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:26)
+	at io.undertow.servlet.handlers.ServletInitialHandler.handleFirstRequest(ServletInitialHandler.java:118)
+	at io.undertow.servlet.handlers.ServletInitialHandler.dispatchRequest(ServletInitialHandler.java:106)
+	at io.undertow.servlet.handlers.ServletInitialHandler.handleRequest(ServletInitialHandler.java:83)
+	at io.undertow.server.HttpHandlers.executeRootHandler(HttpHandlers.java:52)
+	at io.undertow.server.HttpServerExchange$1.run(HttpServerExchange.java:544)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)
+	at java.lang.Thread.run(Thread.java:722)
+</failure>
+    <system-out>&amp;#27;[0m22:13:15,661 INFO  [org.jboss.modules] (main) JBoss Modules version 1.2.0.Final
+&amp;#27;[0m&amp;#27;[0m22:13:15,805 INFO  [org.jboss.msc] (main) JBoss MSC version 1.1.2.Final
+&amp;#27;[0m&amp;#27;[0m22:13:15,852 INFO  [org.jboss.as] (MSC service thread 1-6) JBAS015899: WildFly 8.0.0.Alpha2-SNAPSHOT &quot;WildFly&quot; starting
+&amp;#27;[0m&amp;#27;[0m22:13:16,541 INFO  [org.xnio] (MSC service thread 1-7) XNIO Version 3.1.0.CR3
+&amp;#27;[0m&amp;#27;[0m22:13:16,543 INFO  [org.jboss.as.server] (Controller Boot Thread) JBAS015888: Creating http management service using socket-binding (management-http)
+&amp;#27;[0m&amp;#27;[0m22:13:16,545 INFO  [org.xnio.nio] (MSC service thread 1-7) XNIO NIO Implementation Version 3.1.0.CR3
+&amp;#27;[0m&amp;#27;[0m22:13:16,558 INFO  [org.jboss.remoting] (MSC service thread 1-7) JBoss Remoting version 4.0.0.Beta1
+&amp;#27;[0m&amp;#27;[0m22:13:16,580 INFO  [org.jboss.as.jacorb] (ServerService Thread Pool -- 35) JBAS016300: Activating JacORB Subsystem
+&amp;#27;[0m&amp;#27;[0m22:13:16,581 INFO  [org.jboss.as.clustering.infinispan] (ServerService Thread Pool -- 34) JBAS010280: Activating Infinispan subsystem.
+&amp;#27;[0m&amp;#27;[0m22:13:16,608 INFO  [org.jboss.as.jsf] (ServerService Thread Pool -- 41) JBAS012605: Activated the following JSF Implementations: [main]
+&amp;#27;[0m&amp;#27;[0m22:13:16,610 INFO  [org.jboss.as.naming] (ServerService Thread Pool -- 45) JBAS011800: Activating Naming Subsystem
+&amp;#27;[0m&amp;#27;[0m22:13:16,619 INFO  [org.jboss.as.security] (ServerService Thread Pool -- 50) JBAS013171: Activating Security Subsystem
+&amp;#27;[0m&amp;#27;[0m22:13:16,629 INFO  [org.jboss.as.connector.logging] (MSC service thread 1-3) JBAS010408: Starting JCA Subsystem (IronJacamar 1.0.17.Final)
+&amp;#27;[0m&amp;#27;[0m22:13:16,634 INFO  [org.jboss.as.security] (MSC service thread 1-5) JBAS013170: Current PicketBox version=4.0.17.Final
+&amp;#27;[0m&amp;#27;[0m22:13:16,641 INFO  [org.jboss.as.webservices] (ServerService Thread Pool -- 54) JBAS015537: Activating WebServices Extension
+&amp;#27;[0m&amp;#27;[0m22:13:16,645 INFO  [org.wildfly.extension.undertow] (MSC service thread 1-10) JBAS017502: Undertow 1.0.0.Alpha15 starting
+&amp;#27;[0m&amp;#27;[0m22:13:16,645 INFO  [org.wildfly.extension.undertow] (ServerService Thread Pool -- 53) JBAS017502: Undertow 1.0.0.Alpha15 starting
+&amp;#27;[0m&amp;#27;[0m22:13:16,647 INFO  [org.jboss.as.naming] (MSC service thread 1-15) JBAS011802: Starting Naming Service
+&amp;#27;[0m&amp;#27;[0m22:13:16,649 INFO  [org.jboss.as.mail.extension] (MSC service thread 1-12) JBAS015400: Bound mail session [java:jboss/mail/Default]
+&amp;#27;[0m&amp;#27;[0m22:13:16,669 INFO  [org.jboss.as.connector.subsystems.datasources] (ServerService Thread Pool -- 29) JBAS010403: Deploying JDBC-compliant driver class org.h2.Driver (version 1.3)
+&amp;#27;[0m&amp;#27;[0m22:13:16,680 INFO  [org.jboss.as.connector.deployers.jdbc] (MSC service thread 1-12) JBAS010417: Started Driver service with driver-name = h2
+&amp;#27;[0m&amp;#27;[0m22:13:16,725 INFO  [org.jboss.ws.common.management] (MSC service thread 1-6) JBWS022052: Starting JBoss Web Services - Stack CXF Server 4.2.0.Beta1
+&amp;#27;[0m&amp;#27;[0m22:13:16,823 INFO  [org.wildfly.extension.undertow] (MSC service thread 1-4) Starting server server service: service jboss.undertow.server.default-server
+&amp;#27;[0m&amp;#27;[0m22:13:16,824 INFO  [org.wildfly.extension.undertow] (MSC service thread 1-4) Starting host default-host
+&amp;#27;[0m&amp;#27;[0m22:13:16,841 INFO  [io.undertow] (ServerService Thread Pool -- 53) Creating file handler for path /home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/welcome-content
+&amp;#27;[0m&amp;#27;[0m22:13:16,847 INFO  [org.wildfly.extension.undertow] (MSC service thread 1-2) JBAS017525: Started http handler io.undertow.server.handlers.resource.ResourceHandler@6158ab02.
+&amp;#27;[0m&amp;#27;[0m22:13:16,847 INFO  [org.wildfly.extension.undertow] (MSC service thread 1-8) registering handler org.jboss.msc.value.InjectedValue@70480c1e under path &apos;/&apos;
+&amp;#27;[0m&amp;#27;[0m22:13:16,877 INFO  [org.wildfly.extension.undertow] (MSC service thread 1-10) JBAS017519: Undertow HTTP listener default listening on talon/127.0.0.1:8080
+&amp;#27;[0m&amp;#27;[0m22:13:16,925 INFO  [org.jboss.as.jacorb] (MSC service thread 1-7) JBAS016330: CORBA ORB Service started
+&amp;#27;[0m&amp;#27;[0m22:13:16,929 INFO  [org.hornetq.core.server] (ServerService Thread Pool -- 56) HQ221000: live server is starting with configuration HornetQ Configuration (clustered=false,backup=false,sharedStore=true,journalDirectory=/home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/standalone/data/messagingjournal,bindingsDirectory=/home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/standalone/data/messagingbindings,largeMessagesDirectory=/home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/standalone/data/messaginglargemessages,pagingDirectory=/home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/standalone/data/messagingpaging)
+&amp;#27;[0m&amp;#27;[0m22:13:16,931 INFO  [org.hornetq.core.server] (ServerService Thread Pool -- 56) HQ221006: Waiting to obtain live lock
+&amp;#27;[0m&amp;#27;[0m22:13:16,958 INFO  [org.hornetq.core.server] (ServerService Thread Pool -- 56) HQ221012: Using AIO Journal
+&amp;#27;[0m&amp;#27;[0m22:13:16,976 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-5) JBAS010400: Bound data source [java:jboss/datasources/ExampleDS]
+&amp;#27;[0m&amp;#27;[0m22:13:16,994 INFO  [org.jboss.as.jacorb] (MSC service thread 1-13) JBAS016328: CORBA Naming Service started
+&amp;#27;[0m&amp;#27;[0m22:13:17,032 INFO  [org.jboss.as.server.deployment.scanner] (MSC service thread 1-13) JBAS015012: Started FileSystemDeploymentService for directory /home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/standalone/deployments
+&amp;#27;[0m&amp;#27;[0m22:13:17,033 INFO  [org.jboss.as.remoting] (MSC service thread 1-3) JBAS017100: Listening on 127.0.0.1:9999
+&amp;#27;[0m&amp;#27;[0m22:13:17,033 INFO  [org.jboss.as.remoting] (MSC service thread 1-14) JBAS017100: Listening on 127.0.0.1:4447
+&amp;#27;[0m&amp;#27;[0m22:13:17,045 INFO  [org.hornetq.core.server] (ServerService Thread Pool -- 56) HQ221034: Waiting to obtain live lock
+&amp;#27;[0m&amp;#27;[0m22:13:17,045 INFO  [org.hornetq.core.server] (ServerService Thread Pool -- 56) HQ221035: Live Server Obtained live lock
+&amp;#27;[0m&amp;#27;[0m22:13:17,576 INFO  [org.hornetq.core.server] (ServerService Thread Pool -- 56) HQ221020: Started Netty Acceptor version 3.6.2.Final-c0d783c 127.0.0.1:5455 for CORE protocol
+&amp;#27;[0m&amp;#27;[0m22:13:17,577 INFO  [org.hornetq.core.server] (ServerService Thread Pool -- 56) HQ221020: Started Netty Acceptor version 3.6.2.Final-c0d783c 127.0.0.1:5445 for CORE protocol
+&amp;#27;[0m&amp;#27;[0m22:13:17,578 INFO  [org.hornetq.core.server] (ServerService Thread Pool -- 56) HQ221007: Server is now live
+&amp;#27;[0m&amp;#27;[0m22:13:17,579 INFO  [org.hornetq.core.server] (ServerService Thread Pool -- 56) HQ221001: HornetQ Server version 2.3.1.Final (Wild Hornet, 123) [549d816d-c34e-11e2-ae85-2d29b200f711] 
+&amp;#27;[0m&amp;#27;[0m22:13:17,595 INFO  [org.jboss.as.messaging] (ServerService Thread Pool -- 56) JBAS011601: Bound messaging object to jndi name java:/ConnectionFactory
+&amp;#27;[0m&amp;#27;[0m22:13:17,596 INFO  [org.jboss.as.messaging] (ServerService Thread Pool -- 56) JBAS011601: Bound messaging object to jndi name java:jboss/DefaultJMSConnectionFactory
+&amp;#27;[0m&amp;#27;[0m22:13:17,597 INFO  [org.jboss.as.messaging] (ServerService Thread Pool -- 57) JBAS011601: Bound messaging object to jndi name java:jboss/exported/jms/RemoteConnectionFactory
+&amp;#27;[0m&amp;#27;[0m22:13:17,632 INFO  [org.jboss.as.connector.deployment] (MSC service thread 1-14) JBAS010406: Registered connection factory java:/JmsXA
+&amp;#27;[0m&amp;#27;[0m22:13:17,659 INFO  [org.hornetq.ra] (MSC service thread 1-14) HornetQ resource adaptor started
+&amp;#27;[0m&amp;#27;[0m22:13:17,660 INFO  [org.jboss.as.connector.services.resourceadapters.ResourceAdapterActivatorService$ResourceAdapterActivator] (MSC service thread 1-14) IJ020002: Deployed: file://RaActivatorhornetq-ra
+&amp;#27;[0m&amp;#27;[0m22:13:17,662 INFO  [org.jboss.as.connector.deployment] (MSC service thread 1-12) JBAS010401: Bound JCA ConnectionFactory [java:/JmsXA]
+&amp;#27;[0m&amp;#27;[0m22:13:17,853 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015961: Http management interface listening on http://127.0.0.1:9990/management
+&amp;#27;[0m&amp;#27;[0m22:13:17,854 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015951: Admin console listening on http://127.0.0.1:9990
+&amp;#27;[0m&amp;#27;[0m22:13:17,855 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015874: WildFly 8.0.0.Alpha2-SNAPSHOT &quot;WildFly&quot; started in 2475ms - Started 187 of 223 services (65 services are lazy, passive or on-demand)
+&amp;#27;[0mValidation-test.war:
+/WEB-INF/
+/WEB-INF/classes/
+/WEB-INF/classes/org/
+/WEB-INF/classes/org/jboss/
+/WEB-INF/classes/org/jboss/resteasy/
+/WEB-INF/classes/org/jboss/resteasy/validation/
+/WEB-INF/classes/org/jboss/resteasy/validation/FooReaderWriter.class
+/WEB-INF/classes/org/jboss/resteasy/validation/Foo.class
+/WEB-INF/classes/org/jboss/resteasy/validation/FooConstraint.class
+/WEB-INF/classes/org/jboss/resteasy/validation/TestClassConstraint.class
+/WEB-INF/classes/org/jboss/resteasy/validation/FooValidator.class
+/WEB-INF/classes/org/jboss/resteasy/validation/TestResourceWithReturnValues.class
+/WEB-INF/classes/org/jboss/resteasy/validation/JaxRsActivator.class
+/WEB-INF/classes/org/jboss/resteasy/validation/TestResourceWithAllViolationTypes.class
+/WEB-INF/classes/org/jboss/resteasy/validation/TestClassValidator.class
+/WEB-INF/classes/META-INF/
+/WEB-INF/classes/META-INF/services/
+/WEB-INF/classes/META-INF/services/javax.ws.rs.ext.Providers
+&amp;#27;[0m22:13:23,144 INFO  [org.jboss.as.repository] (management-handler-thread - 2) JBAS014900: Content added at location /home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/standalone/data/content/62/2213697887d43bfe4d1e86a110b7757399a063/content
+&amp;#27;[0m&amp;#27;[0m22:13:23,157 INFO  [org.jboss.as.server.deployment] (MSC service thread 1-5) JBAS015876: Starting deployment of &quot;Validation-test.war&quot; (runtime-name: &quot;Validation-test.war&quot;)
+&amp;#27;[0m&amp;#27;[33m22:13:23,528 WARN  [org.jboss.weld.deployer] (MSC service thread 1-12) JBAS016012: Deployment deployment &quot;Validation-test.war&quot; contains CDI annotations but beans.xml was not found.
+&amp;#27;[0m&amp;#27;[0m22:13:23,630 INFO  [org.wildfly.extension.undertow] (MSC service thread 1-3) JBAS018210: Register web context: /Validation-test
+&amp;#27;[0m&amp;#27;[0m22:13:23,734 INFO  [org.jboss.as.server] (management-handler-thread - 2) JBAS018559: Deployed &quot;Validation-test.war&quot; (runtime-name : &quot;Validation-test.war&quot;)
+&amp;#27;[0m&amp;#27;[0m22:13:24,216 INFO  [org.jboss.arquillian.testenricher.cdi.container.BeanManagerProducer] (default task-2) BeanManager not found.
+&amp;#27;[0m&amp;#27;[33m22:13:24,369 WARN  [org.jboss.resteasy.plugins.providers.RegisterBuiltin] (default task-2) NoClassDefFoundError: Unable to load builtin provider: org.jboss.resteasy.plugins.validation.hibernate.HibernateValidatorContextResolver
+&amp;#27;[0m&amp;#27;[33m22:13:24,579 WARN  [org.jboss.resteasy.plugins.providers.RegisterBuiltin] (default task-7) NoClassDefFoundError: Unable to load builtin provider: org.jboss.resteasy.plugins.validation.hibernate.HibernateValidatorContextResolver
+&amp;#27;[0m&amp;#27;[0m22:13:24,727 INFO  [stdout] (default task-7) org.jboss.resteasy.validation.TestResourceWithAllViolationTypes@7917a1ec t: wxyz
+&amp;#27;[0m&amp;#27;[31m22:13:24,737 ERROR [io.undertow.request] (default task-7) Servlet request failed io.undertow.server.HttpServerExchange@5027e82f: java.lang.NoClassDefFoundError: javax/xml/stream/XMLStreamException
+	at java.lang.Class.forName0(Native Method) [rt.jar:1.7.0_21]
+	at java.lang.Class.forName(Class.java:266) [rt.jar:1.7.0_21]
+	at org.jboss.logging.Logger$1.run(Logger.java:2252) [jboss-logging-3.1.3.GA.jar:3.1.3.GA]
+	at java.security.AccessController.doPrivileged(Native Method) [rt.jar:1.7.0_21]
+	at org.jboss.logging.Logger.getMessageLogger(Logger.java:2227) [jboss-logging-3.1.3.GA.jar:3.1.3.GA]
+	at org.jboss.logging.Logger.getMessageLogger(Logger.java:2214) [jboss-logging-3.1.3.GA.jar:3.1.3.GA]
+	at org.hibernate.validator.internal.util.logging.LoggerFactory.make(LoggerFactory.java:29) [hibernate-validator-5.0.1.Final.jar:5.0.1.Final]
+	at org.hibernate.validator.internal.util.Version.&lt;clinit&gt;(Version.java:27) [hibernate-validator-5.0.1.Final.jar:5.0.1.Final]
+	at org.hibernate.validator.internal.engine.ConfigurationImpl.&lt;clinit&gt;(ConfigurationImpl.java:65) [hibernate-validator-5.0.1.Final.jar:5.0.1.Final]
+	at org.hibernate.validator.HibernateValidator.createGenericConfiguration(HibernateValidator.java:41) [hibernate-validator-5.0.1.Final.jar:5.0.1.Final]
+	at javax.validation.Validation$GenericBootstrapImpl.configure(Validation.java:276) [validation-api-1.1.0.Final.jar:]
+	at javax.validation.Validation.buildDefaultValidatorFactory(Validation.java:110) [validation-api-1.1.0.Final.jar:]
+	at org.jboss.resteasy.spi.validation.ValidationSupport.getValidator(ValidationSupport.java:28) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:280) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:257) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:246) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:336) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:177) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher.service(ServletContainerDispatcher.java:226) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher.service(HttpServletDispatcher.java:56) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher.service(HttpServletDispatcher.java:51) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:790) [jboss-servlet-api_3.1_spec-1.0.0.Alpha1.jar:1.0.0.Alpha1]
+	at io.undertow.servlet.handlers.ServletHandler.handleRequest(ServletHandler.java:87) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.FilterHandler$FilterChainImpl.doFilter(FilterHandler.java:130) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.websockets.jsr.JsrWebSocketFilter.doFilter(JsrWebSocketFilter.java:138) [undertow-websockets-jsr-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.core.ManagedFilter.doFilter(ManagedFilter.java:56) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.FilterHandler$FilterChainImpl.doFilter(FilterHandler.java:132) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.FilterHandler.handleRequest(FilterHandler.java:85) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.security.ServletSecurityRoleHandler.handleRequest(ServletSecurityRoleHandler.java:56) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.security.SSLInformationAssociationHandler.handleRequest(SSLInformationAssociationHandler.java:116) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.ServletDispatchingHandler.handleRequest(ServletDispatchingHandler.java:36) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at org.wildfly.extension.undertow.security.SecurityContextAssociationHandler.handleRequest(SecurityContextAssociationHandler.java:79)
+	at io.undertow.security.handlers.AuthenticationCallHandler.handleRequest(AuthenticationCallHandler.java:52) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.security.handlers.AbstractConfidentialityHandler.handleRequest(AbstractConfidentialityHandler.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.security.CachedAuthenticatedSessionHandler.handleRequest(CachedAuthenticatedSessionHandler.java:66) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.security.handlers.SecurityInitialHandler.handleRequest(SecurityInitialHandler.java:71) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:26) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at org.wildfly.extension.undertow.security.SecurityContextCreationHandler.handleRequest(SecurityContextCreationHandler.java:56)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:26) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.ServletInitialHandler.handleFirstRequest(ServletInitialHandler.java:118) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.ServletInitialHandler.dispatchRequest(ServletInitialHandler.java:106) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.ServletInitialHandler.handleRequest(ServletInitialHandler.java:83) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeRootHandler(HttpHandlers.java:52) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpServerExchange$1.run(HttpServerExchange.java:544) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145) [rt.jar:1.7.0_21]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615) [rt.jar:1.7.0_21]
+	at java.lang.Thread.run(Thread.java:722) [rt.jar:1.7.0_21]
+Caused by: java.lang.ClassNotFoundException: javax.xml.stream.XMLStreamException from [Module &quot;org.hibernate.validator:main&quot; from local module loader @336e8a49 (finder: local module finder @1e38d900 (roots: /home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/modules,/home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/modules/system/layers/base))]
+	at org.jboss.modules.ModuleClassLoader.findClass(ModuleClassLoader.java:196) [jboss-modules.jar:1.2.0.Final]
+	at org.jboss.modules.ConcurrentClassLoader.performLoadClassUnchecked(ConcurrentClassLoader.java:444) [jboss-modules.jar:1.2.0.Final]
+	at org.jboss.modules.ConcurrentClassLoader.performLoadClassChecked(ConcurrentClassLoader.java:432) [jboss-modules.jar:1.2.0.Final]
+	at org.jboss.modules.ConcurrentClassLoader.performLoadClass(ConcurrentClassLoader.java:374) [jboss-modules.jar:1.2.0.Final]
+	at org.jboss.modules.ConcurrentClassLoader.loadClass(ConcurrentClassLoader.java:119) [jboss-modules.jar:1.2.0.Final]
+	... 53 more
+
+&amp;#27;[0m</system-out>
+    <system-err>May 22, 2013 10:13:15 PM org.jboss.as.arquillian.container.managed.ManagedDeployableContainer startInternal
+INFO: Starting container with: [/opt/local/java/jdk1.7.0_21/bin/java, -Xmx512m, -XX:MaxPermSize=128m, -ea, -Djboss.home.dir=target/wildfly-8.0.0.Alpha2-SNAPSHOT, -Dorg.jboss.boot.log.file=/home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/standalone/log/boot.log, -Dlogging.configuration=file:/home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/standalone/configuration/logging.properties, -Djboss.bundles.dir=target/wildfly-8.0.0.Alpha2-SNAPSHOT/bundles, -jar, /home/rsigal/git.master.new/Resteasy/jaxrs/arquillian/ValidationTest/target/wildfly-8.0.0.Alpha2-SNAPSHOT/jboss-modules.jar, -mp, target/wildfly-8.0.0.Alpha2-SNAPSHOT/modules, org.jboss.as.standalone, -server-config, standalone-full.xml]
+</system-err>
+  </testcase>
+  <testcase time="0.052" classname="org.jboss.resteasy.test.validation.TestValidation" name="testReturnValues">
+    <failure message="expected:&lt;200&gt; but was:&lt;500&gt;" type="junit.framework.AssertionFailedError">junit.framework.AssertionFailedError: expected:&lt;200&gt; but was:&lt;500&gt;
+	at junit.framework.Assert.fail(Assert.java:47)
+	at junit.framework.Assert.failNotEquals(Assert.java:283)
+	at junit.framework.Assert.assertEquals(Assert.java:64)
+	at junit.framework.Assert.assertEquals(Assert.java:195)
+	at junit.framework.Assert.assertEquals(Assert.java:201)
+	at org.jboss.resteasy.test.validation.TestValidation.testReturnValues(TestValidation.java:68)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:44)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:15)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:41)
+	at org.jboss.arquillian.junit.Arquillian$6$1.invoke(Arquillian.java:270)
+	at org.jboss.arquillian.container.test.impl.execution.LocalTestExecuter.execute(LocalTestExecuter.java:60)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:94)
+	at org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:99)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:81)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:135)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:115)
+	at org.jboss.arquillian.core.impl.EventImpl.fire(EventImpl.java:67)
+	at org.jboss.arquillian.container.test.impl.execution.ContainerTestExecuter.execute(ContainerTestExecuter.java:38)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:94)
+	at org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:99)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:81)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createTestContext(TestContextHandler.java:89)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:94)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:88)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createClassContext(TestContextHandler.java:75)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:94)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:88)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createSuiteContext(TestContextHandler.java:60)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:601)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:94)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:88)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:135)
+	at org.jboss.arquillian.test.impl.EventTestRunnerAdaptor.test(EventTestRunnerAdaptor.java:111)
+	at org.jboss.arquillian.junit.Arquillian$6.evaluate(Arquillian.java:263)
+	at org.jboss.arquillian.junit.Arquillian$4.evaluate(Arquillian.java:226)
+	at org.jboss.arquillian.junit.Arquillian.multiExecute(Arquillian.java:314)
+	at org.jboss.arquillian.junit.Arquillian.access$100(Arquillian.java:46)
+	at org.jboss.arquillian.junit.Arquillian$5.evaluate(Arquillian.java:240)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:76)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:50)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:193)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:52)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:191)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:42)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:184)
+	at org.jboss.arquillian.junit.Arquillian$2.evaluate(Arquillian.java:185)
+	at org.jboss.arquillian.junit.Arquillian.multiExecute(Arquillian.java:314)
+	at org.jboss.arquillian.junit.Arquillian.access$100(Arquillian.java:46)
+	at org.jboss.arquillian.junit.Arquillian$3.evaluate(Arquillian.java:199)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:236)
+	at org.jboss.arquillian.junit.Arquillian.run(Arquillian.java:147)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:157)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:136)
+	at org.jboss.arquillian.junit.container.JUnitTestRunner.execute(JUnitTestRunner.java:65)
+	at org.jboss.arquillian.protocol.servlet.runner.ServletTestRunner.executeTest(ServletTestRunner.java:160)
+	at org.jboss.arquillian.protocol.servlet.runner.ServletTestRunner.execute(ServletTestRunner.java:126)
+	at org.jboss.arquillian.protocol.servlet.runner.ServletTestRunner.doGet(ServletTestRunner.java:90)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:687)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:790)
+	at io.undertow.servlet.handlers.ServletHandler.handleRequest(ServletHandler.java:87)
+	at io.undertow.servlet.handlers.FilterHandler$FilterChainImpl.doFilter(FilterHandler.java:130)
+	at io.undertow.websockets.jsr.JsrWebSocketFilter.doFilter(JsrWebSocketFilter.java:138)
+	at io.undertow.servlet.core.ManagedFilter.doFilter(ManagedFilter.java:56)
+	at io.undertow.servlet.handlers.FilterHandler$FilterChainImpl.doFilter(FilterHandler.java:132)
+	at io.undertow.servlet.handlers.FilterHandler.handleRequest(FilterHandler.java:85)
+	at io.undertow.servlet.handlers.security.ServletSecurityRoleHandler.handleRequest(ServletSecurityRoleHandler.java:56)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.servlet.handlers.security.SSLInformationAssociationHandler.handleRequest(SSLInformationAssociationHandler.java:116)
+	at io.undertow.servlet.handlers.ServletDispatchingHandler.handleRequest(ServletDispatchingHandler.java:36)
+	at org.wildfly.extension.undertow.security.SecurityContextAssociationHandler.handleRequest(SecurityContextAssociationHandler.java:79)
+	at io.undertow.security.handlers.AuthenticationCallHandler.handleRequest(AuthenticationCallHandler.java:52)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.security.handlers.AbstractConfidentialityHandler.handleRequest(AbstractConfidentialityHandler.java:46)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.servlet.handlers.security.CachedAuthenticatedSessionHandler.handleRequest(CachedAuthenticatedSessionHandler.java:66)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.security.handlers.SecurityInitialHandler.handleRequest(SecurityInitialHandler.java:71)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:26)
+	at org.wildfly.extension.undertow.security.SecurityContextCreationHandler.handleRequest(SecurityContextCreationHandler.java:56)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46)
+	at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:26)
+	at io.undertow.servlet.handlers.ServletInitialHandler.handleFirstRequest(ServletInitialHandler.java:118)
+	at io.undertow.servlet.handlers.ServletInitialHandler.dispatchRequest(ServletInitialHandler.java:106)
+	at io.undertow.servlet.handlers.ServletInitialHandler.handleRequest(ServletInitialHandler.java:83)
+	at io.undertow.server.HttpHandlers.executeRootHandler(HttpHandlers.java:52)
+	at io.undertow.server.HttpServerExchange$1.run(HttpServerExchange.java:544)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)
+	at java.lang.Thread.run(Thread.java:722)
+</failure>
+    <system-out>&amp;#27;[0m22:13:24,822 INFO  [org.jboss.arquillian.testenricher.cdi.container.BeanManagerProducer] (default task-12) BeanManager not found.
+&amp;#27;[0m&amp;#27;[31m22:13:24,835 ERROR [io.undertow.request] (default task-13) Servlet request failed io.undertow.server.HttpServerExchange@7a58606b: java.lang.NoClassDefFoundError: Could not initialize class org.hibernate.validator.internal.engine.ConfigurationImpl
+	at org.hibernate.validator.HibernateValidator.createGenericConfiguration(HibernateValidator.java:41) [hibernate-validator-5.0.1.Final.jar:5.0.1.Final]
+	at javax.validation.Validation$GenericBootstrapImpl.configure(Validation.java:276) [validation-api-1.1.0.Final.jar:]
+	at javax.validation.Validation.buildDefaultValidatorFactory(Validation.java:110) [validation-api-1.1.0.Final.jar:]
+	at org.jboss.resteasy.spi.validation.ValidationSupport.getValidator(ValidationSupport.java:28) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:280) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:257) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:246) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:336) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:177) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher.service(ServletContainerDispatcher.java:226) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher.service(HttpServletDispatcher.java:56) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher.service(HttpServletDispatcher.java:51) [resteasy-jaxrs-3.0-rc-1.jar:]
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:790) [jboss-servlet-api_3.1_spec-1.0.0.Alpha1.jar:1.0.0.Alpha1]
+	at io.undertow.servlet.handlers.ServletHandler.handleRequest(ServletHandler.java:87) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.FilterHandler$FilterChainImpl.doFilter(FilterHandler.java:130) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.websockets.jsr.JsrWebSocketFilter.doFilter(JsrWebSocketFilter.java:138) [undertow-websockets-jsr-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.core.ManagedFilter.doFilter(ManagedFilter.java:56) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.FilterHandler$FilterChainImpl.doFilter(FilterHandler.java:132) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.FilterHandler.handleRequest(FilterHandler.java:85) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.security.ServletSecurityRoleHandler.handleRequest(ServletSecurityRoleHandler.java:56) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.security.SSLInformationAssociationHandler.handleRequest(SSLInformationAssociationHandler.java:116) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.ServletDispatchingHandler.handleRequest(ServletDispatchingHandler.java:36) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at org.wildfly.extension.undertow.security.SecurityContextAssociationHandler.handleRequest(SecurityContextAssociationHandler.java:79)
+	at io.undertow.security.handlers.AuthenticationCallHandler.handleRequest(AuthenticationCallHandler.java:52) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.security.handlers.AbstractConfidentialityHandler.handleRequest(AbstractConfidentialityHandler.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.security.CachedAuthenticatedSessionHandler.handleRequest(CachedAuthenticatedSessionHandler.java:66) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.security.handlers.SecurityInitialHandler.handleRequest(SecurityInitialHandler.java:71) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:26) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at org.wildfly.extension.undertow.security.SecurityContextCreationHandler.handleRequest(SecurityContextCreationHandler.java:56)
+	at io.undertow.server.HttpHandlers.executeHandler(HttpHandlers.java:46) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.handlers.PredicateHandler.handleRequest(PredicateHandler.java:26) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.ServletInitialHandler.handleFirstRequest(ServletInitialHandler.java:118) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.ServletInitialHandler.dispatchRequest(ServletInitialHandler.java:106) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.servlet.handlers.ServletInitialHandler.handleRequest(ServletInitialHandler.java:83) [undertow-servlet-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpHandlers.executeRootHandler(HttpHandlers.java:52) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at io.undertow.server.HttpServerExchange$1.run(HttpServerExchange.java:544) [undertow-core-1.0.0.Alpha15.jar:1.0.0.Alpha15]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145) [rt.jar:1.7.0_21]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615) [rt.jar:1.7.0_21]
+	at java.lang.Thread.run(Thread.java:722) [rt.jar:1.7.0_21]
+
+&amp;#27;[0m</system-out>
+  </testcase>
+</testsuite>

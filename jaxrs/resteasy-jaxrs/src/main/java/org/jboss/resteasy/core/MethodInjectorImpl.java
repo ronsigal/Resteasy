@@ -1,6 +1,5 @@
 package org.jboss.resteasy.core;
 
-import org.jboss.resteasy.plugins.providers.validation.ViolationsContainer;
 import org.jboss.resteasy.spi.ApplicationException;
 import org.jboss.resteasy.spi.BadRequestException;
 import org.jboss.resteasy.spi.Failure;
@@ -11,16 +10,14 @@ import org.jboss.resteasy.spi.MethodInjector;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.metadata.MethodParameter;
 import org.jboss.resteasy.spi.metadata.ResourceLocator;
-import org.jboss.resteasy.spi.validation.GeneralValidator;
-import org.jboss.resteasy.util.Types;
+import org.jboss.resteasy.spi.validation.ValidationSupport;
+import org.jboss.resteasy.validation.ViolationsContainer;
 
+import javax.validation.executable.ExecutableValidator;
+import javax.validation.ValidationException;
 import javax.ws.rs.WebApplicationException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -106,12 +103,22 @@ public class MethodInjectorImpl implements MethodInjector
    {
       Object[] args = injectArguments(request, httpResponse);
 
-      GeneralValidator validator = GeneralValidator.class.cast(request.getAttribute(GeneralValidator.class.getName()));
-      ViolationsContainer<Object> violationsContainer = ViolationsContainer.class.cast(request.getAttribute(ViolationsContainer.class.getName()));
-      if (validator != null && violationsContainer != null)
+      ExecutableValidator executableValidator = ValidationSupport.getValidator().forExecutables();
+      ViolationsContainer violationsContainer = ViolationsContainer.class.cast(request.getAttribute(ViolationsContainer.class.getName()));
+      if (violationsContainer != null)
       {
-         violationsContainer.addViolations(validator.validateAllParameters(resource, method.getMethod(), args));
-         if (violationsContainer.size() > 0)
+         if (executableValidator != null && args != null)
+         {
+            try
+            {
+               violationsContainer.addViolations(executableValidator.validateParameters(resource, method.getMethod(), args));
+            }
+            catch (ValidationException e)
+            {
+               violationsContainer.setException(e);
+            }
+         }
+         if (violationsContainer.size() > 0 || violationsContainer.getException() != null)
          {
             return null;
          }
@@ -135,9 +142,16 @@ public class MethodInjectorImpl implements MethodInjector
       try
       {
          Object result = invokedMethod.invoke(resource, args);
-         if (validator != null && violationsContainer != null)
+         if (executableValidator != null && violationsContainer != null)
          {
-            violationsContainer.addViolations(validator.validateReturnValue(resource, method.getMethod(), result));
+            try
+            {
+               violationsContainer.addViolations(executableValidator.validateReturnValue(resource, method.getMethod(), result));
+            }
+            catch (Exception e)
+            {
+               violationsContainer.setException(e);
+            }
          }
          return result;
       }

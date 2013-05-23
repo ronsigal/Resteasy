@@ -1,9 +1,18 @@
 package org.jboss.resteasy.plugins.providers.validation;
 
+import javax.validation.ConstraintDeclarationException;
+import javax.validation.ConstraintDefinitionException;
+import javax.validation.GroupDefinitionException;
+import javax.validation.ValidationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+
+import org.jboss.resteasy.plugins.providers.SerializableProvider;
+import org.jboss.resteasy.spi.validation.ResteasyViolationException;
+import org.jboss.resteasy.spi.validation.ValidationSupport;
 
 /**
  * 
@@ -13,22 +22,47 @@ import javax.ws.rs.ext.Provider;
  * Created Mar 31, 2012
  */
 @Provider
-public class ResteasyViolationExceptionMapper implements ExceptionMapper<ResteasyViolationExceptionExtension>
+public class ResteasyViolationExceptionMapper implements ExceptionMapper<ValidationException>
 {
-   public Response toResponse(ResteasyViolationExceptionExtension exception)
+   public Response toResponse(ValidationException exception)
    {
-//      exception.convertToStrings();
-//      exception.setViolationsContainer(null);
-      if (exception.getReturnValueViolations().size() == 0)
+      if (exception instanceof ConstraintDefinitionException)
       {
-//        return Response.status(Status.BAD_REQUEST).type("application/x-java-serialized-object").entity(exception).build();
-         return Response.status(Status.BAD_REQUEST).entity(exception.getStrings()).build();
+         return buildResponse(exception, SerializableProvider.APPLICATION_SERIALIZABLE, Status.INTERNAL_SERVER_ERROR);
       }
-      else
+      if (exception instanceof ConstraintDeclarationException)
       {
-//         return Response.status(Status.INTERNAL_SERVER_ERROR).type("application/x-java-serialized-object").entity(exception).build();
-         return Response.status(Status.INTERNAL_SERVER_ERROR).entity(exception.getStrings()).build();
-         
+         return buildResponse(exception, SerializableProvider.APPLICATION_SERIALIZABLE, Status.INTERNAL_SERVER_ERROR);     
       }
+      if (exception instanceof GroupDefinitionException)
+      {
+         return buildResponse(exception, SerializableProvider.APPLICATION_SERIALIZABLE, Status.INTERNAL_SERVER_ERROR);    
+      }
+      if (exception instanceof ResteasyViolationException)
+      {
+         ResteasyViolationException resteasyViolationException = ResteasyViolationException.class.cast(exception);
+         Exception e = resteasyViolationException.getException();
+         if (e != null)
+         {
+            return buildResponse(e, SerializableProvider.APPLICATION_SERIALIZABLE, Status.INTERNAL_SERVER_ERROR);
+         }
+         else if (resteasyViolationException.getReturnValueViolations().size() == 0)
+         {
+            return buildResponse(exception, SerializableProvider.APPLICATION_SERIALIZABLE, Status.BAD_REQUEST);
+         }
+         else
+         {
+            return buildResponse(exception, SerializableProvider.APPLICATION_SERIALIZABLE, Status.INTERNAL_SERVER_ERROR);
+         }
+      }
+      return buildResponse(exception, SerializableProvider.APPLICATION_SERIALIZABLE, Status.INTERNAL_SERVER_ERROR);
+   }
+   
+   protected Response buildResponse(Object entity, String mediaType, Status status)
+   {
+      ResponseBuilder builder =  Response.status(status).entity(entity);
+      builder.type(SerializableProvider.APPLICATION_SERIALIZABLE);
+      builder.header(ValidationSupport.VALIDATION_HEADER, "true");
+      return builder.build();
    }
 }

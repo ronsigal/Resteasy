@@ -48,6 +48,10 @@
           ~ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
           -->
 
+      <module-def name="javax.validation.api">
+          <maven-resource group="javax.validation" artifact="validation-api"/>
+      </module-def>
+      
         <module-def name="org.bouncycastle">
             <maven-resource group="org.bouncycastle" artifact="bcprov-jdk16"/>
             <maven-resource group="org.bouncycastle" artifact="bcmail-jdk16"/>
@@ -73,7 +77,7 @@
             <maven-resource group="org.codehaus.jettison" artifact="jettison"/>
         </module-def>
 
-        <module-def name="com.fasterxml.jackson.core.jackson-core">
+        <!--module-def name="com.fasterxml.jackson.core.jackson-core">
             <maven-resource group="com.fasterxml.jackson.core" artifact="jackson-core"/>
         </module-def>
 
@@ -87,7 +91,7 @@
 
         <module-def name="com.fasterxml.jackson.jaxrs.jackson-jaxrs-json-provider">
             <maven-resource group="com.fasterxml.jackson.jaxrs" artifact="jackson-jaxrs-json-provider"/>
-        </module-def>
+        </module-def-->
 
         <module-def name="javax.ws.rs.api">
             <maven-resource group="org.jboss.resteasy" artifact="jaxrs-api"/>
@@ -147,7 +151,19 @@
             <maven-resource group="org.jboss.resteasy" artifact="skeleton-key-as7"/>
             <maven-resource group="org.jboss.resteasy" artifact="skeleton-key-core"/>
         </module-def>
-
+    	
+        <module-def name="org.hibernate.validator">
+            <maven-resource group="org.hibernate" artifact="hibernate-validator"/>
+            <!--maven-resource group="org.jboss.spec.javax.el" artifact="jboss-el-api_2.2_spec"/-->
+        	   <maven-resource group="com.fasterxml" artifact="classmate"/>
+        	   <maven-resource group="javax.el" artifact="javax.el-api"/>
+            <!--maven-resource group="org.hibernate.javax.persistence" artifact="hibernate-jpa-2.1-api"/-->
+          	<maven-resource group="joda-time" artifact="joda-time"/>
+        	   <maven-resource group="org.glassfish" artifact="javax.el"/>
+            <maven-resource group="org.jsoup" artifact="jsoup"/>
+        	   <!--maven-resource group="org.jboss.logging" artifact="jboss-logging"/-->
+        </module-def>
+    	
         <zip destfile="${output.dir}/resteasy-jboss-modules-${project.version}.zip">
             <zipfileset dir="${output.dir}/modules"/>
         </zip>

@@ -4,8 +4,6 @@ import org.jboss.resteasy.core.interception.JaxrsInterceptorRegistry;
 import org.jboss.resteasy.core.interception.JaxrsInterceptorRegistryListener;
 import org.jboss.resteasy.core.interception.PostMatchContainerRequestContext;
 import org.jboss.resteasy.core.registry.Segment;
-import org.jboss.resteasy.plugins.providers.validation.ResteasyViolationExceptionExtension;
-import org.jboss.resteasy.plugins.providers.validation.ViolationsContainer;
 import org.jboss.resteasy.specimpl.BuiltResponse;
 import org.jboss.resteasy.spi.ApplicationException;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -16,14 +14,15 @@ import org.jboss.resteasy.spi.ResourceFactory;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.jboss.resteasy.spi.metadata.ResourceMethod;
-import org.jboss.resteasy.spi.validation.GeneralValidator;
+import org.jboss.resteasy.spi.validation.ResteasyViolationException;
+import org.jboss.resteasy.spi.validation.ValidationSupport;
 import org.jboss.resteasy.util.FeatureContextDelegate;
 import org.jboss.resteasy.util.HttpHeaderNames;
-import org.jboss.resteasy.util.Types;
 import org.jboss.resteasy.util.WeightedMediaType;
+import org.jboss.resteasy.validation.ViolationsContainer;
 
+import javax.validation.Validator;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
@@ -31,7 +30,6 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.WriterInterceptor;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -39,7 +37,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,8 +61,7 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
    protected ContainerResponseFilter[] responseFilters;
    protected WriterInterceptor[] writerInterceptors;
    protected ConcurrentHashMap<String, AtomicLong> stats = new ConcurrentHashMap<String, AtomicLong>();
-   protected GeneralValidator validator;
-   protected ViolationsContainer<?> violationsContainer;
+   protected ViolationsContainer violationsContainer;
    protected ResourceInfo resourceInfo;
 
    protected boolean methodConsumes;
@@ -129,11 +125,6 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
       providerFactory.getContainerRequestFilterRegistry().getListeners().add(this);
       providerFactory.getContainerResponseFilterRegistry().getListeners().add(this);
       providerFactory.getServerWriterInterceptorRegistry().getListeners().add(this);
-      ContextResolver<GeneralValidator> resolver = providerFactory.getContextResolver(GeneralValidator.class, MediaType.WILDCARD_TYPE);
-      if (resolver != null)
-      {
-         validator = providerFactory.getContextResolver(GeneralValidator.class, MediaType.WILDCARD_TYPE).getContext(null);
-      }
    }
 
    public void cleanup()
@@ -286,11 +277,20 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
 
    protected BuiltResponse invokeOnTarget(HttpRequest request, HttpResponse response, Object target)
    {
+      Validator validator = ValidationSupport.getValidator();
       if (validator != null)
       {
-         violationsContainer = new ViolationsContainer<Object>(validator.validate(target));
+         try
+         {
+            violationsContainer = new ViolationsContainer(validator.validate(target));
+         }
+         catch (Exception e)
+         {
+            violationsContainer = new ViolationsContainer();
+            violationsContainer.setException(e);
+            throw new ResteasyViolationException(violationsContainer);
+         }
          request.setAttribute(ViolationsContainer.class.getName(), violationsContainer);
-         request.setAttribute(GeneralValidator.class.getName(), validator);
       }
 
       PostMatchContainerRequestContext requestContext = new PostMatchContainerRequestContext(request, this);
@@ -313,11 +313,16 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
 
       Object rtn = methodInjector.invoke(request, response, target);
 
-      if (violationsContainer != null && violationsContainer.size() > 0)
+      if (violationsContainer != null)
       {
-         throw new ResteasyViolationExceptionExtension(violationsContainer);
+         if (violationsContainer.getException() != null || violationsContainer.size() > 0)
+         {
+            {
+               throw new ResteasyViolationException(violationsContainer);
+            }
+         }
       }
-
+         
       if (request.getAsyncContext().isSuspended())
       {
          request.getAsyncContext().getAsyncResponse().setAnnotations(method.getAnnotatedMethod().getAnnotations());
