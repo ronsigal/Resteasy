@@ -48,7 +48,7 @@
                             <artifactItem>
                                 <groupId>org.wildfly</groupId>
                                 <artifactId>wildfly-dist</artifactId>
-                                <version>${as-version}</version>
+                                <version>${wf-version}</version>
                                 <type>zip</type>
                                 <overWrite>false</overWrite>
                                 <outputDirectory>target</outputDirectory>
