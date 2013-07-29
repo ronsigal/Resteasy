@@ -2,6 +2,11 @@ package org.jboss.resteasy.api.validation;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * 
  * @author <a href="ron.sigal@jboss.com">Ron Sigal</a>
@@ -9,6 +14,8 @@ import java.io.Serializable;
  *
  * Copyright Jun 4, 2013
  */
+@XmlRootElement(name="resteasyConstraintViolation")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ResteasyConstraintViolation implements Serializable
 {
    private static final long serialVersionUID = -5441628046215135260L;
@@ -26,9 +33,14 @@ public class ResteasyConstraintViolation implements Serializable
       this.value = value;
    }
    
+   public ResteasyConstraintViolation()
+   {
+   }
+   
    /**
     * @return type of constraint
     */
+//   @XmlElement
    public ConstraintType.Type getConstraintType()
    {
       return constraintType;
@@ -37,6 +49,7 @@ public class ResteasyConstraintViolation implements Serializable
    /**
     * @return description of element violating constraint
     */
+//   @XmlElement
    public String getPath()
    {
       return path;
@@ -45,6 +58,7 @@ public class ResteasyConstraintViolation implements Serializable
    /**
     * @return description of constraint violation
     */
+//   @XmlElement
    public String getMessage()
    {
       return message;
@@ -53,6 +67,7 @@ public class ResteasyConstraintViolation implements Serializable
    /**
     * @return object in violation of constraint
     */
+//   @XmlElement
    public String getValue()
    {
       return value;
@@ -69,6 +84,7 @@ public class ResteasyConstraintViolation implements Serializable
    /**
     * @return String form of violation type 
     */
+//   @XmlElement
    public String type()
    {
       return constraintType.toString();

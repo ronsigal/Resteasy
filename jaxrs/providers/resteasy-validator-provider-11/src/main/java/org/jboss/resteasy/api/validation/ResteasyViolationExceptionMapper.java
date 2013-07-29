@@ -1,5 +1,7 @@
 package org.jboss.resteasy.api.validation;
 
+import java.util.List;
+
 import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintDefinitionException;
 import javax.validation.GroupDefinitionException;
@@ -50,11 +52,11 @@ public class ResteasyViolationExceptionMapper implements ExceptionMapper<Validat
          }
          else if (resteasyViolationException.getReturnValueViolations().size() == 0)
          {
-            return buildResponse(resteasyViolationException.toString(), MediaType.TEXT_PLAIN, Status.BAD_REQUEST);
+            return buildViolationReportResponse(resteasyViolationException, Status.BAD_REQUEST);
          }
          else
          {
-            return buildResponse(resteasyViolationException.toString(), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);
+            return buildViolationReportResponse(resteasyViolationException, Status.INTERNAL_SERVER_ERROR);
          }
       }
       return buildResponse(unwrapException(exception), MediaType.TEXT_PLAIN, Status.INTERNAL_SERVER_ERROR);
@@ -67,6 +69,25 @@ public class ResteasyViolationExceptionMapper implements ExceptionMapper<Validat
       builder.header(Validation.VALIDATION_HEADER, "true");
       return builder.build();
    }
+   
+   protected Response buildViolationReportResponse(ResteasyViolationException exception, Status status)
+   {
+      ResponseBuilder builder = Response.status(status);
+      builder.header(Validation.VALIDATION_HEADER, "true");
+      List<String> accept = exception.getAccept();
+      if (accept.contains(MediaType.APPLICATION_XML))
+      {
+         builder.type(MediaType.APPLICATION_XML);
+         builder.entity(new ViolationReport(exception));
+      }
+      else
+      {
+         builder.type(MediaType.TEXT_PLAIN);
+         builder.entity(exception.toString());
+      }
+      return builder.build();
+   }
+   
    
    protected String unwrapException(Throwable t)
    {

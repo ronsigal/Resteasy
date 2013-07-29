@@ -100,8 +100,8 @@ public class GeneralValidatorImpl implements GeneralValidator
       @SuppressWarnings("unchecked")
       ViolationsContainer<Object> violationsContainer = ViolationsContainer.class.cast(request.getAttribute(ViolationsContainer.class.getName()));
       if (violationsContainer != null && violationsContainer.size() > 0)
-      {
-         throw new ResteasyViolationException(violationsContainer);
+      {         
+         throw new ResteasyViolationException(violationsContainer, request.getHttpHeaders().getRequestHeader("Accept"));
       }
 
    }
@@ -136,7 +136,7 @@ public class GeneralValidatorImpl implements GeneralValidator
       violationsContainer.addViolations(rcvs);
       if (violationsContainer.size() > 0)
       {
-         throw new ResteasyViolationException(violationsContainer);
+         throw new ResteasyViolationException(violationsContainer, request.getHttpHeaders().getRequestHeader("Accept"));
       }
    }
 
@@ -164,7 +164,7 @@ public class GeneralValidatorImpl implements GeneralValidator
       violationsContainer.addViolations(rcvs);
       if (violationsContainer.size() > 0)
       {
-         throw new ResteasyViolationException(violationsContainer);
+         throw new ResteasyViolationException(violationsContainer, request.getHttpHeaders().getRequestHeader("Accept"));
       }
    }
 

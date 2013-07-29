@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.validation.ValidationException;
+import javax.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.plugins.providers.validation.ViolationsContainer;
 
@@ -28,6 +29,7 @@ public class ResteasyViolationException extends ValidationException
 {  
    private static final long serialVersionUID = 2623733139912277260L;
    
+   private List<String> accept;
    private Exception exception;
    
    private List<ResteasyConstraintViolation> fieldViolations       = new ArrayList<ResteasyConstraintViolation>();
@@ -38,11 +40,20 @@ public class ResteasyViolationException extends ValidationException
    
    private List<ResteasyConstraintViolation> allViolations; 
    private List<List<ResteasyConstraintViolation>> violationLists;
-   
+
    public ResteasyViolationException(ViolationsContainer<?> container)
    {
       convertToStrings(container);
       exception = container.getException();
+      ArrayList<String> accept = new ArrayList<String>();
+      accept.add(MediaType.TEXT_PLAIN);
+   }
+   
+   public ResteasyViolationException(ViolationsContainer<?> container, List<String> accept)
+   {
+      convertToStrings(container);
+      exception = container.getException();
+      this.accept = accept;
    }
    
    public ResteasyViolationException(String stringRep)
@@ -50,6 +61,16 @@ public class ResteasyViolationException extends ValidationException
       convertFromString(stringRep);
    }
    
+   public List<String> getAccept()
+   {
+      return accept;
+   }
+
+   public void setAccept(List<String> accept)
+   {
+      this.accept = accept;
+   }
+
    public Exception getException()
    {
       return exception;
