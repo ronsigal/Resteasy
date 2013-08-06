@@ -378,23 +378,12 @@ public class TestValidationXML
    }
 
    @Test
-   public void testViolationsBeforeReturnValue() throws Exception
+   public void testXML() throws Exception
    {
       beforeFoo(TestResourceWithAllFivePotentialViolations.class);
 
-//      {
-//         // Valid
-//         ClientRequest request = new ClientRequest(generateURL("/abc/wxyz/unused/unused"));
-//         Foo foo = new Foo("pqrs");
-//         request.body("application/foo", foo);
-//         ClientResponse<?> response = request.post(Foo.class);     
-//         Assert.assertEquals(200, response.getStatus());
-//         Assert.assertEquals(foo, response.getEntity());
-//      }
-//
       {
-         // Invalid: Should have 1 each of field, property, class, and parameter violations,
-         //          and no return value violations.
+         // Text form
          ClientRequest request = new ClientRequest(generateURL("/a/b/c/unused/unused"));
          Foo foo = new Foo("p");
          request.body("application/foo", foo);
@@ -406,24 +395,67 @@ public class TestValidationXML
          String expected = "violationReport><fieldViolations><constraintType>FIELD</constraintType><path>s</path><message>size must be between 2 and 4</message><value>a</value></fieldViolations><fieldViolations><constraintType>FIELD</constraintType><path>t</path><message>size must be between 2 and 4</message><value>b</value></fieldViolations><propertyViolations><constraintType>PROPERTY</constraintType><path>u</path><message>size must be between 3 and 5</message><value>c</value></propertyViolations><classViolations><constraintType>CLASS</constraintType><path></path><message>Concatenation of s and t must have length &gt; 5</message><value>org.jboss.resteasy.test.validation.TestValidationXML$TestResourceWithAllFivePotentialViolations@5948221d</value></classViolations><parameterViolations><constraintType>PARAMETER</constraintType><path>post.arg0</path><message>s must have length: 3 &lt;= length &lt;= 5</message><value>Foo[p]</value></parameterViolations></violationReport>";
          Assert.assertTrue(entity.contains(entity));
       }
-//      ResteasyViolationException e = new ResteasyViolationException(String.class.cast(entity));
-//      countViolations(e, 4, 1, 1, 1, 1, 0);
-//      ResteasyConstraintViolation cv = e.getFieldViolations().iterator().next();
-//      Assert.assertEquals("size must be between 2 and 4", cv.getMessage());
-//      Assert.assertEquals("a", cv.getValue());
-//      cv = e.getPropertyViolations().iterator().next();
-//      Assert.assertEquals("size must be between 3 and 5", cv.getMessage());
-//      Assert.assertEquals("z", cv.getValue());
-//      cv = e.getClassViolations().iterator().next();
-//      Assert.assertEquals("Concatenation of s and t must have length > 5", cv.getMessage());
-//      Assert.assertTrue(cv.getValue().startsWith("org.jboss.resteasy.test.validation.TestValidation$TestResourceWithAllFivePotentialViolations@"));
-//      cv = e.getParameterViolations().iterator().next();
-//      Assert.assertEquals("s must have length: 3 <= length <= 5", cv.getMessage());
-//      Assert.assertEquals("Foo[p]", cv.getValue());
-      
+
       {
-         // Invalid: Should have 1 each of field, property, class, and parameter violations,
-         //          and no return value violations.
+         // Unmarshal report,
+         ClientRequest request = new ClientRequest(generateURL("/a/b/c/unused/unused"));
+         Foo foo = new Foo("p");
+         request.body("application/foo", foo);
+         request.accept(MediaType.APPLICATION_XML);
+         ClientResponse<?> response = request.post(Foo.class);
+         Assert.assertEquals(400, response.getStatus());
+         ViolationReport report = response.getEntity(ViolationReport.class);
+         System.out.println("report: " + report);
+         countViolations(report, 4, 2, 1, 1, 1, 0);
+         Iterator<ResteasyConstraintViolation> iterator = report.getFieldViolations().iterator();
+         ResteasyConstraintViolation cv1 = iterator.next();
+         ResteasyConstraintViolation cv2 = iterator.next();
+         if (!("a").equals(cv1.getValue()))
+         {
+            ResteasyConstraintViolation tmp = cv1;
+            cv1 = cv2;
+            cv2 = tmp;
+         }
+         Assert.assertEquals("size must be between 2 and 4", cv1.getMessage());
+         Assert.assertEquals("a", cv1.getValue());
+         Assert.assertEquals("size must be between 2 and 4", cv2.getMessage());
+         Assert.assertEquals("b", cv2.getValue());
+         ResteasyConstraintViolation cv = report.getPropertyViolations().iterator().next();
+         Assert.assertEquals("size must be between 3 and 5", cv.getMessage());
+         Assert.assertEquals("c", cv.getValue());
+         cv = report.getClassViolations().iterator().next();
+         Assert.assertEquals("Concatenation of s and u must have length > 5", cv.getMessage());
+         System.out.print("value: " + cv.getValue());
+         Assert.assertTrue(cv.getValue().startsWith("org.jboss.resteasy.test.validation.TestValidationXML$TestResourceWithAllFivePotentialViolations@"));
+         cv = report.getParameterViolations().iterator().next();
+         Assert.assertEquals("s must have length: 3 <= length <= 5", cv.getMessage());
+         Assert.assertEquals("Foo[p]", cv.getValue());
+      }
+      
+      after();
+   }
+   
+   @Test
+   public void testJSON() throws Exception
+   {
+      beforeFoo(TestResourceWithAllFivePotentialViolations.class);
+
+      {
+         // Text form
+         ClientRequest request = new ClientRequest(generateURL("/a/b/c/unused/unused"));
+         Foo foo = new Foo("p");
+         request.body("application/foo", foo);
+         request.accept(MediaType.APPLICATION_JSON);
+         ClientResponse<?> response = request.post(Foo.class);
+         Assert.assertEquals(400, response.getStatus());
+         String entity = response.getEntity(String.class);
+         System.out.println("report: " + entity);
+         String expected = "violationReport><fieldViolations><constraintType>FIELD</constraintType><path>s</path><message>size must be between 2 and 4</message><value>a</value></fieldViolations><fieldViolations><constraintType>FIELD</constraintType><path>t</path><message>size must be between 2 and 4</message><value>b</value></fieldViolations><propertyViolations><constraintType>PROPERTY</constraintType><path>u</path><message>size must be between 3 and 5</message><value>c</value></propertyViolations><classViolations><constraintType>CLASS</constraintType><path></path><message>Concatenation of s and t must have length &gt; 5</message><value>org.jboss.resteasy.test.validation.TestValidationXML$TestResourceWithAllFivePotentialViolations@5948221d</value></classViolations><parameterViolations><constraintType>PARAMETER</constraintType><path>post.arg0</path><message>s must have length: 3 &lt;= length &lt;= 5</message><value>Foo[p]</value></parameterViolations></violationReport>";
+         Assert.assertTrue(entity.contains(entity));
+      }
+
+      {
+         // Unmarshal report,
          ClientRequest request = new ClientRequest(generateURL("/a/b/c/unused/unused"));
          Foo foo = new Foo("p");
          request.body("application/foo", foo);
