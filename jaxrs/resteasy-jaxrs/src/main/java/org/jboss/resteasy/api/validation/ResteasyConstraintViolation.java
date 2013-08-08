@@ -2,6 +2,10 @@ package org.jboss.resteasy.api.validation;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * 
  * @author <a href="ron.sigal@jboss.com">Ron Sigal</a>
@@ -9,6 +13,8 @@ import java.io.Serializable;
  *
  * Copyright Jun 4, 2013
  */
+@XmlRootElement(name="resteasyConstraintViolation")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ResteasyConstraintViolation implements Serializable
 {
    private static final long serialVersionUID = -5441628046215135260L;
@@ -24,6 +30,10 @@ public class ResteasyConstraintViolation implements Serializable
       this.path = path;
       this.message = message;
       this.value = value;
+   }
+   
+   public ResteasyConstraintViolation()
+   {   
    }
    
    /**

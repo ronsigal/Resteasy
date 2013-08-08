@@ -100,8 +100,8 @@ public class GeneralValidatorImpl implements GeneralValidator
       @SuppressWarnings("unchecked")
       ViolationsContainer<Object> violationsContainer = ViolationsContainer.class.cast(request.getAttribute(ViolationsContainer.class.getName()));
       if (violationsContainer != null && violationsContainer.size() > 0)
-      {
-         throw new ResteasyViolationException(violationsContainer);
+      {         
+         throw new ResteasyViolationException(violationsContainer, request.getHttpHeaders().getAcceptableMediaTypes());
       }
 
    }
@@ -136,7 +136,7 @@ public class GeneralValidatorImpl implements GeneralValidator
       violationsContainer.addViolations(rcvs);
       if (violationsContainer.size() > 0)
       {
-         throw new ResteasyViolationException(violationsContainer);
+         throw new ResteasyViolationException(violationsContainer, request.getHttpHeaders().getAcceptableMediaTypes());
       }
    }
 
@@ -164,7 +164,7 @@ public class GeneralValidatorImpl implements GeneralValidator
       violationsContainer.addViolations(rcvs);
       if (violationsContainer.size() > 0)
       {
-         throw new ResteasyViolationException(violationsContainer);
+         throw new ResteasyViolationException(violationsContainer, request.getHttpHeaders().getAcceptableMediaTypes());
       }
    }
 
@@ -177,39 +177,39 @@ public class GeneralValidatorImpl implements GeneralValidator
    @Override
    public boolean isMethodValidatable(Method m)
    {
-   	if (!isExecutableValidationEnabled)
-   	{
-   		return false;
-   	}
-   	
-   	ExecutableType[] types = null;
+      if (!isExecutableValidationEnabled)
+      {
+         return false;
+      }
+      
+      ExecutableType[] types = null;
       List<ExecutableType[]> typesList = getExecutableTypesOnMethodInHierarchy(m);
       if (typesList.size() > 1)
       {
-      	throw new ValidationException("@ValidateOnExecution found on multiple overridden methods");
+         throw new ValidationException("@ValidateOnExecution found on multiple overridden methods");
       }
       if (typesList.size() == 1)
       {
-      	types = typesList.get(0);
+         types = typesList.get(0);
       }
       else
       {
-      	ValidateOnExecution voe = m.getDeclaringClass().getAnnotation(ValidateOnExecution.class);
-      	if (voe == null)
-      	{
-      		types = defaultValidatedExecutableTypes;
-      	}
-      	else
-      	{
-      		if (voe.type().length > 0)
-      		{
-      			types = voe.type();
-      		}
-      		else
-      		{
-      			types = defaultValidatedExecutableTypes;
-      		}
-      	}
+         ValidateOnExecution voe = m.getDeclaringClass().getAnnotation(ValidateOnExecution.class);
+         if (voe == null)
+         {
+            types = defaultValidatedExecutableTypes;
+         }
+         else
+         {
+            if (voe.type().length > 0)
+            {
+               types = voe.type();
+            }
+            else
+            {
+               types = defaultValidatedExecutableTypes;
+            }
+         }
       }
       
       boolean isGetterMethod = isGetter(m);
@@ -271,41 +271,41 @@ public class GeneralValidatorImpl implements GeneralValidator
    
    protected List<ExecutableType[]> getExecutableTypesOnMethodInInterfaces(Class<?> clazz, Method method)
    {
-   	List<ExecutableType[]> typesList = new ArrayList<ExecutableType[]>();
-   	Class<?>[] interfaces = clazz.getInterfaces();
-   	for (int i = 0; i < interfaces.length; i++)
-   	{
-   	   Method interfaceMethod = getSuperMethod(method, interfaces[i]);
-   	   if (interfaceMethod != null)
-   	   {
-   	      ExecutableType[] types = getExecutableTypesOnMethod(interfaceMethod);
-   	      if (types != null)
-   	      {
-   	         typesList.add(types);
-   	      }
-   	   }
-   	   List<ExecutableType[]> superList = getExecutableTypesOnMethodInInterfaces(interfaces[i], method);
-   	   if (superList.size() > 0)
-   	   {
-   	      typesList.addAll(superList);
-   	   }
-   	}
-   	return typesList;
+      List<ExecutableType[]> typesList = new ArrayList<ExecutableType[]>();
+      Class<?>[] interfaces = clazz.getInterfaces();
+      for (int i = 0; i < interfaces.length; i++)
+      {
+         Method interfaceMethod = getSuperMethod(method, interfaces[i]);
+         if (interfaceMethod != null)
+         {
+            ExecutableType[] types = getExecutableTypesOnMethod(interfaceMethod);
+            if (types != null)
+            {
+               typesList.add(types);
+            }
+         }
+         List<ExecutableType[]> superList = getExecutableTypesOnMethodInInterfaces(interfaces[i], method);
+         if (superList.size() > 0)
+         {
+            typesList.addAll(superList);
+         }
+      }
+      return typesList;
    }
    
    static protected ExecutableType[] getExecutableTypesOnMethod(Method method)
    {
-   	ValidateOnExecution voe = method.getAnnotation(ValidateOnExecution.class);
-   	if (voe == null || voe.type().length == 0)
-   	{
-   		return null;
-   	}
-   	ExecutableType[] types = voe.type();
-   	if (types == null || types.length == 0)
-   	{
-   		return null;
-   	}
-   	return types;
+      ValidateOnExecution voe = method.getAnnotation(ValidateOnExecution.class);
+      if (voe == null || voe.type().length == 0)
+      {
+         return null;
+      }
+      ExecutableType[] types = voe.type();
+      if (types == null || types.length == 0)
+      {
+         return null;
+      }
+      return types;
    }
    
    static protected boolean isGetter(Method m)
@@ -370,18 +370,18 @@ public class GeneralValidatorImpl implements GeneralValidator
       return null;
    }
    
-	/**
-	 * Checks, whether {@code subTypeMethod} overrides {@code superTypeMethod}.
-	 * 
-	 * N.B. "Override" here is reflexive. I.e., a method overrides itself.
-	 * 
-	 * @param subTypeMethod   The sub type method (cannot be {@code null}).
-	 * @param superTypeMethod The super type method (cannot be {@code null}).
-	 * 
-	 * @return Returns {@code true} if {@code subTypeMethod} overrides {@code superTypeMethod}, {@code false} otherwise.
-	 *         
-	 * Taken from Hibernate Validator
-	 */
+   /**
+    * Checks, whether {@code subTypeMethod} overrides {@code superTypeMethod}.
+    * 
+    * N.B. "Override" here is reflexive. I.e., a method overrides itself.
+    * 
+    * @param subTypeMethod   The sub type method (cannot be {@code null}).
+    * @param superTypeMethod The super type method (cannot be {@code null}).
+    * 
+    * @return Returns {@code true} if {@code subTypeMethod} overrides {@code superTypeMethod}, {@code false} otherwise.
+    *         
+    * Taken from Hibernate Validator
+    */
    protected boolean overrides(Method subTypeMethod, Method superTypeMethod)
    {
       if (subTypeMethod == null || superTypeMethod == null)
