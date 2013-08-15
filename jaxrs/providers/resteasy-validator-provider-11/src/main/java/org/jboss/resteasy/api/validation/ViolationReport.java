@@ -1,6 +1,8 @@
 package org.jboss.resteasy.api.validation;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -101,5 +103,31 @@ public class ViolationReport
    public void setReturnValueViolations(ArrayList<ResteasyConstraintViolation> returnValueViolations)
    {
       this.returnValueViolations = returnValueViolations;
+   }
+   
+   public String toString()
+   {
+      StringBuffer sb = new StringBuffer();
+      for (Iterator<ResteasyConstraintViolation> it = fieldViolations.iterator(); it.hasNext(); )
+      {
+         sb.append(it.next().toString()).append('\r');
+      }
+      for (Iterator<ResteasyConstraintViolation> it = propertyViolations.iterator(); it.hasNext(); )
+      {
+         sb.append(it.next().toString()).append('\r');
+      }
+      for (Iterator<ResteasyConstraintViolation> it = classViolations.iterator(); it.hasNext(); )
+      {
+         sb.append(it.next().toString()).append('\r');
+      }
+      for (Iterator<ResteasyConstraintViolation> it = parameterViolations.iterator(); it.hasNext(); )
+      {
+         sb.append(it.next().toString()).append('\r');
+      }
+      for (Iterator<ResteasyConstraintViolation> it = returnValueViolations.iterator(); it.hasNext(); )
+      {
+         sb.append(it.next().toString()).append('\r');
+      }
+      return sb.toString();
    }
 }
