@@ -1,9 +1,7 @@
 package org.jboss.resteasy.api.validation;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintDefinitionException;
@@ -28,8 +26,6 @@ import org.jboss.resteasy.logging.Logger;
 @Provider
 public class ResteasyViolationExceptionMapper implements ExceptionMapper<ValidationException>
 {
-   private static Logger log = Logger.getLogger(ResteasyViolationExceptionMapper.class);
-   
    public Response toResponse(ValidationException exception)
    {
       if (exception instanceof ConstraintDefinitionException)
@@ -76,47 +72,12 @@ public class ResteasyViolationExceptionMapper implements ExceptionMapper<Validat
    {
       ResponseBuilder builder = Response.status(status);
       builder.header(Validation.VALIDATION_HEADER, "true");
-      List<MediaType> acceptList = exception.getAccept();
-      Map<MediaType, Double> acceptMap = createMap(acceptList);
-      
-      // Check Red Hat vendor specific media types
-      MediaType mediaType = chooseMediaType(acceptMap, Validation.VALIDATION_REPORT_XML_TYPE, Validation.VALIDATION_REPORT_JSON_TYPE);
-      if (mediaType != null)
-      {
-         builder.type(mediaType);
-         builder.entity(new ViolationReport(exception));
-         return builder.build();
-      }
-      if (acceptMap.keySet().contains(Validation.VALIDATION_REPORT_XML_TYPE))
-      {
-         builder.type(MediaType.APPLICATION_XML);
-         builder.entity(new ViolationReport(exception));
-         return builder.build();
-      }
-      if (acceptMap.keySet().contains(Validation.VALIDATION_REPORT_JSON_TYPE))
-      {
-         builder.type(MediaType.APPLICATION_JSON);
-         builder.entity(new ViolationReport(exception));
-         return builder.build();
-      }
       
       // Check standard media types.
-      mediaType = chooseMediaType(acceptMap, MediaType.APPLICATION_XML_TYPE, MediaType.APPLICATION_JSON_TYPE);
+      MediaType mediaType = getAcceptMediaType(exception.getAccept());
       if (mediaType != null)
       {
          builder.type(mediaType);
-         builder.entity(new ViolationReport(exception));
-         return builder.build();
-      }
-      if (acceptMap.keySet().contains(MediaType.APPLICATION_XML_TYPE))
-      {
-         builder.type(MediaType.APPLICATION_XML);
-         builder.entity(new ViolationReport(exception));
-         return builder.build();
-      }
-      if (acceptMap.keySet().contains(MediaType.APPLICATION_JSON_TYPE))
-      {
-         builder.type(MediaType.APPLICATION_JSON);
          builder.entity(new ViolationReport(exception));
          return builder.build();
       }
@@ -150,36 +111,21 @@ public class ResteasyViolationExceptionMapper implements ExceptionMapper<Validat
       }
    }
    
-   private Map<MediaType, Double> createMap(List<MediaType> list)
+   private MediaType getAcceptMediaType (List<MediaType> accept)
    {
-      HashMap<MediaType, Double> map = new HashMap<MediaType, Double>();
-      Iterator<MediaType> it = list.iterator();
+      Iterator<MediaType> it = accept.iterator();
       while (it.hasNext())
       {
          MediaType mt = it.next();
-         String s = mt.getParameters().get("q");
-         double q = 1.0;
-         try
+         if (MediaType.APPLICATION_XML_TYPE.getType().equals(mt.getType()) && MediaType.APPLICATION_XML_TYPE.getSubtype().equals(mt.getSubtype()))
          {
-            q =  (s == null ? 1.0 : Double.valueOf(s));
+            return MediaType.APPLICATION_XML_TYPE;
          }
-         catch (NumberFormatException e)
+         if (MediaType.APPLICATION_JSON_TYPE.getType().equals(mt.getType()) && MediaType.APPLICATION_JSON_TYPE.getSubtype().equals(mt.getSubtype()))
          {
-            log.warn("invalid q parameter for " + mt + ": " + s);
+            return MediaType.APPLICATION_JSON_TYPE;
          }
-         map.put(new MediaType(mt.getType(), mt.getSubtype()), q);
       }
-      return map;
-   }
-   
-   private MediaType chooseMediaType(Map<MediaType, Double> acceptMap, MediaType mt1, MediaType mt2)
-   {
-      if (!acceptMap.keySet().contains(mt1) || !acceptMap.keySet().contains(mt2))
-      {
-         return null;
-      }
-      double q1 = acceptMap.get(mt1);
-      double q2 = acceptMap.get(mt2);
-      return (q1 >= q2) ? mt1 : mt2;
+      return null;
    }
 }

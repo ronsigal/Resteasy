@@ -235,18 +235,6 @@ public class TestValidationXML
 
    //////////////////////////////////////////////////////////////////////////////
    @Test
-   public void testRedhatXML() throws Exception
-   {
-      doTestXML(Validation.VALIDATION_REPORT_XML);
-   }
-
-   @Test
-   public void testRedhatJSON() throws Exception
-   {
-      doTestJSON(Validation.VALIDATION_REPORT_JSON);
-   }
-
-   @Test
    public void testStandardXML() throws Exception
    {
       doTestXML(MediaType.APPLICATION_XML);
@@ -271,27 +259,27 @@ public class TestValidationXML
    }
    
    @Test
-   public void testRedhatXMLGTRedhatJSON() throws Exception
+   public void tesXML_NoQ_JSON() throws Exception
    {
-      doTestXML(Validation.VALIDATION_REPORT_XML + ";q=1," + Validation.VALIDATION_REPORT_JSON + ";q=.5");
+      doTestXML(MediaType.APPLICATION_XML + "," + MediaType.APPLICATION_JSON + ";q=.5");
    }
 
    @Test
-   public void testRedhatXML_NoQ_RedhatJSON() throws Exception
+   public void tesXML_JSON_NoQ() throws Exception
    {
-      doTestXML(Validation.VALIDATION_REPORT_XML + "," + Validation.VALIDATION_REPORT_JSON + ";q=.5");
-   }
-    
-   @Test
-   public void testRedhatXMLLTRedhatJSON() throws Exception
-   {
-      doTestJSON(Validation.VALIDATION_REPORT_XML + ";q=.5," + Validation.VALIDATION_REPORT_JSON + ";q=1");
+      doTestJSON(MediaType.APPLICATION_XML + ";q=.5" + "," + MediaType.APPLICATION_JSON);
    }
    
    @Test
-   public void testStandardXMLGTRedhatJSON() throws Exception
+   public void testXML_GT_JSON() throws Exception
    {
-      doTestJSON(MediaType.APPLICATION_XML + ";q=1," + Validation.VALIDATION_REPORT_JSON + ";q=.5");
+      doTestXML(MediaType.APPLICATION_XML + ";q=1," + MediaType.APPLICATION_JSON + ";q=.5");
+   }
+    
+   @Test
+   public void testXML_LT_JSON() throws Exception
+   {
+      doTestJSON(MediaType.APPLICATION_XML + ";q=.5," + MediaType.APPLICATION_JSON + ";q=1");
    }
    
    //////////////////////////////////////////////////////////////////////////////
