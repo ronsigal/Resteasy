@@ -37,7 +37,6 @@ public class MediaTypeHeaderDelegate implements RuntimeDelegate.HeaderDelegate
          subtype = "*";
 
       }
-//      else if (paths.length != 2)
       else if (paths.length != 2
             || "".equals(paths[0]) || "".equals(paths[1])
             || paths[0].contains(" ") || paths[1].contains(" "))
