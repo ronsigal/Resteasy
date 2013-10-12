@@ -2,8 +2,6 @@ package org.jboss.resteasy.api.validation;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,6 +12,7 @@ import java.util.List;
 import javax.validation.ValidationException;
 import javax.ws.rs.core.MediaType;
 
+import org.jboss.resteasy.api.validation.logging.Exceptions;
 import org.jboss.resteasy.plugins.providers.validation.ViolationsContainer;
 
 /**
@@ -169,24 +168,12 @@ public class ResteasyViolationException extends ValidationException
    {
       InputStream is = new ByteArrayInputStream(stringRep.getBytes());
       BufferedReader br = new BufferedReader(new InputStreamReader(is));
-      String line;
+      String line = null;
       try
       {
-         int index = 0;
          line = br.readLine();
          while (line != null )
          {
-//            int nextIndex = getField(index, line);
-//            ConstraintType.Type type = ConstraintType.Type.valueOf(line.substring(++index, nextIndex));
-//            index = nextIndex + 1;
-//            nextIndex = getField(index, line);
-//            String path = line.substring(++index, nextIndex);
-//            index = nextIndex + 1;
-//            nextIndex = getField(index, line);
-//            String message = line.substring(++index, nextIndex);
-//            index = nextIndex + 1;
-//            nextIndex = getField(index, line);
-//            String value = line.substring(++index, nextIndex);
             ConstraintType.Type type = ConstraintType.Type.valueOf(line.substring(1, line.length() - 1));
             line = br.readLine();
             String path = line.substring(1, line.length() - 1);
@@ -219,16 +206,21 @@ public class ResteasyViolationException extends ValidationException
                   break;
                   
                default:
-                  throw new RuntimeException("unexpected violation type: " + type);
+                  throw Exceptions.EXCEPTIONS.unexpectedViolationType(type.toString());
+//                  new RuntimeException("unexpected violation type: " + type);
             }
-            index = 0;
             line = br.readLine(); // consume ending '\r'
             line = br.readLine();
          }
       }
       catch (IOException e)
       {
-         throw new RuntimeException("Unable to parse ResteasyViolationException");
+//         throw new RuntimeException("Unable to parse ResteasyViolationException");
+         throw Exceptions.EXCEPTIONS.unableToParseResteasyViolationException();
+      }
+      catch (IllegalArgumentException e)
+      {
+         throw Exceptions.EXCEPTIONS.unexpectedViolationType(line.substring(1, line.length() - 1));
       }
       
       violationLists = new ArrayList<List<ResteasyConstraintViolation>>();
@@ -237,37 +229,5 @@ public class ResteasyViolationException extends ValidationException
       violationLists.add(classViolations);
       violationLists.add(parameterViolations);
       violationLists.add(returnValueViolations);
-   }
-   
-   protected int getField(int start, String line)
-   {
-      int beginning = line.indexOf('[', start);
-      if (beginning == -1)
-      {
-         throw new RuntimeException("ResteasyViolationException has invalid format: " + line);
-      }
-      int index = beginning;
-      int bracketCount = 1;
-      while (++index < line.length())
-      {
-         char c = line.charAt(index);
-         if (c == '[')
-         {
-            bracketCount++;
-         }
-         else if (c == ']')
-         {
-            bracketCount--;
-         }
-         if (bracketCount == 0)
-         {
-            break;
-         }
-      }
-      if (bracketCount != 0)
-      {
-         throw new RuntimeException("ResteasyViolationException has invalid format: " + line);
-      }
-      return index;
    }
 }

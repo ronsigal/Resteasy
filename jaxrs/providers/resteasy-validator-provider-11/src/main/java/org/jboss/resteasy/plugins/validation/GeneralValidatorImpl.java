@@ -21,6 +21,7 @@ import javax.validation.executable.ValidateOnExecution;
 
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
 import org.jboss.resteasy.api.validation.ConstraintType.Type;
+import org.jboss.resteasy.api.validation.logging.Exceptions;
 import org.jboss.resteasy.api.validation.ResteasyViolationException;
 import org.jboss.resteasy.plugins.providers.validation.ConstraintTypeUtil;
 import org.jboss.resteasy.plugins.providers.validation.ViolationsContainer;
@@ -397,7 +398,8 @@ public class GeneralValidatorImpl implements GeneralValidator
    {
       if (subTypeMethod == null || superTypeMethod == null)
       {
-         throw new RuntimeException("Expect two non-null methods");
+//         throw new RuntimeException("Expect two non-null methods");
+         throw Exceptions.EXCEPTIONS.expectTwoNonNullMethods();
       }
 
       if (!subTypeMethod.getName().equals(superTypeMethod.getName()))

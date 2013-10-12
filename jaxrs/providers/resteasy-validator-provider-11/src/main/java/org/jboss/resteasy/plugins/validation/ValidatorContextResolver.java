@@ -1,4 +1,4 @@
-                                                                                              package org.jboss.resteasy.plugins.validation;
+package org.jboss.resteasy.plugins.validation;
 
 import java.util.Set;
 
@@ -8,7 +8,6 @@ import javax.naming.NamingException;
 import javax.validation.BootstrapConfiguration;
 import javax.validation.Configuration;
 import javax.validation.Validation;
-import javax.validation.ValidationException;
 import javax.validation.ValidatorFactory;
 import javax.validation.executable.ExecutableType;
 import javax.ws.rs.ext.ContextResolver;
@@ -16,7 +15,8 @@ import javax.ws.rs.ext.Provider;
 
 import org.hibernate.validator.HibernateValidator;
 import org.hibernate.validator.HibernateValidatorConfiguration;
-import org.jboss.resteasy.logging.Logger;
+import org.jboss.resteasy.api.validation.logging.Exceptions;
+import org.jboss.resteasy.api.validation.logging.LogMessages;
 import org.jboss.resteasy.spi.validation.GeneralValidator;
 
 /**
@@ -30,7 +30,6 @@ import org.jboss.resteasy.spi.validation.GeneralValidator;
 @Provider
 public class ValidatorContextResolver implements ContextResolver<GeneralValidator>
 {
-   private final static Logger logger = Logger.getLogger(ValidatorContextResolver.class);
    private volatile ValidatorFactory validatorFactory;
    final static Object RD_LOCK = new Object();
 
@@ -51,11 +50,11 @@ public class ValidatorContextResolver implements ContextResolver<GeneralValidato
                {
                   Context context = new InitialContext();
                   validatorFactory = tmpValidatorFactory = ValidatorFactory.class.cast(context.lookup("java:comp/ValidatorFactory"));
-                  logger.debug("Using CDI supporting " + validatorFactory);
+                  LogMessages.LOGGER.supportingCDI(validatorFactory);
                }
                catch (NamingException e)
                {
-                  logger.info("Unable to find CDI supporting ValidatorFactory. Using default ValidatorFactory");
+                  LogMessages.LOGGER.unableToSupportCDI();
                   HibernateValidatorConfiguration config = Validation.byProvider(HibernateValidator.class).configure();
                   validatorFactory = tmpValidatorFactory = config.buildValidatorFactory();
                }
@@ -77,7 +76,7 @@ public class ValidatorContextResolver implements ContextResolver<GeneralValidato
       }
       catch (Exception e)
       {
-         throw new ValidationException("Unable to load Validation support", e);
+         throw Exceptions.EXCEPTIONS.unableToLoadValidationSupport(e);
       }
    }
 }

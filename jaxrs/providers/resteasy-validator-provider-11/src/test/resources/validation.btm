@@ -1,0 +1,61 @@
+RULE entering Context.lookup()
+CLASS org.jboss.resteasy.plugins.validation.ValidatorContextResolver
+METHOD getValidatorFactory
+AT INVOKE lookup 
+IF TRUE
+DO
+traceln("bm: calling Context.lookup()");
+ENDRULE
+
+RULE Context.lookup() return null ValidatorFactory
+CLASS ^javax.naming.InitialContext
+METHOD lookup
+AT ENTRY
+IF TRUE
+DO 
+traceln("bm: returning null ValidatorFactory");
+return null;
+ENDRULE
+
+RULE leaving Context.lookup()
+CLASS org.jboss.resteasy.plugins.validation.ValidatorContextResolver
+METHOD getValidatorFactory
+AFTER INVOKE lookup 
+IF TRUE
+DO
+traceln("bm: called Context.lookup()");
+ENDRULE
+
+RULE after write validatorFactory 1
+CLASS org.jboss.resteasy.plugins.validation.ValidatorContextResolver
+METHOD getValidatorFactory
+AFTER WRITE validatorFactory 1
+BIND
+validator:org.hibernate.validator.HibernateValidator = new org.hibernate.validator.HibernateValidator();
+config:org.hibernate.validator.HibernateValidatorConfiguration = javax.validation.Validation.byProvider(validator.getClass()).configure();
+tmp:javax.validation.ValidatorFactory = config.buildValidatorFactory();
+IF TRUE
+DO
+traceln("bm: wrote validatorFactory: no exception: " + tmp);
+$0.validatorFactory = tmp;
+traceln("bm: set default ValidatorFactory");
+ENDRULE
+
+RULE after write validatorFactory 2
+CLASS org.jboss.resteasy.plugins.validation.ValidatorContextResolver
+METHOD getValidatorFactory
+AFTER WRITE validatorFactory 2
+IF TRUE
+DO
+traceln("bm: wrote validatorFactory: caught exception");
+ENDRULE
+
+#RULE Context.lookup()
+#INTERFACE ^javax.naming.InitialContext
+#METHOD lookup
+#AT ENTRY
+#IF TRUE
+#DO 
+#traceln("bm: entering Context.lookup()");
+#return null;
+#ENDRULE

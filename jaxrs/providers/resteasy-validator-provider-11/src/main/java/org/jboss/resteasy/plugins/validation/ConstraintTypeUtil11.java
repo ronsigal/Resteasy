@@ -8,6 +8,7 @@ import javax.validation.ElementKind;
 import javax.validation.Path.Node;
 
 import org.jboss.resteasy.api.validation.ConstraintType;
+import org.jboss.resteasy.api.validation.logging.Exceptions;
 import org.jboss.resteasy.plugins.providers.validation.ConstraintTypeUtil;
 
 /**
@@ -22,7 +23,8 @@ public class ConstraintTypeUtil11 implements ConstraintTypeUtil
    {
       if (!(o instanceof ConstraintViolation))
       {
-         throw new RuntimeException("unknown object passed as constraint violation: " + o);
+//         throw new RuntimeException("unknown object passed as constraint violation: " + o);
+         throw Exceptions.EXCEPTIONS.unknownObjectPassedAsConstraintViolation(o);
       }
       ConstraintViolation<?> v = ConstraintViolation.class.cast(o);
       
@@ -43,7 +45,8 @@ public class ConstraintTypeUtil11 implements ConstraintTypeUtil
          }
          else
          {
-            throw new RuntimeException("unexpected path node type in method violation: " + secondNode.getKind());
+//            throw new RuntimeException("unexpected path node type in method violation: " + secondNode.getKind());
+            throw Exceptions.EXCEPTIONS.unexpectedPathNodeTypeInMethodViolation(secondNode.getKind());
          }
       }
 
@@ -83,7 +86,8 @@ public class ConstraintTypeUtil11 implements ConstraintTypeUtil
          }
       }
       
-      throw new RuntimeException("unexpeced path node type: " + firstNode.getKind());
+//      throw new RuntimeException("unexpeced path node type: " + firstNode.getKind());
+      throw Exceptions.EXCEPTIONS.unexpectedPathNodeType(firstNode.getKind());
    }
    
    private static Method getMethod(Class<?> clazz, String methodName) throws NoSuchMethodException
