@@ -104,19 +104,19 @@ public class JaxrsInjectionTarget<T> implements InjectionTarget<T>
    
    private void validate(HttpRequest request, T instance)
    {
-      if (GetRestful.isRootResource(clazz))
+      ResteasyProviderFactory providerFactory = ResteasyProviderFactory.getInstance();
+      ContextResolver<GeneralValidatorCDI> resolver = providerFactory.getContextResolver(GeneralValidatorCDI.class, MediaType.WILDCARD_TYPE);
+      if (resolver != null)
       {
-         ResteasyProviderFactory providerFactory = ResteasyProviderFactory.getInstance();
-         ContextResolver<GeneralValidatorCDI> resolver = providerFactory.getContextResolver(GeneralValidatorCDI.class, MediaType.WILDCARD_TYPE);
-         if (resolver != null)
-         {
-            validator = providerFactory.getContextResolver(GeneralValidatorCDI.class, MediaType.WILDCARD_TYPE).getContext(null);
-         }
-         if (validator != null && validator.isValidatableFromCDI(clazz))
+         validator = providerFactory.getContextResolver(GeneralValidatorCDI.class, MediaType.WILDCARD_TYPE).getContext(null);
+      }
+      if (validator != null && validator.isValidatableFromCDI(clazz))
+      {
+         if (GetRestful.isRootResource(clazz))
          {
             validator.validate(request, instance);
-            validator.checkViolationsfromCDI(request);
          }
+         validator.checkViolationsfromCDI(request);
       }
    }
 }
