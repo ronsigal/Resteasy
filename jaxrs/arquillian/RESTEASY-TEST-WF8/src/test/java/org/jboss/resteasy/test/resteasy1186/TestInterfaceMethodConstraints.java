@@ -13,6 +13,11 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
 import org.jboss.resteasy.api.validation.Validation;
 import org.jboss.resteasy.api.validation.ViolationReport;
+import org.jboss.resteasy.resteasy1186.AsyncRootResource;
+import org.jboss.resteasy.resteasy1186.AsyncRootResourceImpl;
+import org.jboss.resteasy.resteasy1186.AsyncSubResource;
+import org.jboss.resteasy.resteasy1186.AsyncSubResourceImpl;
+import org.jboss.resteasy.resteasy1186.AsyncValidResource;
 import org.jboss.resteasy.resteasy1186.QueryBeanParam;
 import org.jboss.resteasy.resteasy1186.QueryBeanParamImpl;
 import org.jboss.resteasy.resteasy1186.RootResource;
@@ -49,6 +54,9 @@ public class TestInterfaceMethodConstraints
             .addClasses(QueryBeanParam.class, QueryBeanParamImpl.class)
             .addClasses(RootResource.class, RootResourceImpl.class, ValidResource.class)
             .addClasses(SubResource.class, SubResourceImpl.class)
+            .addClasses(AsyncRootResource.class, AsyncRootResourceImpl.class)
+            .addClasses(AsyncSubResource.class, AsyncSubResourceImpl.class)
+            .addClasses(AsyncValidResource.class)
             .addAsWebInfResource("1186/web.xml", "web.xml")
             .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
             ;
@@ -73,6 +81,28 @@ public class TestInterfaceMethodConstraints
       Iterator<ResteasyConstraintViolation> it = report.getParameterViolations().iterator();
       System.out.println("\r" + it.next());
       builder = client.target("http://localhost:8080/RESTEASY-1186/test/root/entered").request();
+      response = builder.get();
+      System.out.println("status: " + response.getStatus());
+      Assert.assertEquals(200, response.getStatus());
+   }
+   
+   @Test
+   public void testAsynch() throws Exception
+   {  
+      Client client = ClientBuilder.newClient();
+      Builder builder = client.target("http://localhost:8080/RESTEASY-1186/test/async/sub?foo=x").request();
+      builder.accept(MediaType.APPLICATION_XML);
+      Response response = builder.get();
+      System.out.println("status: " + response.getStatus());
+      Assert.assertEquals(400, response.getStatus());
+      Object header = response.getHeaders().getFirst(Validation.VALIDATION_HEADER);
+      Assert.assertTrue(header instanceof String);
+      Assert.assertTrue(Boolean.valueOf(String.class.cast(header)));
+      ViolationReport report = response.readEntity(ViolationReport.class);
+      countViolations(report, 0, 0, 0, 1, 0);
+      Iterator<ResteasyConstraintViolation> it = report.getParameterViolations().iterator();
+      System.out.println("\r" + it.next());
+      builder = client.target("http://localhost:8080/RESTEASY-1186/test/async/entered").request();
       response = builder.get();
       System.out.println("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
