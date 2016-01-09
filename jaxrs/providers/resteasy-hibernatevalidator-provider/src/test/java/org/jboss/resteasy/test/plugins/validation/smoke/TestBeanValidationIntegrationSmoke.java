@@ -266,7 +266,7 @@ public class TestBeanValidationIntegrationSmoke {
 	}
 	
 	@Test
-//	@Ignore
+// @Ignore
 	public void shouldValidateNothing() {
 		POJOResourceFactory factory = new POJOResourceFactory(ShouldNotValidateResource.Impl.class);
 		dispatcher.getRegistry().addResourceFactory(factory);
@@ -278,7 +278,7 @@ public class TestBeanValidationIntegrationSmoke {
 	}
 	
 	@Test
-//	@Ignore
+// @Ignore
 	public void shouldValidateJustOneMethod() {
 		POJOResourceFactory noDefaults = new POJOResourceFactory(ShouldValidateJustOneMethod.Impl.class);
 		dispatcher.getRegistry().addResourceFactory(noDefaults);
@@ -288,6 +288,7 @@ public class TestBeanValidationIntegrationSmoke {
 		Assert.assertEquals("bad numbers", resource.sumPost("a", "b"));
 		try {
 			resource.sumGet("c3", "2d");
+         Assert.fail("expected ClientResponseFailure");
 		} catch (ClientResponseFailure e) {
 			Assert.assertEquals(400, e.getResponse().getStatus());
 			// should validate more things, not just status code
@@ -295,7 +296,7 @@ public class TestBeanValidationIntegrationSmoke {
 	}
 	
 	@Test
-//	@Ignore
+// @Ignore
 	public void shouldValidateAllMethods() {
 		POJOResourceFactory noDefaults = new POJOResourceFactory(ShouldValidateAllMethods.Impl.class);
 		dispatcher.getRegistry().addResourceFactory(noDefaults);
@@ -304,12 +305,14 @@ public class TestBeanValidationIntegrationSmoke {
 		
 		try {
 			resource.sumPost("a", "b");
+         Assert.fail("expected ClientResponseFailure");
 		} catch (ClientResponseFailure e) {
 			Assert.assertEquals(400, e.getResponse().getStatus());
 			// should validate more things, not just status code
 		}
 		try {
 			resource.sumGet("c3", "2d");
+         Assert.fail("expected ClientResponseFailure");
 		} catch (ClientResponseFailure e) {
 			Assert.assertEquals(400, e.getResponse().getStatus());
 			// should validate more things, not just status code
@@ -317,7 +320,7 @@ public class TestBeanValidationIntegrationSmoke {
 	}
 	
 	@Test
-//	@Ignore
+// @Ignore
 	public void shouldNotValidateOneMethod() {
 		POJOResourceFactory noDefaults = new POJOResourceFactory(ShouldNotValidateOneMethod.Impl.class);
 		dispatcher.getRegistry().addResourceFactory(noDefaults);
@@ -327,6 +330,7 @@ public class TestBeanValidationIntegrationSmoke {
 		Assert.assertEquals("bad numbers", resource.sumPost("a", "b"));
 		try {
 			resource.sumGet("c3", "2d");
+			Assert.fail("expected ClientResponseFailure");
 		} catch (ClientResponseFailure e) {
 			Assert.assertEquals(400, e.getResponse().getStatus());
 			// should validate more things, not just status code
@@ -334,7 +338,7 @@ public class TestBeanValidationIntegrationSmoke {
 	}
 	
 	@Test
-//	@Ignore
+	@Ignore
 	public void shouldRespectInsertGroup() {
 		POJOResourceFactory noDefaults = new POJOResourceFactory(ShouldRespectGroups.Impl.class);
 		dispatcher.getRegistry().addResourceFactory(noDefaults);
@@ -351,6 +355,7 @@ public class TestBeanValidationIntegrationSmoke {
 		try {
 			input.setAge(1000);
 			resource.insert(input);
+         Assert.fail("expected ClientResponseFailure");
 		} catch (ClientResponseFailure e) {
 			Assert.assertEquals(400, e.getResponse().getStatus());
 			// should validate more things, not just status code
@@ -360,6 +365,7 @@ public class TestBeanValidationIntegrationSmoke {
 			input.setId(123L);
 			input.setAge(27);
 			resource.insert(input);
+         Assert.fail("expected ClientResponseFailure");
 		} catch (ClientResponseFailure e) {
 			Assert.assertEquals(400, e.getResponse().getStatus());
 			// should validate more things, not just status code
