@@ -3,12 +3,13 @@ package org.jboss.resteasy.plugins.interceptors;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import javax.annotation.Priority;
-import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
+
+import org.jboss.resteasy.client.exception.ResteasyForbiddenException;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -31,7 +32,7 @@ public class RoleBasedSecurityFilter implements ContainerRequestFilter
    @Override
    public void filter(ContainerRequestContext requestContext) throws IOException
    {
-      if (denyAll) throw new ForbiddenException();
+      if (denyAll) throw new ResteasyForbiddenException();
       if (permitAll) return;
       if (rolesAllowed != null)
       {
@@ -42,7 +43,7 @@ public class RoleBasedSecurityFilter implements ContainerRequestFilter
             {
                if (context.isUserInRole(role)) return;
             }
-            throw new ForbiddenException();
+            throw new ResteasyForbiddenException();
          }
       }
       return;

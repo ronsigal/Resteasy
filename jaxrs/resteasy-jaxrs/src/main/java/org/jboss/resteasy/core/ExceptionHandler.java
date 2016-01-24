@@ -1,5 +1,6 @@
 package org.jboss.resteasy.core;
 
+import org.jboss.resteasy.client.exception.DebugLevelException;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.spi.ApplicationException;
 import org.jboss.resteasy.spi.Failure;
@@ -196,7 +197,17 @@ public class ExceptionHandler
 
    protected Response handleWebApplicationException(WebApplicationException wae)
    {
-      if (!(wae instanceof NoLogWebApplicationException)) LogMessages.LOGGER.failedToExecute(wae);
+      if (!(wae instanceof NoLogWebApplicationException))
+      {
+         if (wae instanceof DebugLevelException)
+         {
+            LogMessages.LOGGER.failedToExecuteDebug(wae);  
+         }
+         else
+         {
+            LogMessages.LOGGER.failedToExecute(wae);
+         }
+      }
       return wae.getResponse();
    }
 
