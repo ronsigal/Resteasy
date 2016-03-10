@@ -13,7 +13,10 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.NioErrorHandler;
+import javax.ws.rs.core.NioWriterHandler;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 import java.lang.annotation.Annotation;
 import java.net.URI;
@@ -392,5 +395,19 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
       if (headers == null) return this;
       metadata.putAll(headers);
       return this;
+   }
+
+   @Override
+   public ResponseBuilder entity(NioWriterHandler writer)
+   {
+      // TODO Auto-generated method stub
+      return null;
+   }
+
+   @Override
+   public ResponseBuilder entity(NioWriterHandler writer, NioErrorHandler error)
+   {
+      // TODO Auto-generated method stub
+      return null;
    }
 }

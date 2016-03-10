@@ -11,6 +11,9 @@ import org.jboss.resteasy.util.HttpResponseCodes;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.NioCompletionHandler;
+import javax.ws.rs.core.NioErrorHandler;
+import javax.ws.rs.core.NioReaderHandler;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
@@ -221,6 +224,34 @@ public class RequestImpl implements Request
       }
 
       return Response.status(HttpResponseCodes.SC_PRECONDITION_FAILED);
+   }
+
+   @Override
+   public void entity(NioReaderHandler reader)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public void entity(NioReaderHandler reader, NioCompletionHandler completion)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public void entity(NioReaderHandler reader, NioErrorHandler error)
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public void entity(NioReaderHandler reader, NioCompletionHandler completion, NioErrorHandler error)
+   {
+      // TODO Auto-generated method stub
+      
    }
 
 }
