@@ -1,7 +1,10 @@
 package org.jboss.resteasy.core;
 
 import org.jboss.resteasy.core.interception.PreMatchContainerRequestContext;
-import org.jboss.resteasy.logging.Logger;
+import org.jboss.resteasy.plugins.server.servlet.Cleanable;
+import org.jboss.resteasy.plugins.server.servlet.Cleanables;
+import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
+import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.specimpl.BuiltResponse;
 import org.jboss.resteasy.specimpl.RequestImpl;
 import org.jboss.resteasy.spi.Failure;
@@ -33,6 +36,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,8 +56,6 @@ public class SynchronousDispatcher implements Dispatcher
    protected boolean bufferExceptionEntityRead = false;
    protected boolean bufferExceptionEntity = true;
    
-   private final static Logger logger = Logger.getLogger(SynchronousDispatcher.class);
-
    public SynchronousDispatcher(ResteasyProviderFactory providerFactory)
    {
       this.providerFactory = providerFactory;
@@ -62,6 +64,13 @@ public class SynchronousDispatcher implements Dispatcher
       defaultContextObjects.put(Registry.class, registry);
       defaultContextObjects.put(Dispatcher.class, this);
       defaultContextObjects.put(InternalDispatcher.class, InternalDispatcher.getInstance());
+   }
+
+   public SynchronousDispatcher(ResteasyProviderFactory providerFactory, ResourceMethodRegistry registry)
+   {
+      this(providerFactory);
+      this.registry = registry;
+      defaultContextObjects.put(Registry.class, registry);
    }
 
    public ResteasyProviderFactory getProviderFactory()
@@ -162,7 +171,7 @@ public class SynchronousDispatcher implements Dispatcher
             }
          }
       }
-      if (response.isCommitted()) throw new UnhandledException("Response is committed, can't handle exception", e);
+      if (response.isCommitted()) throw new UnhandledException(Messages.MESSAGES.responseIsCommitted(), e);
       Response handledResponse = new ExceptionHandler(providerFactory, unwrappedExceptions).handleException(request, e);
       if (handledResponse == null) throw new UnhandledException(e);
       if (!bufferExceptionEntity)
@@ -247,15 +256,15 @@ public class SynchronousDispatcher implements Dispatcher
    public ResourceInvoker getInvoker(HttpRequest request)
            throws Failure
    {
-      logger.debug("PathInfo: " + request.getUri().getPath());
+      LogMessages.LOGGER.pathInfo(request.getUri().getPath());
       if (!request.isInitial())
       {
-         throw new InternalServerErrorException(request.getUri().getPath() + " is not initial request.  Its suspended and retried.  Aborting.");
+         throw new InternalServerErrorException(Messages.MESSAGES.isNotInitialRequest(request.getUri().getPath())); 
       }
       ResourceInvoker invoker = registry.getResourceInvoker(request);
       if (invoker == null)
       {
-         throw new NotFoundException("Unable to find JAX-RS resource associated with path: " + request.getUri().getPath());
+         throw new NotFoundException(Messages.MESSAGES.unableToFindJaxRsResource(request.getUri().getPath()));
       }
       return invoker;
    }
@@ -287,6 +296,7 @@ public class SynchronousDispatcher implements Dispatcher
       contextDataMap.put(ResourceContext.class, resourceContext);
 
       contextDataMap.putAll(defaultContextObjects);
+      contextDataMap.put(Cleanables.class, new Cleanables());
    }
 
    public Response internalInvocation(HttpRequest request, HttpResponse response, Object entity)
@@ -322,7 +332,22 @@ public class SynchronousDispatcher implements Dispatcher
 
    public void clearContextData()
    {
-      ResteasyProviderFactory.clearContextData();
+	  Cleanables cleanables = ResteasyProviderFactory.getContextData(Cleanables.class);
+	  if (cleanables != null)
+	  {
+		  for (Iterator<Cleanable> it = cleanables.getCleanables().iterator(); it.hasNext(); )
+		  {
+			  try
+			  {
+				  it.next().clean();
+			  }
+			  catch(Exception e)
+			  {
+				// Empty
+			  }
+		  }
+	  }
+	  ResteasyProviderFactory.clearContextData();
       // just in case there were internalDispatches that need to be cleaned up
       MessageBodyParameterInjector.clearBodies();
    }
@@ -420,7 +445,7 @@ public class SynchronousDispatcher implements Dispatcher
       }
       catch (Throwable ex)
       {
-         logger.error("Unhandled asynchronous exception, sending back 500", ex);
+         LogMessages.LOGGER.unhandledAsynchronousException(ex);
          // unhandled exceptions need to be processed as they can't be thrown back to the servlet container
          if (!response.isCommitted()) {
             try

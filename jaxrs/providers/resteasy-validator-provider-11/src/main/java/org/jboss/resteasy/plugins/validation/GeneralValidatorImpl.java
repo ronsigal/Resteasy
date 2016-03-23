@@ -21,7 +21,8 @@ import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
 import org.jboss.resteasy.api.validation.ResteasyViolationException;
 import org.jboss.resteasy.cdi.CdiInjectorFactory;
 import org.jboss.resteasy.cdi.ResteasyCdiExtension;
-import org.jboss.resteasy.logging.Logger;
+import org.jboss.resteasy.plugins.validation.i18n.LogMessages;
+import org.jboss.resteasy.plugins.validation.i18n.Messages;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.InjectorFactory;
 import org.jboss.resteasy.spi.ResteasyConfiguration;
@@ -46,7 +47,6 @@ import com.fasterxml.classmate.members.ResolvedMethod;
 public class GeneralValidatorImpl implements GeneralValidatorCDI
 {
    public static final String SUPPRESS_VIOLATION_PATH = "resteasy.validation.suppress.path";
-   private static final Logger log = Logger.getLogger(GeneralValidatorImpl.class);
    
    /**
     * Used for resolving type parameters. Thread-safe.
@@ -67,12 +67,12 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
       try
       {
          cdiActive = ResteasyCdiExtension.isCDIActive();
-         log.debug("ResteasyCdiExtension is on the classpath.");
+         LogMessages.LOGGER.debug(Messages.MESSAGES.resteasyCdiExtensionOnClasspath());
       }
       catch (Throwable t)
       {
          // In case ResteasyCdiExtension is not on the classpath.
-         log.debug("ResteasyCdiExtension is not on the classpath. Assuming CDI is not active");
+         LogMessages.LOGGER.debug(Messages.MESSAGES.resteasyCdiExtensionNotOnClasspath());
       }
       
       ResteasyConfiguration context = ResteasyProviderFactory.getContextData(ResteasyConfiguration.class);
@@ -100,11 +100,13 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
       {
          SimpleViolationsContainer violationsContainer = getViolationsContainer(request, object);
          violationsContainer.setException(e);
+         violationsContainer.setFieldsValidated(true);
          throw new ResteasyViolationException(violationsContainer);
       }
       
       SimpleViolationsContainer violationsContainer = getViolationsContainer(request, object);
       violationsContainer.addViolations(cvs);
+      violationsContainer.setFieldsValidated(true);
    }
 
    @Override
@@ -113,7 +115,7 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
       // Called from resteasy-jaxrs only if two argument version of isValidatable() returns true.
       SimpleViolationsContainer violationsContainer = getViolationsContainer(request, null);
       Object target = violationsContainer.getTarget();
-      if (target != null && !isWeldProxy(target.getClass()))
+      if (target != null && violationsContainer.isFieldsValidated())
       {
          if (violationsContainer != null && violationsContainer.size() > 0)
          {
@@ -161,7 +163,7 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
          throw new ResteasyViolationException(violationsContainer);
       }
       violationsContainer.addViolations(cvs);
-      if (!isWeldProxy(object.getClass()) && violationsContainer.size() > 0)
+      if (violationsContainer.isFieldsValidated() && violationsContainer.size() > 0)
       {
          throw new ResteasyViolationException(violationsContainer, request.getHttpHeaders().getAcceptableMediaTypes());
       }
@@ -238,7 +240,7 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
       List<ExecutableType[]> typesList = getExecutableTypesOnMethodInHierarchy(m);
       if (typesList.size() > 1)
       {
-         throw new ValidationException("@ValidateOnExecution found on multiple overridden methods");
+         throw new ValidationException(Messages.MESSAGES.validateOnExceptionOnMultipleMethod());
       }
       if (typesList.size() == 1)
       {
@@ -438,7 +440,7 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
    {
       if (subTypeMethod == null || superTypeMethod == null)
       {
-         throw new RuntimeException("Expect two non-null methods");
+         throw new RuntimeException(Messages.MESSAGES.expectTwoNonNullMethods());
       }
 
       if (!subTypeMethod.getName().equals(superTypeMethod.getName()))
@@ -518,7 +520,7 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
          violationsContainer.addViolations(cvs);
          if (violationsContainer.size() > 0)
          {
-            throw new ResteasyViolationException(violationsContainer);
+            throw new ResteasyViolationException(violationsContainer, request.getHttpHeaders().getAcceptableMediaTypes());
          }
       }
       
@@ -571,30 +573,6 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
       return locale;
    }
    
-   private static final String WELD_PROXY_INTERFACE_NAME = "org.jboss.weld.bean.proxy.ProxyObject";
-
-   /**
-    * Whether the given class is a proxy created by Weld or not. This is
-    * the case if the given class implements the interface
-    * {@code org.jboss.weld.bean.proxy.ProxyObject}.
-    * 
-    * Borrowed from org.jboss.resteasy.spi.metadata.ResourceBuilder.
-    *
-    * @param clazz the class of interest
-    *
-    * @return {@code true} if the given class is a Weld proxy,
-    * {@code false} otherwise
-    */
-   private static boolean isWeldProxy(Class<?> clazz) {
-      for ( Class<?> implementedInterface : clazz.getInterfaces() ) {
-         if ( implementedInterface.getName().equals( WELD_PROXY_INTERFACE_NAME ) ) {
-            return true;
-         }
-      }
-
-      return false;
-   }
-
    /**
     * A filter implementation filtering methods matching given methods.
     * 

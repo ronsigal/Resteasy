@@ -18,6 +18,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.client.jaxrs.engines.PassthroughTrustManager;
+import org.jboss.resteasy.client.jaxrs.i18n.Messages;
 import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -30,6 +31,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
+
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
@@ -72,6 +74,7 @@ public class ResteasyClientBuilder extends ClientBuilder
    protected HostnameVerificationPolicy policy = HostnameVerificationPolicy.WILDCARD;
    protected ResteasyProviderFactory providerFactory;
    protected ExecutorService asyncExecutor;
+   protected boolean cleanupExecutor;
    protected SSLContext sslContext;
    protected Map<String, Object> properties = new HashMap<String, Object>();
    protected ClientHttpEngine httpEngine;
@@ -108,7 +111,20 @@ public class ResteasyClientBuilder extends ClientBuilder
     */
    public ResteasyClientBuilder asyncExecutor(ExecutorService asyncExecutor)
    {
+      return asyncExecutor(asyncExecutor, false);
+   }
+
+   /**
+    * Executor to use to run AsyncInvoker invocations
+    *
+    * @param asyncExecutor
+    * @param cleanupExecutor true if the Client should close the executor when it is closed
+    * @return
+    */
+   public ResteasyClientBuilder asyncExecutor(ExecutorService asyncExecutor, boolean cleanupExecutor)
+   {
       this.asyncExecutor = asyncExecutor;
+      this.cleanupExecutor = cleanupExecutor;
       return this;
    }
 
@@ -336,7 +352,6 @@ public class ResteasyClientBuilder extends ClientBuilder
 
       ExecutorService executor = asyncExecutor;
 
-      boolean cleanupExecutor = false;
       if (executor == null)
       {
          cleanupExecutor = true;
@@ -361,19 +376,19 @@ public class ResteasyClientBuilder extends ClientBuilder
       @Override
       public void verify(String host, SSLSocket ssl) throws IOException
       {
-         if (!verifier.verify(host, ssl.getSession())) throw new SSLException("Hostname verification failure");
+         if (!verifier.verify(host, ssl.getSession())) throw new SSLException(Messages.MESSAGES.hostnameVerificationFailure());
       }
 
       @Override
       public void verify(String host, X509Certificate cert) throws SSLException
       {
-         throw new SSLException("This verification path not implemented");
+         throw new SSLException(Messages.MESSAGES.verificationPathNotImplemented());
       }
 
       @Override
       public void verify(String host, String[] cns, String[] subjectAlts) throws SSLException
       {
-         throw new SSLException("This verification path not implemented");
+         throw new SSLException(Messages.MESSAGES.verificationPathNotImplemented());
       }
 
       @Override
@@ -560,7 +575,7 @@ public class ResteasyClientBuilder extends ClientBuilder
             register(clazz, contracts);
          }
          catch (RuntimeException e) {
-            throw new RuntimeException("failed on registering class: " + clazz.getName(), e);
+            throw new RuntimeException(Messages.MESSAGES.failedOnRegisteringClass(clazz.getName()), e);
          }
       }
       for (Object obj : config.getInstances())

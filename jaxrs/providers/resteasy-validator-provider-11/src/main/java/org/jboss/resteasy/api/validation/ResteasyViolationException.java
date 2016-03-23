@@ -5,9 +5,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
@@ -19,6 +22,7 @@ import org.jboss.resteasy.plugins.providers.validation.ViolationsContainer;
 import org.jboss.resteasy.plugins.validation.ConstraintTypeUtil11;
 import org.jboss.resteasy.plugins.validation.GeneralValidatorImpl;
 import org.jboss.resteasy.plugins.validation.SimpleViolationsContainer;
+import org.jboss.resteasy.plugins.validation.i18n.Messages;
 import org.jboss.resteasy.spi.ResteasyConfiguration;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -35,7 +39,7 @@ public class ResteasyViolationException extends ConstraintViolationException
 {  
    private static final long serialVersionUID = 2623733139912277260L;
    
-   private List<MediaType> accept;
+   private List<CloneableMediaType> accept;
    private Exception exception;
    
    private List<ResteasyConstraintViolation> fieldViolations;
@@ -47,7 +51,7 @@ public class ResteasyViolationException extends ConstraintViolationException
    private List<ResteasyConstraintViolation> allViolations; 
    private List<List<ResteasyConstraintViolation>> violationLists;
    
-   private ConstraintTypeUtil11 util = new ConstraintTypeUtil11();
+   transient private ConstraintTypeUtil11 util = new ConstraintTypeUtil11();
    private boolean suppressPath;
    
    /**
@@ -58,8 +62,8 @@ public class ResteasyViolationException extends ConstraintViolationException
    {
       super(constraintViolations);
       checkSuppressPath();
-      accept = new ArrayList<MediaType>();
-      accept.add(MediaType.TEXT_PLAIN_TYPE);
+      accept = new ArrayList<CloneableMediaType>();
+      accept.add(CloneableMediaType.TEXT_PLAIN_TYPE);
    }
    
    /**
@@ -72,7 +76,7 @@ public class ResteasyViolationException extends ConstraintViolationException
    {
       super(constraintViolations);
       checkSuppressPath();
-      this.accept = accept;
+      this.accept = toCloneableMediaTypeList(accept);
    }
    
    /**
@@ -104,8 +108,8 @@ public class ResteasyViolationException extends ConstraintViolationException
       super(null);
       convertToStrings(container);
       exception = container.getException();
-      accept = new ArrayList<MediaType>();
-      accept.add(MediaType.TEXT_PLAIN_TYPE);
+      accept = new ArrayList<CloneableMediaType>();
+      accept.add(CloneableMediaType.TEXT_PLAIN_TYPE);
    }
    
    public ResteasyViolationException(ViolationsContainer<?> container, List<MediaType> accept)
@@ -113,7 +117,7 @@ public class ResteasyViolationException extends ConstraintViolationException
       super(null);
       convertToStrings(container);
       exception = container.getException();
-      this.accept = accept;
+      this.accept = toCloneableMediaTypeList(accept);
    }
    
    public ResteasyViolationException(String stringRep)
@@ -125,12 +129,12 @@ public class ResteasyViolationException extends ConstraintViolationException
    
    public List<MediaType> getAccept()
    {
-      return accept;
+      return toMediaTypeList(accept);
    }
 
    public void setAccept(List<MediaType> accept)
    {
-      this.accept = accept;
+      this.accept = toCloneableMediaTypeList(accept);
    }
 
    public Exception getException()
@@ -277,7 +281,7 @@ public class ResteasyViolationException extends ConstraintViolationException
                   break;
                   
                default:
-                  throw new RuntimeException("unexpected violation type: " + type);
+                  throw new RuntimeException(Messages.MESSAGES.unexpectedViolationType(type));
             }
             line = br.readLine(); // consume ending '\r'
             line = br.readLine();
@@ -285,7 +289,7 @@ public class ResteasyViolationException extends ConstraintViolationException
       }
       catch (IOException e)
       {
-         throw new RuntimeException("Unable to parse ResteasyViolationException");
+         throw new RuntimeException(Messages.MESSAGES.unableToParseException());
       }
       
       violationLists = new ArrayList<List<ResteasyConstraintViolation>>();
@@ -301,7 +305,7 @@ public class ResteasyViolationException extends ConstraintViolationException
       int beginning = line.indexOf('[', start);
       if (beginning == -1)
       {
-         throw new RuntimeException("ResteasyViolationException has invalid format: " + line);
+         throw new RuntimeException(Messages.MESSAGES.exceptionHasInvalidFormat(line));
       }
       int index = beginning;
       int bracketCount = 1;
@@ -323,7 +327,7 @@ public class ResteasyViolationException extends ConstraintViolationException
       }
       if (bracketCount != 0)
       {
-         throw new RuntimeException("ResteasyViolationException has invalid format: " + line);
+         throw new RuntimeException(Messages.MESSAGES.exceptionHasInvalidFormat(line));
       }
       return index;
    }
@@ -382,7 +386,7 @@ public class ResteasyViolationException extends ConstraintViolationException
                   break;
 
                default:
-                  throw new RuntimeException("unexpected violation type: " + rcv.getConstraintType());
+                  throw new RuntimeException(Messages.MESSAGES.unexpectedViolationType(rcv.getConstraintType()));
             }
          }
       }
@@ -421,5 +425,58 @@ public class ResteasyViolationException extends ConstraintViolationException
          result = (o == null ? "" : o.toString());
       }
       return result;
+   }
+   
+   /**
+    * It seems that EJB3 wants to clone ResteasyViolationException,
+    * and MediaType is not serializable.
+    *
+    */
+   static class CloneableMediaType implements Serializable
+   {
+      public static final CloneableMediaType TEXT_PLAIN_TYPE = new CloneableMediaType("plain", "text");  
+      private static final long serialVersionUID = 9179565449557464429L;
+      private String type;
+      private String subtype;
+      private Map<String, String> parameters;
+      
+      public CloneableMediaType(MediaType mediaType)
+      {
+         type = mediaType.getType();
+         subtype = mediaType.getSubtype();
+         parameters = new HashMap<String, String>(mediaType.getParameters());
+      }
+      
+      public CloneableMediaType(String type, String subtype)
+      {
+         this.type = type;
+         this.subtype = subtype;
+      }
+      
+      public MediaType toMediaType()
+      {
+         return new MediaType(type, subtype, parameters);
+      }
+   }
+   
+   static protected List<CloneableMediaType> toCloneableMediaTypeList(List<MediaType> list)
+   {
+      List<CloneableMediaType> cloneableList = new ArrayList<CloneableMediaType>();
+      for (Iterator<MediaType> it = list.iterator(); it.hasNext(); )
+      {
+         cloneableList.add(new CloneableMediaType(it.next()));
+      }
+      return cloneableList;
+   }
+   
+   static protected List<MediaType> toMediaTypeList(List<CloneableMediaType> cloneableList)
+   {
+      List<MediaType> list = new ArrayList<MediaType>();
+      for (Iterator<CloneableMediaType> it = cloneableList.iterator(); it.hasNext(); )
+      {
+         CloneableMediaType cmt = it.next();
+         list.add(new MediaType(cmt.type, cmt.subtype, cmt.parameters));
+      }
+      return list;
    }
 }

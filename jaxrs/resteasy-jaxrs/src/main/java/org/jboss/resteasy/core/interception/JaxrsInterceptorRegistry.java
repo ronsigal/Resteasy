@@ -1,5 +1,6 @@
 package org.jboss.resteasy.core.interception;
 
+import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.AcceptedByMethod;
 
@@ -142,21 +143,21 @@ public class JaxrsInterceptorRegistry<T>
                // we matched all of them
                Object intercept = getInterceptor();
                if (intercept == null)
-                  throw new NullPointerException("interceptor null from class: " + this.getClass().getName());
+                  throw new NullPointerException(Messages.MESSAGES.interceptorNullFromClass(this.getClass().getName()));
                return new Match(intercept, order);
             }
             else
             {
                Object intercept = getInterceptor();
                if (intercept == null)
-                  throw new NullPointerException("interceptor null from class: " + this.getClass().getName());
+                  throw new NullPointerException(Messages.MESSAGES.interceptorNullFromClass(this.getClass().getName()));
                return new Match(intercept, order);
             }
          } else if (nameBound.size() == 0)
          {
             Object intercept = getInterceptor();
             if (intercept == null)
-               throw new NullPointerException("interceptor null from class: " + this.getClass().getName());
+               throw new NullPointerException(Messages.MESSAGES.interceptorNullFromClass(this.getClass().getName()));
             return new Match(intercept, order);
          } else
          {
@@ -359,7 +360,15 @@ public class JaxrsInterceptorRegistry<T>
    {
       public int compare(Match match, Match match2)
       {
-         return match.order - match2.order;
+         if (match.order < match2.order)
+         {
+            return -1;
+         }
+         if (match.order == match2.order)
+         {
+            return 0;
+         }
+         return 1;
       }
    }
 
@@ -367,7 +376,15 @@ public class JaxrsInterceptorRegistry<T>
    {
       public int compare(Match match, Match match2)
       {
-         return match2.order - match.order;
+         if (match2.order < match.order)
+         {
+            return -1;
+         }
+         if (match2.order == match.order)
+         {
+            return 0;
+         }
+         return 1;
       }
    }
 

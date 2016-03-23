@@ -2,9 +2,9 @@ package org.jboss.resteasy.plugins.server.servlet;
 
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.core.SynchronousExecutionContext;
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.plugins.providers.FormUrlEncodedProvider;
 import org.jboss.resteasy.plugins.server.BaseHttpRequest;
+import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.specimpl.ResteasyHttpHeaders;
 import org.jboss.resteasy.spi.HttpResponse;
@@ -19,9 +19,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +37,6 @@ import java.util.Map;
  */
 public class HttpServletInputMessage extends BaseHttpRequest
 {
-   private final static Logger logger = Logger.getLogger(HttpServletInputMessage.class);
    protected ResteasyHttpHeaders httpHeaders;
    protected HttpServletRequest request;
    protected HttpServletResponse servletResponse;
@@ -84,7 +85,7 @@ public class HttpServletInputMessage extends BaseHttpRequest
       }
       else
       {
-         throw new IllegalArgumentException("Request media type is not application/x-www-form-urlencoded");
+         throw new IllegalArgumentException(Messages.MESSAGES.requestMediaTypeNotUrlencoded());
       }
       return formParameters;
    }
@@ -131,6 +132,12 @@ public class HttpServletInputMessage extends BaseHttpRequest
       {
          return getPutFormParameters();
       }
+      Map<String, String[]> parameterMap = request.getParameterMap();
+      MultivaluedMap<String, String> queryMap = uri.getQueryParameters();
+      if (request.getMethod().equals("PUT") && mapEquals(parameterMap, queryMap))
+      {
+         return getPutFormParameters();
+      }
       formParameters = Encode.encode(getDecodedFormParameters());
       return formParameters;
    }
@@ -142,6 +149,12 @@ public class HttpServletInputMessage extends BaseHttpRequest
       // Tomcat does not set getParameters() if it is a PUT request
       // so pull it out manually
       if (request.getMethod().equals("PUT") && (request.getParameterMap() == null || request.getParameterMap().isEmpty()))
+      {
+         return getPutDecodedFormParameters();
+      }
+      Map<String, String[]> parameterMap = request.getParameterMap();
+      MultivaluedMap<String, String> queryMap = uri.getQueryParameters();
+      if (request.getMethod().equals("PUT") && mapEquals(parameterMap, queryMap))
       {
          return getPutDecodedFormParameters();
       }
@@ -169,7 +182,6 @@ public class HttpServletInputMessage extends BaseHttpRequest
          }
       }
       return decodedFormParameters;
-
    }
 
    @Override
@@ -238,5 +250,31 @@ public class HttpServletInputMessage extends BaseHttpRequest
    public boolean wasForwarded()
    {
       return wasForwarded;
+   }
+
+   protected boolean mapEquals(Map<String, String[]> parameterMap,  MultivaluedMap<String, String> queryMap)
+   {
+      if (parameterMap.size() != queryMap.size())
+      {
+         return false;
+      }
+      for (Iterator<String> it = parameterMap.keySet().iterator(); it.hasNext(); )
+      {
+         String key = it.next();
+         String[] parameterValues = parameterMap.get(key);
+         List<String> queryValues = queryMap.get(key);
+         if (parameterValues.length != queryValues.size())
+         {
+            return false;
+         }
+         for (int i = 0; i < parameterValues.length; i++)
+         {
+            if (!queryValues.contains(parameterValues[i]))
+            {
+               return false;
+            }
+         }
+      }
+      return true;
    }
 }

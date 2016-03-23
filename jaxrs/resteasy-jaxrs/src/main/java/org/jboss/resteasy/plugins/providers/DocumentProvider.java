@@ -1,7 +1,7 @@
 package org.jboss.resteasy.plugins.providers;
 
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
+import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.spi.ReaderException;
 import org.jboss.resteasy.spi.ResteasyConfiguration;
 import org.jboss.resteasy.spi.WriterException;
@@ -20,6 +20,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,8 +38,6 @@ import java.lang.reflect.Type;
 @Consumes({"text/*+xml", "application/*+xml"})
 public class DocumentProvider extends AbstractEntityProvider<Document>
 {
-   private static final Logger logger = Logger.getLogger(DocumentProvider.class);
-   
    private final TransformerFactory transformerFactory;
    private final DocumentBuilderFactory documentBuilder;
    private boolean expandEntityReferences = false;
@@ -56,7 +55,7 @@ public class DocumentProvider extends AbstractEntityProvider<Document>
       }
       catch (Exception e)
       {
-         logger.debug("Unable to retrieve config: expandEntityReferences defaults to false");
+         LogMessages.LOGGER.unableToRetrieveConfigExpand();
       }
       try
       {
@@ -65,7 +64,7 @@ public class DocumentProvider extends AbstractEntityProvider<Document>
       }
       catch (Exception e)
       {
-         logger.debug("Unable to retrieve config: enableSecureProcessingFeature defaults to true");
+         LogMessages.LOGGER.unableToRetrieveConfigSecure();
       }
       try
       {
@@ -74,7 +73,7 @@ public class DocumentProvider extends AbstractEntityProvider<Document>
       }
       catch (Exception e)
       {
-         logger.debug("Unable to retrieve config: disableDTDs defaults to true");
+         LogMessages.LOGGER.unableToRetrieveConfigDTDs();
       }
    }
 
@@ -96,6 +95,17 @@ public class DocumentProvider extends AbstractEntityProvider<Document>
          documentBuilder.setFeature("http://apache.org/xml/features/disallow-doctype-decl", disableDTDs);
          documentBuilder.setFeature("http://xml.org/sax/features/external-general-entities", expandEntityReferences);
          documentBuilder.setFeature("http://xml.org/sax/features/external-parameter-entities", expandEntityReferences);
+         if (expandEntityReferences) {
+            try {
+//               documentBuilder.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "all");
+               // backward compatibility for jdk 1.6
+               // we can't directly use XMLConstants.ACCESS_EXTERNAL_DTD here
+               // because it doesn't exist in jdk 1.6
+               documentBuilder.setAttribute("http://javax.xml.XMLConstants/property/accessExternalDTD", "all");
+            } catch (IllegalArgumentException e) {
+               //jaxp 1.5 feature not supported
+            }
+         }
          return documentBuilder.newDocumentBuilder().parse(input);
       }
       catch (Exception e)

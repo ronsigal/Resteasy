@@ -24,7 +24,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.validation.Schema;
 
-import org.jboss.resteasy.logging.Logger;
+import org.jboss.resteasy.plugins.providers.jaxb.i18n.Messages;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -40,7 +40,6 @@ import org.xml.sax.XMLReader;
  * Created Feb 1, 2012
  */
 public class SecureUnmarshaller implements Unmarshaller {
-   final static Logger log = Logger.getLogger(SecureUnmarshaller.class);
 
 	private Unmarshaller delegate;
 	boolean disableExternalEntities;
@@ -134,7 +133,7 @@ public class SecureUnmarshaller implements Unmarshaller {
    }
 
    public Object unmarshal(File f) throws JAXBException {
-      throw new UnsupportedOperationException(errorMessage("File"));
+      throw new UnsupportedOperationException(Messages.MESSAGES.unexpectedUse("File"));
    }
 
    /**
@@ -145,11 +144,11 @@ public class SecureUnmarshaller implements Unmarshaller {
    }
    
    public Object unmarshal(Reader reader) throws JAXBException {
-      throw new UnsupportedOperationException(errorMessage("Reader"));
+      throw new UnsupportedOperationException(Messages.MESSAGES.unexpectedUse("Reader"));
    }
 
    public Object unmarshal(URL url) throws JAXBException {
-      throw new UnsupportedOperationException(errorMessage("URL"));
+      throw new UnsupportedOperationException(Messages.MESSAGES.unexpectedUse("URL"));
    }
 
    /**
@@ -162,6 +161,7 @@ public class SecureUnmarshaller implements Unmarshaller {
           SAXParserFactory spf = SAXParserFactory.newInstance();
           configureParserFactory(spf);
           SAXParser sp = spf.newSAXParser();
+          configParser(sp);
           XMLReader xmlReader = sp.getXMLReader();
           SAXSource saxSource = new SAXSource(xmlReader, source);
           return delegate.unmarshal(saxSource);
@@ -188,6 +188,7 @@ public class SecureUnmarshaller implements Unmarshaller {
             SAXParserFactory spf = SAXParserFactory.newInstance();
             configureParserFactory(spf);
             SAXParser sp = spf.newSAXParser();
+            configParser(sp);
             XMLReader xmlReader = sp.getXMLReader();
             ((SAXSource) source).setXMLReader(xmlReader);
             return delegate.unmarshal(source);
@@ -201,20 +202,31 @@ public class SecureUnmarshaller implements Unmarshaller {
             throw new JAXBException(e);
          }
       }
-      
-      throw new UnsupportedOperationException(errorMessage("Source, Class<T>"));
+
+      throw new UnsupportedOperationException(Messages.MESSAGES.unexpectedUse("Source, Class<T>"));
    }
 
+   private void configParser(SAXParser sp) {
+      try {
+         if (!disableExternalEntities)
+            sp.setProperty("http://javax.xml.XMLConstants/property/accessExternalDTD", "all");
+      } catch (SAXException e)
+      {
+         //expected, jaxp 1.5 not supported
+      }
+   }
+
+
    public Object unmarshal(XMLStreamReader reader) throws JAXBException {
-      throw new UnsupportedOperationException(errorMessage("XMLStreamReader"));
+      throw new UnsupportedOperationException(Messages.MESSAGES.unexpectedUse("XMLStreamReader"));
    }
 
    public Object unmarshal(XMLEventReader reader) throws JAXBException {
-      throw new UnsupportedOperationException(errorMessage("XMLEventReader"));
+      throw new UnsupportedOperationException(Messages.MESSAGES.unexpectedUse("XMLEventReader"));
    }
 
    public <T> JAXBElement<T> unmarshal(Node node, Class<T> declaredType) throws JAXBException {
-      throw new UnsupportedOperationException(errorMessage("Node, Class<T>"));
+      throw new UnsupportedOperationException(Messages.MESSAGES.unexpectedUse("Node, Class<T>"));
    }
 
    public <T> JAXBElement<T> unmarshal(Source source, Class<T> declaredType) throws JAXBException
@@ -226,6 +238,7 @@ public class SecureUnmarshaller implements Unmarshaller {
             SAXParserFactory spf = SAXParserFactory.newInstance();
             configureParserFactory(spf);
             SAXParser sp = spf.newSAXParser();
+            configParser(sp);
             XMLReader xmlReader = sp.getXMLReader();
             ((SAXSource) source).setXMLReader(xmlReader);
             return delegate.unmarshal(source, declaredType);
@@ -239,16 +252,16 @@ public class SecureUnmarshaller implements Unmarshaller {
             throw new JAXBException(e);
          }
       }
-      
-      throw new UnsupportedOperationException(errorMessage("Source, Class<T>"));
+
+      throw new UnsupportedOperationException(Messages.MESSAGES.unexpectedUse("Source, Class<T>"));
    }
 
    public <T> JAXBElement<T> unmarshal(XMLStreamReader reader, Class<T> declaredType) throws JAXBException {
-      throw new UnsupportedOperationException(errorMessage("XMLStreamReader, Class<T>"));
+      throw new UnsupportedOperationException(Messages.MESSAGES.unexpectedUse("XMLStreamReader, Class<T>"));
    }
 
    public <T> JAXBElement<T> unmarshal(XMLEventReader reader, Class<T> declaredType) throws JAXBException {
-      throw new UnsupportedOperationException(errorMessage("XMLEventReader, Class<T>"));
+      throw new UnsupportedOperationException(Messages.MESSAGES.unexpectedUse("XMLEventReader, Class<T>"));
    }
 
    public Unmarshaller getDelegate()
@@ -267,12 +280,7 @@ public class SecureUnmarshaller implements Unmarshaller {
       factory.setFeature("http://xml.org/sax/features/namespaces", true);
       factory.setFeature("http://xml.org/sax/features/external-general-entities", !disableExternalEntities);
       factory.setFeature("http://xml.org/sax/features/external-parameter-entities", !disableExternalEntities);
-      factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, enableSecureProcessingFeature); 
+      factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, enableSecureProcessingFeature);
       factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", disableDTDs); 
-   }
-   
-   private String errorMessage(String s)
-   {
-      return "ExternalEntityUnmarshallerWrapper: unexpected use of unmarshal(" + s + ")";
    }
 }
