@@ -243,7 +243,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
          metadata.remove(HttpHeaderNames.LAST_MODIFIED);
          return this;
       }
-      metadata.putSingle(HttpHeaderNames.LAST_MODIFIED, lastModified);
+      metadata.putSingle(HttpHeaderNames.LAST_MODIFIED, getDateFormatRFC822().format(lastModified));
       return this;
    }
 
@@ -299,7 +299,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
 
    public static SimpleDateFormat getDateFormatRFC822()
    {
-      SimpleDateFormat dateFormatRFC822 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+      SimpleDateFormat dateFormatRFC822 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss.SSS z", Locale.US);
       dateFormatRFC822.setTimeZone(TimeZone.getTimeZone("GMT"));
       return dateFormatRFC822;
    }

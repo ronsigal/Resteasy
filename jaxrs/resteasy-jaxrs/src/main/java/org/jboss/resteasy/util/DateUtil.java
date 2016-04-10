@@ -60,9 +60,14 @@ public class DateUtil
     * <code>asctime()</code> format.
     */
    public static final String PATTERN_ASCTIME = "EEE MMM d HH:mm:ss yyyy";
+   
+   /**
+    * Date format from RFC822.
+    */
+   protected static final String PATTERN_RFC822 = "EEE, dd MMM yyyy HH:mm:ss.SSS z";
 
    private static final Collection DEFAULT_PATTERNS = Arrays.asList(
-           new String[]{PATTERN_ASCTIME, PATTERN_RFC1036, PATTERN_RFC1123});
+           new String[]{PATTERN_ASCTIME, PATTERN_RFC1036, PATTERN_RFC1123, PATTERN_RFC822});
 
    private static final Date DEFAULT_TWO_DIGIT_YEAR_START;
 

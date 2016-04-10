@@ -32,7 +32,7 @@ public class ResponseTest
 
    public static final DateFormat createDateFormat(TimeZone timezone){
       SimpleDateFormat sdf = new SimpleDateFormat(
-              "EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+              "EEE, dd MMM yyyy HH:mm:ss.SSS z", Locale.US);
       sdf.setTimeZone(timezone);
       return sdf;
    }
