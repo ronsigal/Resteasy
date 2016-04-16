@@ -14,4 +14,5 @@ import java.lang.annotation.Target;
 @ContentEncoding("gzip")
 public @interface GZIP
 {
+   boolean automatic() default true;
 }

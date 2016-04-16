@@ -1,5 +1,6 @@
 package org.jboss.resteasy.plugins.interceptors.encoding;
 
+import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.util.CommitHeaderOutputStream;
 
 import javax.annotation.Priority;
@@ -9,8 +10,12 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
+
+import static org.jboss.resteasy.util.FindAnnotation.findAnnotation;
+
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -74,7 +79,7 @@ public class GZIPEncodingInterceptor implements WriterInterceptor
    {
       Object encoding = context.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING);
 
-      if (encoding != null && encoding.toString().equalsIgnoreCase("gzip"))
+      if (encoding != null && encoding.toString().equalsIgnoreCase("gzip") && automaticGzip(context))
       {
          OutputStream old = context.getOutputStream();
          // GZIPOutputStream constructor writes to underlying OS causing headers to be written.
@@ -99,5 +104,12 @@ public class GZIPEncodingInterceptor implements WriterInterceptor
       {
          context.proceed();
       }
+   }
+   
+   private boolean automaticGzip(WriterInterceptorContext context)
+   {
+      Annotation[] annotations = context.getAnnotations();
+      GZIP gzip = findAnnotation(annotations, GZIP.class);
+      return gzip == null || gzip.automatic();
    }
 }
