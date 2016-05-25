@@ -1,8 +1,7 @@
 package org.jboss.resteasy.specimpl;
 
-import org.jboss.resteasy.util.CaseInsensitiveMap;
+import org.jboss.resteasy.util.CookieParser;
 import org.jboss.resteasy.util.DateUtil;
-import org.jboss.resteasy.util.LocaleHelper;
 import org.jboss.resteasy.util.MediaTypeHelper;
 import org.jboss.resteasy.util.WeightedLanguage;
 
@@ -14,9 +13,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 /**
@@ -37,17 +38,19 @@ public class ResteasyHttpHeaders implements HttpHeaders
    public ResteasyHttpHeaders(MultivaluedMap<String, String> requestHeaders, Map<String, Cookie> cookies)
    {
       this.requestHeaders = requestHeaders;
-      this.cookies = cookies;
+      this.cookies = (cookies == null ? new HashMap<String, Cookie>() : cookies);
    }
 
    @Override
    public MultivaluedMap<String, String> getRequestHeaders()
    {
+      mergeCookies();
       return requestHeaders;
    }
 
    public MultivaluedMap<String, String> getMutableHeaders()
    {
+      mergeCookies();
       return requestHeaders;
    }
 
@@ -72,11 +75,13 @@ public class ResteasyHttpHeaders implements HttpHeaders
    @Override
    public Map<String, Cookie> getCookies()
    {
+      mergeCookies();
       return Collections.unmodifiableMap(cookies);
    }
 
    public Map<String, Cookie> getMutableCookies()
    {
+      mergeCookies();
       return cookies;
    }
 
@@ -96,6 +101,10 @@ public class ResteasyHttpHeaders implements HttpHeaders
    @Override
    public String getHeaderString(String name)
    {
+      if (HttpHeaders.COOKIE.equals(name))
+      {
+         mergeCookies();
+      }
       List<String> vals = requestHeaders.get(name);
       if (vals == null) return null;
       StringBuilder builder = new StringBuilder();
@@ -175,5 +184,85 @@ public class ResteasyHttpHeaders implements HttpHeaders
       Collections.sort(languages);
       for (WeightedLanguage language : languages) list.add(language.getLocale());
       return Collections.unmodifiableList(list);
+   }
+   
+   private void mergeCookies()
+   {
+      List<String> cookieHeader = requestHeaders.get(HttpHeaders.COOKIE);
+      if (cookieHeader == null)
+      {
+         if (cookies.isEmpty())
+         {
+            return;
+         }
+         else
+         {
+            requestHeaders.put(HttpHeaders.COOKIE, new ArrayList<String>());
+            mergeCookiesToHeaders(cookies, requestHeaders);
+            return;
+         }
+      }
+      else if (cookieHeader.isEmpty())
+      {
+         if (cookies.isEmpty())
+         {
+            return;
+         }
+         else
+         {
+            mergeCookiesToHeaders(cookies, requestHeaders);
+            return;
+         }
+      }
+      else
+      {
+         if (cookies.isEmpty())
+         {
+            mergeHeadersToCookies(requestHeaders, cookies);
+            return;
+         }
+         else
+         {
+            Map<String, Cookie> savedCookies = cookies;
+            mergeHeadersToCookies(requestHeaders, cookies);
+            mergeCookiesToHeaders(savedCookies, requestHeaders);
+            return;
+         }
+      }
+   }
+   
+   private void mergeCookiesToHeaders(Map<String, Cookie> cookies, MultivaluedMap<String, String> headers)
+   {
+      Set<Cookie> headerCookies = new HashSet<Cookie>();
+      List<String> cookieHeader = headers.get(HttpHeaders.COOKIE);
+      for (String s : cookieHeader)
+      {
+         List<Cookie> list = CookieParser.parseCookies(s);
+         for (Cookie cookie : list)
+         {
+            headerCookies.add(cookie);
+         }
+      }
+      
+      for (Cookie cookie : cookies.values())
+      {
+         if (!headerCookies.contains(cookie))
+         {
+            cookieHeader.add(cookie.toString());
+         }
+      }
+   }
+   
+   private void mergeHeadersToCookies(MultivaluedMap<String, String> headers, Map<String, Cookie> cookies)
+   {
+      List<String> cookieHeader = headers.get(HttpHeaders.COOKIE);
+      for (String s : cookieHeader)
+      {
+         List<Cookie> list = CookieParser.parseCookies(s);
+         for (Cookie cookie : list)
+         {
+            cookies.put(cookie.getName(), cookie);
+         }
+      }
    }
 }
