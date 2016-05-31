@@ -17,7 +17,7 @@
 
 
     <properties>
-        <version.org.jboss.spec.javax.ws.jboss-jaxrs-api_2.0_spec>1.0.0.Final</version.org.jboss.spec.javax.ws.jboss-jaxrs-api_2.0_spec>
+        <version.javax.ws.rs-api>2.1-SNAPSHOT</version.javax.ws.rs-api>
         <version.org.eclipse.jetty>9.2.13.v20150730</version.org.eclipse.jetty>
     </properties>
 
@@ -56,9 +56,9 @@ pom.xml as a template -->
 
     <dependencies>
         <dependency>
-            <groupId>org.jboss.spec.javax.ws.rs</groupId>
-            <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.ws.jboss-jaxrs-api_2.0_spec}</version>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>${version.javax.ws.rs-api}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

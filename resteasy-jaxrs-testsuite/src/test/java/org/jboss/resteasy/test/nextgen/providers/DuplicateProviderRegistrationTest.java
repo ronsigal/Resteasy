@@ -99,6 +99,7 @@ public class DuplicateProviderRegistrationTest
          sb.append((char) c);
          c = is.read();
       }
+      System.out.println("sb: " + sb.toString());
       Assert.assertEquals(7, countWarnings(sb.toString()));
       process.destroy();
    }

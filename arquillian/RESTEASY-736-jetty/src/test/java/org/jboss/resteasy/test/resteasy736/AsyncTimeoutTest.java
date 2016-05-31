@@ -64,7 +64,7 @@ public class AsyncTimeoutTest
       }
    }
    
-   @Ignore // Fails on master branch.
+//   @Ignore // Fails on master branch.
    @Test
    public void testDefaultAsynchTimeout() throws Exception
    {
