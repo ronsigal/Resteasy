@@ -7,7 +7,10 @@ import org.jboss.resteasy.spi.ResteasyConfiguration;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.DateUtil;
 
+import javax.servlet.ServletInputStream;
 import javax.ws.rs.core.*;
+
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -221,6 +224,39 @@ public class RequestImpl implements Request
       }
 
       return Response.status(SC_PRECONDITION_FAILED);
+   }
+
+   @Override
+   public void entity(NioReaderHandler reader)
+   {
+      entity(reader, null, null);
+   }
+
+   @Override
+   public void entity(NioReaderHandler reader, NioCompletionHandler completion)
+   {
+      entity(reader, completion, null);
+   }
+
+   @Override
+   public void entity(NioReaderHandler reader, NioErrorHandler error)
+   {
+      entity(reader, null, error);
+   }
+
+   @Override
+   public void entity(NioReaderHandler reader, NioCompletionHandler completion, NioErrorHandler error)
+   {
+      InputStream is = request.getInputStream();
+      if (is instanceof ServletInputStream)
+      {
+         ServletInputStream sis = (ServletInputStream) is;
+         sis.setReadListener(new ReadListenerWrapper(reader, sis, completion, error));
+      }
+      else
+      {
+         // ??
+      }
    }
 
 }

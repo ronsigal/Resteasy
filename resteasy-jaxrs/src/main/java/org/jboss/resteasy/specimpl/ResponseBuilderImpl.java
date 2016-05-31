@@ -6,6 +6,9 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.HeaderHelper;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
+import javax.servlet.ServletInputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
@@ -13,8 +16,14 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.NioErrorHandler;
+import javax.ws.rs.core.NioWriterHandler;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.text.SimpleDateFormat;
@@ -391,6 +400,46 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
       metadata.clear();
       if (headers == null) return this;
       metadata.putAll(headers);
+      return this;
+   }
+
+   @Override
+   public ResponseBuilder entity(NioWriterHandler writer)
+   {
+      return entity(writer, (NioErrorHandler) null);
+   }
+
+   @Override
+   public ResponseBuilder entity(NioWriterHandler writer, NioErrorHandler error)
+   {
+      HttpServletResponse response = ResteasyProviderFactory.getContextData(HttpServletResponse.class);
+      if (response != null)
+      {
+         try
+         {
+            ServletOutputStream outputStream = response.getOutputStream();
+            if (outputStream != null)
+            {
+               WriteListenerWrapper writeListener = new WriteListenerWrapper(writer, error, outputStream);
+               outputStream.setWriteListener(writeListener);
+            }
+            else
+            {
+               // ??
+            }
+         }
+         catch (IOException e)
+         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
+         return null;
+      }
+      else
+      {
+         // ??
+      }
+      
       return this;
    }
 }
