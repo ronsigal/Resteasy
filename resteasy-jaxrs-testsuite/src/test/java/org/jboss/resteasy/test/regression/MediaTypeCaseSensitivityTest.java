@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.plugins.providers.ProviderHelper;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
@@ -12,8 +10,12 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
@@ -88,17 +90,16 @@ public class MediaTypeCaseSensitivityTest extends BaseResourceTest
       Assert.assertNotNull(messageBodyReader);
       Assert.assertNotNull(messageBodyReader.getClass());
       Assert.assertEquals(StuffProvider.class, messageBodyReader.getClass());
-      ClientRequest request = new ClientRequest(generateURL("/stuff"));
-      request.body("Application/Stuff", "bill");
-      ClientResponse<?> response = null;
+      Builder builder = ClientBuilder.newClient().target(generateURL("/stuff")).request();
+      Response response = null;
       try
       {
-         response = request.post();
+         response = builder.post(Entity.entity("bill", "Application/Stuff"));
          Assert.assertEquals(204, response.getStatus());
       }
       finally
       {
-         response.releaseConnection();
+         response.close();
       }
    }
 

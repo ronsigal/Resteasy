@@ -1,7 +1,6 @@
 package org.jboss.resteasy.test.resteasy1119;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,9 +10,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.enterprise.util.AnnotationLiteral;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
-
-import org.junit.Assert;
 
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
@@ -31,6 +29,7 @@ import org.jboss.resteasy.resteasy1119.CustomerForm;
 import org.jboss.resteasy.resteasy1119.Name;
 import org.jboss.resteasy.resteasy1119.Xop;
 import org.jboss.resteasy.spi.ResteasyDeployment;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -281,7 +280,7 @@ abstract public class TestContextProviders
       Annotation[] annotations = new Annotation[1];
       annotations[0] = PART_TYPE_APPLICATION_XML;
       List<Name> names = new ArrayList<Name>();
-      names = post("/post/mixed", output, MULTIPART_MIXED, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
+      names = post2("/post/mixed", output, MULTIPART_MIXED, LIST_NAME_TYPE, annotations);
       Assert.assertEquals(2, names.size());
       Assert.assertTrue(names.contains(new Name("Bill")));
       Assert.assertTrue(names.contains(new Name("Bob"))); 
@@ -303,7 +302,7 @@ abstract public class TestContextProviders
       Annotation[] annotations = new Annotation[1];
       annotations[0] = PART_TYPE_APPLICATION_XML;
       List<Name> names = new ArrayList<Name>();
-      names = post("/post/form", output, MULTIPART_FORM_DATA, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
+      names = post2("/post/form", output, MULTIPART_FORM_DATA, LIST_NAME_TYPE, annotations);
       Assert.assertEquals(2, names.size());
       Assert.assertTrue(names.contains(new Name("Bill")));
       Assert.assertTrue(names.contains(new Name("Bob"))); 
@@ -324,7 +323,7 @@ abstract public class TestContextProviders
       Annotation[] annotations = new Annotation[1];
       annotations[0] = PART_TYPE_APPLICATION_XML;
       List<Name> names = new ArrayList<Name>();
-      names = post("/post/list", customers, MULTIPART_MIXED, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
+      names = post2("/post/list", customers, MULTIPART_MIXED, LIST_NAME_TYPE, annotations);
       Assert.assertEquals(2, names.size());
       Assert.assertTrue(names.contains(new Name("Bill")));
       Assert.assertTrue(names.contains(new Name("Bob"))); 
@@ -345,7 +344,7 @@ abstract public class TestContextProviders
       Annotation[] annotations = new Annotation[1];
       annotations[0] = PART_TYPE_APPLICATION_XML;
       List<Name> names = new ArrayList<Name>();
-      names = post("/post/map", customers, MULTIPART_FORM_DATA, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
+      names = post2("/post/map", customers, MULTIPART_FORM_DATA, LIST_NAME_TYPE, annotations);
       Assert.assertEquals(2, names.size());
       Assert.assertTrue(names.contains(new Name("bill:Bill")));
       Assert.assertTrue(names.contains(new Name("bob:Bob"))); 
@@ -367,7 +366,7 @@ abstract public class TestContextProviders
       Annotation[] annotations = new Annotation[1];
       annotations[0] = PART_TYPE_APPLICATION_XML;
       List<Name> names = new ArrayList<Name>();
-      names = post("/post/related", output, MULTIPART_RELATED, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
+      names = post2("/post/related", output, MULTIPART_RELATED, LIST_NAME_TYPE, annotations);
       Assert.assertEquals(2, names.size());
       Assert.assertTrue(names.contains(new Name("Bill")));
       Assert.assertTrue(names.contains(new Name("Bob")));
@@ -385,7 +384,7 @@ abstract public class TestContextProviders
       form.setCustomer(new Customer("Bill"));
       Annotation[] annotations = new Annotation[1];
       annotations[0] = MULTIPART_FORM;
-      String name = post("/post/multipartform", form, MULTIPART_FORM_DATA, String.class, null, annotations);
+      String name = post1("/post/multipartform", form, MULTIPART_FORM_DATA, String.class, annotations);
       System.out.println("name: " + name);
       Assert.assertEquals("Bill", name);
    }
@@ -401,7 +400,7 @@ abstract public class TestContextProviders
       Xop xop = new Xop("hello world".getBytes());
       Annotation[] annotations = new Annotation[1];
       annotations[0] = XOP_WITH_MULTIPART_RELATED;
-      String s = post("/post/xop", xop, MULTIPART_RELATED, String.class, null, annotations);
+      String s = post1("/post/xop", xop, MULTIPART_RELATED, String.class, annotations);
       Assert.assertEquals("hello world", s);
    }
 
@@ -411,27 +410,28 @@ abstract public class TestContextProviders
    }
    
    abstract <T> T get(String path, Class<T> clazz, Annotation[] annotations) throws Exception;
-   abstract <S, T> T post(String path, S payload, MediaType mediaType, Class<T> returnType, Type genericReturnType, Annotation[] annotations) throws Exception;
-
-   static class GenericTypeWrapper<T>
-   {  
-      private org.jboss.resteasy.util.GenericType<T> v2;
-      private javax.ws.rs.core.GenericType<T> v3;
-      
-      public GenericTypeWrapper(org.jboss.resteasy.util.GenericType<T> v2, javax.ws.rs.core.GenericType<T> v3)
-      {
-         this.v2 = v2;
-         this.v3 = v3;
-      }
-      
-      public Type version2()
-      {
-         return v2.getGenericType();
-      }
-      
-      public javax.ws.rs.core.GenericType<T> version3()
-      {
-         return v3;
-      }
-   }
+   abstract <S, T> T post1(String path, S payload, MediaType mediaType, Class<T> returnType, Annotation[] annotations) throws Exception;
+   abstract <S, T> T post2(String path, S payload, MediaType mediaType, GenericType<T> entityType, Annotation[] annotations) throws Exception;
+   
+//   static class GenericTypeWrapper<T>
+//   {  
+//      private org.jboss.resteasy.util.GenericType<T> v2;
+//      private javax.ws.rs.core.GenericType<T> v3;
+//      
+//      public GenericTypeWrapper(org.jboss.resteasy.util.GenericType<T> v2, javax.ws.rs.core.GenericType<T> v3)
+//      {
+//         this.v2 = v2;
+//         this.v3 = v3;
+//      }
+//      
+//      public Type version2()
+//      {
+//         return v2.getGenericType();
+//      }
+//      
+//      public javax.ws.rs.core.GenericType<T> version3()
+//      {
+//         return v3;
+//      }
+//   }
 }

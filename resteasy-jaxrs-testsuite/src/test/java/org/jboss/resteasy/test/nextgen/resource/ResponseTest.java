@@ -148,7 +148,7 @@ public class ResponseTest extends BaseResourceTest
       public Response nullEntityResponse() {
          RuntimeDelegate rd = RuntimeDelegate.getInstance();
          Response.ResponseBuilder rb = rd.createResponseBuilder();
-         return rb.entity(null).build();
+         return rb.entity((Object) null).build();
       }
 
 

@@ -1,15 +1,16 @@
 package org.jboss.resteasy.test.providers;
 
 import org.junit.Assert;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import java.io.IOException;
@@ -52,11 +53,9 @@ public class TestProvider extends BaseResourceTest
 
       });
 
-      ClientRequest request = new ClientRequest(TEST_URI);
-      request.body("application/octet-stream", "foo");
-      ClientResponse<?> response = request.post();
+      Response response = ClientBuilder.newClient().target(TEST_URI).request().post(Entity.entity("foo", "application/octet-stream"));
       Assert.assertEquals(999, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 
    @Test
@@ -85,10 +84,9 @@ public class TestProvider extends BaseResourceTest
 
       });
 
-      ClientRequest request = new ClientRequest(TEST_URI);
-      ClientResponse<?> response = request.get();
+      Response response = ClientBuilder.newClient().target(TEST_URI).request().get();
       Assert.assertEquals(999, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 
 }

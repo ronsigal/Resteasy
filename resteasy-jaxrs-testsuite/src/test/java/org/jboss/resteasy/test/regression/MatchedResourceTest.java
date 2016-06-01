@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.HttpResponseCodes;
@@ -15,6 +13,12 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
@@ -25,17 +29,20 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 public class MatchedResourceTest
 {
    private static Dispatcher dispatcher;
+   private static Client client;
 
    @BeforeClass
    public static void before() throws Exception
    {
       dispatcher = EmbeddedContainer.start().getDispatcher();
       dispatcher.getRegistry().addPerRequestResource(SimpleResource.class);
+      client = ClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
    }
 
@@ -121,13 +128,11 @@ public class MatchedResourceTest
    @Test
    public void testEmpty() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/start"));
-      String rtn = request.postTarget(String.class);
+      WebTarget target = client.target(generateURL("/start"));
+      String rtn = target.request().post(null, String.class);
       Assert.assertEquals("started", rtn);
 
-      request = new ClientRequest(generateURL("/start"));
-      request.body("application/xml", "<xml/>");
-      rtn = request.postTarget(String.class);
+      rtn = target.request().post(Entity.entity("<xml/>", "application/xml"), String.class);
       Assert.assertEquals("<xml/>", rtn);
 
    }
@@ -140,11 +145,11 @@ public class MatchedResourceTest
    @Test
    public void testMatch() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/match"));
-      request.header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-      ClientResponse<String> rtn = request.get(String.class);
-      Assert.assertEquals("text/html", rtn.getResponseHeaders().getFirst("Content-Type"));
-      String res = rtn.getEntity();
+      Builder builder = client.target(generateURL("/match")).request();
+      builder.header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+      Response rtn = builder.get();
+      Assert.assertEquals("text/html", rtn.getHeaderString("Content-Type"));
+      String res = rtn.readEntity(String.class);
       Assert.assertEquals("*/*", res);
    }
 
@@ -152,10 +157,9 @@ public class MatchedResourceTest
    {
       try
       {
-         ClientRequest request = new ClientRequest(uri);
-         ClientResponse<String> response = request.get(String.class);
+         Response response = client.target(uri).request().get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         Assert.assertEquals(value, response.getEntity());
+         Assert.assertEquals(value, response.readEntity(String.class));
       }
       catch (Exception e)
       {

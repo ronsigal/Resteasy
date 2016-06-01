@@ -1,7 +1,6 @@
 package org.jboss.resteasy.springmvc.test.spring;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.springmvc.tjws.TJWSEmbeddedSpringMVCServer;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.After;
@@ -10,6 +9,9 @@ import org.junit.Test;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 import static org.junit.Assert.assertEquals;
+
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 public class TypeMappingTest
 {
@@ -110,23 +112,23 @@ public class TypeMappingTest
       {
          url = url + "." + extension;
       }
-      ClientRequest request = new ClientRequest(url);
+      Builder builder = ResteasyClientBuilder.newClient().target(url).request();
       if (accept != null)
       {
-         request.accept(accept);
+         builder.accept(accept);
       }
-      ClientResponse<?> response = null;
+      Response response = null;
       try
       {
-         response = request.get(); 
+         response = builder.get(); 
          int status = response.getStatus();
-         String contentType = response.getResponseHeaders().getFirst("Content-type");
+         String contentType = response.getHeaderString("Content-type");
          assertEquals("Request for " + url + " returned a non-200 status", 200, status);
          assertEquals("Request for " + url + " returned an unexpected content type", expectedContentType, contentType);
       }
       finally
       {
-         response.releaseConnection();
+         response.close();
       }
    }
 }

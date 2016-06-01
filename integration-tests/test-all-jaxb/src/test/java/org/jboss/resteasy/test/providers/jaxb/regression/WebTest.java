@@ -10,10 +10,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
-import org.jboss.resteasy.client.ClientExecutor;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
+import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -28,6 +27,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import java.io.ByteArrayInputStream;
@@ -66,7 +69,7 @@ public class WebTest
       EmbeddedContainer.stop();
    }
 
-   private ApacheHttpClient4Executor createClient()
+   private ApacheHttpClient4Engine createClient()
    {
       HttpParams params = new BasicHttpParams();
       ConnManagerParams.setMaxTotalConnections(params, 500);
@@ -83,8 +86,8 @@ public class WebTest
       ClientConnectionManager cm = new ThreadSafeClientConnManager(params, schemeRegistry);
       HttpClient httpClient = new DefaultHttpClient(cm, params);
 
-      final ApacheHttpClient4Executor executor = new ApacheHttpClient4Executor(httpClient);
-      return executor;
+      final ApacheHttpClient4Engine engine = new ApacheHttpClient4Engine(httpClient);
+      return engine;
 
    }
 
@@ -97,7 +100,8 @@ public class WebTest
 
       // TODO Auto-generated method stub
 
-      ClientExecutor executor = createClient();
+      ClientHttpEngine engine = createClient();
+      Client client = new ResteasyClientBuilder().httpEngine(engine).build();
 
       itemString = setString();
 
@@ -131,12 +135,10 @@ public class WebTest
          connection.disconnect();
          */
 
-         ClientRequest request = new ClientRequest(u, executor);
-         request.body("application/xml", itemString);
-         ClientResponse response = request.post();
-         response.releaseConnection();
+         Builder request = client.target(u).request();
+         Response response = request.post(Entity.entity(itemString, "application/xml"));
+         response.close();
          Assert.assertEquals(202, response.getStatus());
-
 
       }
       latch.await(10, TimeUnit.SECONDS);

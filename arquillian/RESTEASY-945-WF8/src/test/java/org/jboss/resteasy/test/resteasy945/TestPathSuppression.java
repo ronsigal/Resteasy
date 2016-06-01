@@ -2,14 +2,14 @@ package org.jboss.resteasy.test.resteasy945;
 
 import static org.junit.Assert.assertEquals;
 
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
-import org.jboss.resteasy.api.validation.ResteasyViolationException;
 import org.jboss.resteasy.api.validation.Validation;
 import org.jboss.resteasy.api.validation.ViolationReport;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.resteasy945.TestApplication;
 import org.jboss.resteasy.resteasy945.TestClassConstraint;
 import org.jboss.resteasy.resteasy945.TestClassValidator;
@@ -106,13 +106,12 @@ public class TestPathSuppression
    
    public void doTestInputViolations(String suppress, String fieldPath, String propertyPath, String classPath, String parameterPath) throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-945-" + suppress + "/all/a/b/c");
-      ClientResponse<?>  response = request.get();
+      Response response = ClientBuilder.newClient().target("http://localhost:8080/RESTEASY-945-" + suppress + "/all/a/b/c").request().get();
       System.out.println("status: " + response.getStatus());
-      Object header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      Object header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertTrue(header instanceof String);
       Assert.assertTrue(Boolean.valueOf(String.class.cast(header)));
-      String answer = response.getEntity(String.class);
+      String answer = response.readEntity(String.class);
       System.out.println("entity: " + answer);
       assertEquals(400, response.getStatus());
       ViolationReport report = new ViolationReport(String.class.cast(answer));
@@ -134,13 +133,12 @@ public class TestPathSuppression
    
    public void doTestReturnValueViolations(String suppress, String returnValuePath) throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-945-" + suppress + "/all/aa/bbb/cccc");
-      ClientResponse<?>  response = request.get();
+      Response response = ClientBuilder.newClient().target("http://localhost:8080/RESTEASY-945-" + suppress + "/all/aa/bbb/cccc").request().get();
       System.out.println("status: " + response.getStatus());
-      Object header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      Object header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertTrue(header instanceof String);
       Assert.assertTrue(Boolean.valueOf(String.class.cast(header)));
-      String answer = response.getEntity(String.class);
+      String answer = response.readEntity(String.class);
       System.out.println("entity: " + answer);
       assertEquals(500, response.getStatus());
       ViolationReport report = new ViolationReport(String.class.cast(answer));

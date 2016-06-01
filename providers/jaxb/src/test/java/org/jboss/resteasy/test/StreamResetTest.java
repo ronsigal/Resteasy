@@ -1,7 +1,6 @@
 package org.jboss.resteasy.test;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,13 +107,12 @@ public class StreamResetTest extends BaseResourceTest
    @Test
    public void test456() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/test"));
-      ClientResponse<Place> response = request.get(Place.class);
+      ClientResponse response = (ClientResponse) ClientBuilder.newClient().target(TestPortProvider.generateURL("/test")).request().get();
       boolean exceptionThrown = false;
       try
       {
-         Place place = response.getEntity();
-
+         response.bufferEntity();
+         response.readEntity(Place.class);
       }
       catch (Exception e)
       {
@@ -122,9 +120,9 @@ public class StreamResetTest extends BaseResourceTest
       }
       Assert.assertTrue(exceptionThrown);
 
-      response.resetStream();
+//      response.resetStream(); // Out of date.
 
-      Person person = response.getEntity(Person.class);
+      Person person = response.readEntity(Person.class);
       Assert.assertNotNull(person);
       Assert.assertEquals("bill", person.getName());
    }

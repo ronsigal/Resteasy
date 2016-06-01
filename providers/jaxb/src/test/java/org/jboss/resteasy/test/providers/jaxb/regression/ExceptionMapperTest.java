@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.providers.jaxb.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.plugins.providers.jaxb.JAXBUnmarshalException;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.TestPortProvider;
@@ -12,6 +10,9 @@ import org.junit.Test;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -55,11 +56,10 @@ public class ExceptionMapperTest extends BaseResourceTest
    @Test
    public void testFailure() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/test"));
-      request.body("application/xml", "<person");
-      ClientResponse<?> response = request.post();
+      Builder request = ClientBuilder.newClient().target(TestPortProvider.generateURL("/test")).request();
+      Response response = request.post(Entity.entity("<person", "application/xml"));
       Assert.assertEquals(400, response.getStatus());
-      String output = response.getEntity(String.class);
+      String output = response.readEntity(String.class);
       System.out.println(output);
    }
 

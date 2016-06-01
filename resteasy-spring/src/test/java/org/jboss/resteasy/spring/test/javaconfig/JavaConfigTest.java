@@ -1,13 +1,16 @@
 package org.jboss.resteasy.spring.test.javaconfig;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.webapp.WebAppContext;
 
 import static org.junit.Assert.assertEquals;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 
 /**
  * This test will verify that the resource invoked by RESTEasy has been
@@ -31,10 +34,10 @@ public class JavaConfigTest {
 
    @Test
    public void test() throws Exception {
-       ClientRequest request = new ClientRequest(BASE_URL + CONTEXT_PATH + PATH);
-       @SuppressWarnings("unchecked")
-    ClientResponse<String> response = request.get();
-       assertEquals("unexpected response code", 200, response.getResponseStatus().getStatusCode());
-       assertEquals("unexpected response msg", "hello", response.getEntity(String.class));
+       Client client = ResteasyClientBuilder.newClient();
+       WebTarget target = client.target(BASE_URL + CONTEXT_PATH + PATH);
+       Response response = target.request().get(Response.class);
+       assertEquals("unexpected response code", 200, response.getStatus());
+       assertEquals("unexpected response msg", "hello", response.readEntity(String.class));
    }
 }

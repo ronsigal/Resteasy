@@ -7,6 +7,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.junit.Assert;
@@ -14,7 +15,6 @@ import org.junit.Assert;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.jboss.resteasy.resteasy1119.Customer;
 import org.jboss.resteasy.resteasy1119.CustomerForm;
@@ -60,8 +60,7 @@ public class TestContextProviders3 extends TestContextProviders
    }
 
    @Override
-   <S, T> T post(String path, S payload, MediaType mediaType,
-         Class<T> returnType, Type genericReturnType, Annotation[] annotations) throws Exception
+   <S, T> T post1(String path, S payload, MediaType mediaType, Class<T> returnType, Annotation[] annotations) throws Exception
    {
       Client client = ClientBuilder.newClient();
       WebTarget target = client.target("http://localhost:8080/RESTEASY-1119" + path);
@@ -69,17 +68,18 @@ public class TestContextProviders3 extends TestContextProviders
       ClientResponse response = (ClientResponse) target.request().post(entity);
       System.out.println("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      T result = null;
-      if (genericReturnType != null)
-      {
-//         result = response.getEntity(returnType, new GenericType<T>(genericReturnType));  
-         result = response.readEntity(returnType, genericReturnType, null);  
-      }
-      else
-      {
-         result = response.readEntity(returnType);
-      }
-      return result;
+      return response.readEntity(returnType);
    }
 
+   @Override
+   <S, T> T post2(String path, S payload, MediaType mediaType, GenericType<T> genericReturnType, Annotation[] annotations) throws Exception
+   {
+      Client client = ClientBuilder.newClient();
+      WebTarget target = client.target("http://localhost:8080/RESTEASY-1119" + path);
+      Entity<S> entity = Entity.entity(payload, mediaType, annotations);
+      ClientResponse response = (ClientResponse) target.request().post(entity);
+      System.out.println("status: " + response.getStatus());
+      Assert.assertEquals(200, response.getStatus());
+      return response.readEntity(genericReturnType, null);
+   }
 }

@@ -3,17 +3,22 @@
  */
 package org.jboss.resteasy.test.providers.datasource;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.LocateTestData;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +34,19 @@ public class TestDataSourceProvider extends BaseResourceTest
 {
 
    private static final String TEST_URI = generateURL("/jaf");
+   private static Client client;
+   
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
 
    /**
     * @throws java.lang.Exception
@@ -45,29 +63,24 @@ public class TestDataSourceProvider extends BaseResourceTest
       //File file = new File("./src/test/test-data/harper.jpg");
       File file = LocateTestData.getTestData("harper.jpg");
       Assert.assertTrue(file.exists());
-      ClientRequest request = new ClientRequest(TEST_URI);
-      request.body("image/jpeg", file);
-      ClientResponse<?> response = request.post();
+      Response response = client.target(TEST_URI).request().post(Entity.entity(file, "image/jpeg"));
       Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
-      Assert.assertEquals("image/jpeg", response.getEntity(String.class));      
+      Assert.assertEquals("image/jpeg", response.readEntity(String.class));      
    }
 
    @Test
-   @Ignore
    public void testEchoDataSourceBigData() throws Exception
    {
-      ClientRequest request = new ClientRequest(TEST_URI + "/echo");
       File file = LocateTestData.getTestData("harper.jpg");
       Assert.assertTrue(file.exists());
-      request.body("image/jpeg", file);
-      ClientResponse<?> response = request.post();
+      Response response = client.target(TEST_URI + "/echo").request().post(Entity.entity(file, "image/jpeg"));
       Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
       
       InputStream ris = null;
       InputStream fis = null;
       try
       {
-         ris = response.getEntity(InputStream.class);
+         ris = response.readEntity(InputStream.class);
          fis = new FileInputStream(file);
          int fi;
          int ri;
@@ -92,17 +105,15 @@ public class TestDataSourceProvider extends BaseResourceTest
    @Test
    public void testEchoDataSourceSmallData() throws Exception
    {
-      ClientRequest request = new ClientRequest(TEST_URI + "/echo");
       byte[] input = "Hello World!".getBytes("utf-8");
-      request.body(MediaType.APPLICATION_OCTET_STREAM, input);
-      ClientResponse<?> response = request.post();
+      Response response = client.target(TEST_URI + "/echo").request().post(Entity.entity(input, MediaType.APPLICATION_OCTET_STREAM));
       Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
       
       InputStream ris = null;
       InputStream bis = null;
       try
       {
-         ris = response.getEntity(InputStream.class);
+         ris = response.readEntity(InputStream.class);
          bis = new ByteArrayInputStream(input);
          int fi;
          int ri;
@@ -127,9 +138,8 @@ public class TestDataSourceProvider extends BaseResourceTest
    public void testGetDataSource() throws Exception
    {
       String value = "foo";
-      ClientRequest request = new ClientRequest(TEST_URI + "/" + value);
-      ClientResponse<?> response = request.get();
+      Response response = client.target(TEST_URI + "/" + value).request().get();
       Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
-      Assert.assertEquals(value, response.getEntity(String.class));
+      Assert.assertEquals(value, response.readEntity(String.class));
    }
 }

@@ -1,7 +1,7 @@
 package org.jboss.resteasy.test.core.injection;
 
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.test.BaseResourceTest;
+import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,7 +30,7 @@ public class ProviderInjectionTest extends BaseResourceTest
 
       // do a request (force provider instantiation if providers were created
       // lazily)
-      SimpleResource proxy = ProxyFactory.create(SimpleResource.class, generateBaseUrl());
+      SimpleResource proxy = TestPortProvider.createProxy(SimpleResource.class, "");
       assertEquals(proxy.foo(), "bar");
    }
 

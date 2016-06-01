@@ -1,10 +1,7 @@
 package org.jboss.resteasy.test.providers.jaxb.collection;
 
 import org.jboss.resteasy.annotations.providers.jaxb.WrappedMap;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
-import org.jboss.resteasy.util.GenericType;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,6 +11,11 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -253,23 +255,18 @@ public class MapTest extends BaseResourceTest
               + "<foo name=\"monica\"/></resteasy:entry>"
               + "</resteasy:map>";
 
-      ClientRequest request = new ClientRequest(generateURL("/map"));
-      request.body("application/xml", xml);
-      ClientResponse<Map<String, Foo>> response = request.post(new GenericType<Map<String, Foo>>()
-      {
-      });
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/map"));
+      Response response = target.request().post(Entity.entity(xml, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      Map<String, Foo> map = response.getEntity();
+      Map<String, Foo> map = response.readEntity(new GenericType<Map<String, Foo>>() {});
       Assert.assertEquals(2, map.size());
       Assert.assertNotNull(map.get("bill"));
       Assert.assertNotNull(map.get("monica"));
       Assert.assertEquals(map.get("bill").getName(), "bill");
       Assert.assertEquals(map.get("monica").getName(), "monica");
 
-      request = new ClientRequest(generateURL("/map"));
-      request.body("application/xml", xml);
-      ClientResponse<String> response2 = request.post(String.class);
-      System.out.println(response2.getEntity());
+      Response response2 = target.request().post(Entity.entity(xml, "application/xml"));
+      System.out.println(response2.readEntity(String.class));
 
 
    }
@@ -284,20 +281,17 @@ public class MapTest extends BaseResourceTest
           + "<foo name=\"monica\"/></resteasy:entry>"
           + "</resteasy:map>";
 
-      ClientRequest request = new ClientRequest(generateURL("/map/integerFoo"));
-      request.body("application/xml", xml);
-      ClientResponse<Map<String, Foo>> response = request.post(new GenericType<Map<String, Foo>>() {});
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/map/integerFoo"));
+      Response response = target.request().post(Entity.entity(xml, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      Map<String, Foo> map = response.getEntity();
+      Map<String, Foo> map = response.readEntity(new GenericType<Map<String, Foo>>() {});
       Assert.assertEquals(2, map.size());
       Assert.assertNotNull(map.get("1"));
       Assert.assertNotNull(map.get("2"));
       Assert.assertEquals(map.get("1").getName(), "bill");
       Assert.assertEquals(map.get("2").getName(), "monica");
 
-      request = new ClientRequest(generateURL("/map/integerFoo"));
-      request.body("application/xml", xml);
-      ClientResponse<String> response2 = request.post(String.class);
+      Response response2 = target.request().post(Entity.entity(xml, "application/xml"));
       xml = xml.replace("resteasy:map", "map").replace("jboss.org/resteasy", "foo.com").replace("resteasy", "ns2");
       
       String result = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
@@ -305,7 +299,7 @@ public class MapTest extends BaseResourceTest
           + "<entry key=\"1\"><ns2:foo name=\"bill\"/></entry>"
           + "<entry key=\"2\"><ns2:foo name=\"monica\"/></entry>"
           + "</map>";
-      Assert.assertEquals(result, response2.getEntity());
+      Assert.assertEquals(result, response2.readEntity(String.class));
    }
 
    
@@ -319,20 +313,14 @@ public class MapTest extends BaseResourceTest
               + "<foo:foo name=\"monica\"/></entry>"
               + "</map>";
 
-
-      ClientRequest request = new ClientRequest(generateURL("/map/wrapped"));
-      request.body("application/xml", xml);
-      ClientResponse<String> response2 = request.post(String.class);
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/map/wrapped"));
+      Response response2 = target.request().post(Entity.entity(xml, "application/xml"));
       Assert.assertEquals(200, response2.getStatus());
-      System.out.println(response2.getEntity());
+      System.out.println(response2.readEntity(String.class));
 
-      request = new ClientRequest(generateURL("/map/wrapped"));
-      request.body("application/xml", xml);
-      ClientResponse<Map<String, Foo>> response = request.post(new GenericType<Map<String, Foo>>()
-      {
-      });
+      Response response = target.request().post(Entity.entity(xml, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      Map<String, Foo> map = response.getEntity();
+      Map<String, Foo> map = response.readEntity(new GenericType<Map<String, Foo>>() {});
       Assert.assertEquals(2, map.size());
       Assert.assertNotNull(map.get("bill"));
       Assert.assertNotNull(map.get("monica"));
@@ -351,9 +339,8 @@ public class MapTest extends BaseResourceTest
               + "<foo name=\"monica\"/></resteasy:entry>"
               + "</resteasy:map>";
 
-      ClientRequest request = new ClientRequest(generateURL("/map/wrapped"));
-      request.body("application/xml", xml);
-      ClientResponse<String> response2 = request.post(String.class);
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/map/wrapped"));
+      Response response2 = target.request().post(Entity.entity(xml, "application/xml"));
       Assert.assertEquals(400, response2.getStatus());
 
    }

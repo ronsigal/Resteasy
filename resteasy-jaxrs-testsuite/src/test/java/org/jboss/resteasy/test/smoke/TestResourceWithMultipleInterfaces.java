@@ -1,9 +1,9 @@
 package org.jboss.resteasy.test.smoke;
 
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.plugins.server.resourcefactory.POJOResourceFactory;
 import org.jboss.resteasy.test.EmbeddedContainer;
+import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -12,8 +12,6 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-
-import static org.jboss.resteasy.test.TestPortProvider.generateBaseUrl;
 
 /**
  * Simple smoke test
@@ -65,7 +63,7 @@ public class TestResourceWithMultipleInterfaces
       POJOResourceFactory noDefaults = new POJOResourceFactory(RootResource.class);
       dispatcher.getRegistry().addResourceFactory(noDefaults);
 
-      IntA client = ProxyFactory.create(IntA.class, generateBaseUrl());
+      IntA client = TestPortProvider.createProxy(IntA.class, "");
 
       Assert.assertEquals("FOO", client.getFoo());
    }

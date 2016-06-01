@@ -1,10 +1,7 @@
 package org.jboss.resteasy.test.providers.jaxb.collection;
 
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
-import org.jboss.resteasy.util.GenericType;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,6 +10,11 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -152,12 +154,8 @@ public class CollectionTest2Test extends BaseResourceTest
       String xml = "<resteasy:collection xmlns:resteasy=\"http://jboss.org/resteasy\">"
               + "<foo test=\"hello\"/></resteasy:collection>";
 
-      ClientRequest request = new ClientRequest(generateURL("/array"));
-      request.body("application/xml", xml);
-      ClientResponse<List<Foo>> response = request.post(new GenericType<List<Foo>>()
-      {
-      });
-      List<Foo> list = response.getEntity();
+      Builder request = ClientBuilder.newClient().target(generateURL("/array")).request();
+      List<Foo> list= request.post(Entity.entity(xml, "application/xml"), new GenericType<List<Foo>>() {});
       Assert.assertEquals(1, list.size());
       Assert.assertEquals(list.get(0).getTest(), "hello");
 
@@ -169,12 +167,8 @@ public class CollectionTest2Test extends BaseResourceTest
       String xml = "<list>"
               + "<foo test=\"hello\"/></list>";
 
-      ClientRequest request = new ClientRequest(generateURL("/list"));
-      request.body("application/xml", xml);
-      ClientResponse<Foo[]> response = request.post(new GenericType<Foo[]>()
-      {
-      });
-      Foo[] list = response.getEntity();
+      Builder request = ClientBuilder.newClient().target(generateURL("/list")).request();
+      Foo[] list= request.post(Entity.entity(xml, "application/xml"), new GenericType<Foo[]>() {});
       Assert.assertEquals(1, list.length);
       Assert.assertEquals(list[0].getTest(), "hello");
 
@@ -186,12 +180,8 @@ public class CollectionTest2Test extends BaseResourceTest
       String xml = "<collection xmlns:foo=\"http://foo.com\">"
               + "<foo:foo test=\"hello\"/></collection>";
 
-      ClientRequest request = new ClientRequest(generateURL("/namespaced/array"));
-      request.body("application/xml", xml);
-      ClientResponse<List<NamespacedFoo>> response = request.post(new GenericType<List<NamespacedFoo>>()
-      {
-      });
-      List<NamespacedFoo> list = response.getEntity();
+      Builder request = ClientBuilder.newClient().target(generateURL("/namespaced/array")).request();
+      List<NamespacedFoo> list= request.post(Entity.entity(xml, "application/xml"), new GenericType<List<NamespacedFoo>>() {});
       Assert.assertEquals(1, list.size());
       Assert.assertEquals(list.get(0).getTest(), "hello");
 
@@ -203,12 +193,8 @@ public class CollectionTest2Test extends BaseResourceTest
       String xml = "<list xmlns:foo=\"http://foo.com\">"
               + "<foo:foo test=\"hello\"/></list>";
 
-      ClientRequest request = new ClientRequest(generateURL("/namespaced/list"));
-      request.body("application/xml", xml);
-      ClientResponse<NamespacedFoo[]> response = request.post(new GenericType<NamespacedFoo[]>()
-      {
-      });
-      NamespacedFoo[] list = response.getEntity();
+      Builder request = ClientBuilder.newClient().target(generateURL("/namespaced/list")).request();
+      NamespacedFoo[] list= request.post(Entity.entity(xml, "application/xml"), new GenericType<NamespacedFoo[]>() {});
       Assert.assertEquals(1, list.length);
       Assert.assertEquals(list[0].getTest(), "hello");
 
@@ -220,11 +206,8 @@ public class CollectionTest2Test extends BaseResourceTest
       String xml = "<bad-list>"
               + "<foo test=\"hello\"/></bad-list>";
 
-      ClientRequest request = new ClientRequest(generateURL("/list"));
-      request.body("application/xml", xml);
-      ClientResponse<Foo[]> response = request.post(new GenericType<Foo[]>()
-      {
-      });
+      Builder request = ClientBuilder.newClient().target(generateURL("/list")).request();
+      Response response = request.post(Entity.entity(xml, "application/xml"));
       Assert.assertEquals(400, response.getStatus());
 
    }

@@ -1,17 +1,22 @@
 package org.jboss.resteasy.test.xxe;
 
 import org.junit.Assert;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import org.junit.BeforeClass;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Hashtable;
@@ -35,6 +40,7 @@ public class TestXXE
 {
    protected static ResteasyDeployment deployment;
    protected static Dispatcher dispatcher;
+   protected static Client client;
 
    @Path("/")
    public static class MovieResource
@@ -141,6 +147,18 @@ public class TestXXE
      }
    }
 
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    public static void before(String expandEntityReferences, String enableSecurityFeature) throws Exception
    {
       Hashtable<String,String> initParams = new Hashtable<String,String>();
@@ -182,7 +200,7 @@ public class TestXXE
    void doTestXmlRootElementDefault(String enableSecurityFeature) throws Exception
    {
       before(enableSecurityFeature);
-      ClientRequest request = new ClientRequest(generateURL("/xmlRootElement"));
+      Builder request = client.target(generateURL("/xmlRootElement")).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -191,10 +209,9 @@ public class TestXXE
                    "<favoriteMovieXmlRootElement><title>&xxe;</title></favoriteMovieXmlRootElement>";
       
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("Result: " + entity);
       Assert.assertTrue(entity.indexOf("xx:xx:xx:xx:xx:xx:xx") < 0);
       after();
@@ -210,7 +227,7 @@ public class TestXXE
    void doTestXmlRootElementWithoutExpansion(String enableSecurityFeature) throws Exception
    {
       before("false", enableSecurityFeature);
-      ClientRequest request = new ClientRequest(generateURL("/xmlRootElement"));
+      Builder request = client.target(generateURL("/xmlRootElement")).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -219,10 +236,9 @@ public class TestXXE
                    "<favoriteMovieXmlRootElement><title>&xxe;</title></favoriteMovieXmlRootElement>";
       
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("Result: " + entity);
       Assert.assertTrue(entity.indexOf("xx:xx:xx:xx:xx:xx:xx") < 0);
       after();
@@ -238,7 +254,7 @@ public class TestXXE
    void doTestXmlRootElementWithExpansion(String enableSecurityFeature) throws Exception
    {
       before("true", enableSecurityFeature);
-      ClientRequest request = new ClientRequest(generateURL("/xmlRootElement"));
+      Builder request = client.target(generateURL("/xmlRootElement")).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -247,10 +263,9 @@ public class TestXXE
                    "<favoriteMovieXmlRootElement><title>&xxe;</title></favoriteMovieXmlRootElement>";
 
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("result: " + entity);
       Assert.assertTrue(entity.indexOf("xx:xx:xx:xx:xx:xx:xx") >= 0);
       after();
@@ -266,7 +281,7 @@ public class TestXXE
    void doTestXmlTypeDefault(String enableSecurityFeature) throws Exception
    {
       before(enableSecurityFeature);
-      ClientRequest request = new ClientRequest(generateURL("/xmlType"));
+      Builder request = client.target(generateURL("/xmlType")).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -275,10 +290,9 @@ public class TestXXE
                    "<favoriteMovie><title>&xxe;</title></favoriteMovie>";
       
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("Result: " + entity);
       Assert.assertTrue(entity.indexOf("xx:xx:xx:xx:xx:xx:xx") < 0);
       after();
@@ -294,7 +308,7 @@ public class TestXXE
    void doTestXmlTypeWithoutExpansion(String enableSecurityFeature) throws Exception
    {
       before("false", enableSecurityFeature);
-      ClientRequest request = new ClientRequest(generateURL("/xmlType"));
+      Builder request = client.target(generateURL("/xmlType")).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -303,10 +317,9 @@ public class TestXXE
                    "<favoriteMovie><title>&xxe;</title></favoriteMovie>";
       
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("Result: " + entity);
       Assert.assertTrue(entity.indexOf("xx:xx:xx:xx:xx:xx:xx") < 0);
       after();
@@ -322,7 +335,7 @@ public class TestXXE
    void doTestXmlTypeWithExpansion(String enableSecurityFeature) throws Exception
    {
       before("true", enableSecurityFeature);
-      ClientRequest request = new ClientRequest(generateURL("/xmlType"));
+      Builder request = client.target(generateURL("/xmlType")).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -331,10 +344,9 @@ public class TestXXE
                    "<favoriteMovie><title>&xxe;</title></favoriteMovie>";
 
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("result: " + entity);
       Assert.assertTrue(entity.indexOf("xx:xx:xx:xx:xx:xx:xx") >= 0);  
       after();
@@ -350,7 +362,7 @@ public class TestXXE
    void doTestJAXBElementDefault(String enableSecurityFeature) throws Exception
    {
       before(enableSecurityFeature);
-      ClientRequest request = new ClientRequest(generateURL("/JAXBElement"));
+      Builder request = client.target(generateURL("/JAXBElement")).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -359,10 +371,9 @@ public class TestXXE
                    "<favoriteMovieXmlType><title>&xxe;</title></favoriteMovieXmlType>";
       
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("Result: " + entity);
       Assert.assertTrue(entity.indexOf("xx:xx:xx:xx:xx:xx:xx") < 0);
       after();
@@ -378,7 +389,7 @@ public class TestXXE
    void doTestJAXBElementWithoutExpansion(String enableSecurityFeature) throws Exception
    {
       before("false", enableSecurityFeature);
-      ClientRequest request = new ClientRequest(generateURL("/JAXBElement"));
+      Builder request = client.target(generateURL("/JAXBElement")).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -387,10 +398,9 @@ public class TestXXE
                    "<favoriteMovieXmlType><title>&xxe;</title></favoriteMovieXmlType>";
       
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("Result: " + entity);
       Assert.assertTrue(entity.indexOf("xx:xx:xx:xx:xx:xx:xx") < 0);
       after();
@@ -406,7 +416,7 @@ public class TestXXE
    void doTestJAXBElementWithExpansion(String enableSecurityFeature) throws Exception
    {
       before("true", enableSecurityFeature);
-      ClientRequest request = new ClientRequest(generateURL("/JAXBElement"));
+      Builder request = client.target(generateURL("/JAXBElement")).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -415,10 +425,9 @@ public class TestXXE
                    "<favoriteMovieXmlType><title>&xxe;</title></favoriteMovieXmlType>";
       
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("Result: " + entity);
       Assert.assertTrue(entity.indexOf("xx:xx:xx:xx:xx:xx:xx") >= 0);  
       after();
@@ -519,7 +528,7 @@ public class TestXXE
       {
          before(Boolean.toString(expand), Boolean.toString(enableSecurityFeature));
       }
-      ClientRequest request = new ClientRequest(generateURL("/" + path));
+      Builder request = client.target(generateURL("/" + path)).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -531,10 +540,9 @@ public class TestXXE
                    "</collection>";
       
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("Result: " + entity);
       if (expand)
       {
@@ -558,7 +566,7 @@ public class TestXXE
       {
          before(Boolean.toString(expand), Boolean.toString(enableSecurityFeature));  
       }
-      ClientRequest request = new ClientRequest(generateURL("/map"));
+      Builder request = client.target(generateURL("/map")).request();
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -574,10 +582,9 @@ public class TestXXE
                    "</map>";
       
       //System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       //System.out.println("Result: " + entity);
       if (expand)
       {

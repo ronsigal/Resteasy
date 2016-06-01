@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.finegrain.resource;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.HttpResponseCodes;
@@ -13,9 +11,14 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -29,7 +32,8 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
  */
 public class ExtensionTest
 {
-
+   private static Client client;
+   
    @Path("/extension")
    public static class ExtensionResource
    {
@@ -89,22 +93,24 @@ public class ExtensionTest
       deployment.setLanguageExtensions(languageMap);
       deployment.getActualResourceClasses().add(ExtensionResource.class);
       EmbeddedContainer.start(deployment);
+      client = ClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
    }
 
    private void _test(String path, String body)
    {
-      ClientRequest request = new ClientRequest(generateURL(path));
+      Builder builder = client.target(generateURL(path)).request();
       try
       {
-         ClientResponse<String> response = request.get(String.class);
+         Response response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         Assert.assertEquals(body, response.getEntity());
+         Assert.assertEquals(body, response.readEntity(String.class));
       }
       catch (Exception e)
       {
@@ -126,16 +132,20 @@ public class ExtensionTest
    @Test
    public void testError()
    {
-      ClientRequest request = new ClientRequest(generateURL("/extension.junk"));
+      Builder builder = client.target(generateURL("/extension.junk")).request();
+      Response response = null;
       try
       {
-         ClientResponse<String> response = request.get(String.class);
+         response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_NOT_FOUND, response.getStatus());
-         response.releaseConnection();
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
+      }
+      finally
+      {
+         response.close();
       }
    }
 }

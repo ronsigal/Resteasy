@@ -9,9 +9,10 @@ import java.util.Iterator;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.test.BaseResourceTest;
@@ -59,11 +60,11 @@ public class JAXBContextFinderTest extends BaseResourceTest
    @Test
    public void testAtomFeed() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/atom/feed"));
-      ClientResponse<Feed> response = request.get(Feed.class);
+      Builder request = ClientBuilder.newClient().target(generateURL("/atom/feed")).request();
+      Response response = request.get();
       Assert.assertEquals(200, response.getStatus());
-      System.out.println(response.getEntity());
-      Feed feed = response.getEntity();
+      Feed feed = response.readEntity(Feed.class);
+      System.out.println(feed);
       Iterator<Entry> it = feed.getEntries().iterator();
       Entry entry1 = it.next();
       Entry entry2 = it.next();

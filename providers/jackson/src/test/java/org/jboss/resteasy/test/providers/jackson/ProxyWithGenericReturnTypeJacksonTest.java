@@ -9,13 +9,15 @@ import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.codehaus.jackson.annotate.JsonTypeInfo.As;
 import org.codehaus.jackson.annotate.JsonTypeInfo.Id;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.junit.After;
@@ -159,20 +161,22 @@ public class ProxyWithGenericReturnTypeJacksonTest
 
     @Test
     public void test() throws Exception {
-        ClientRequest request = new ClientRequest("http://localhost:8081/test/one/");
+        Builder request = ClientBuilder.newClient().target("http://localhost:8081/test/one/").request();
         System.out.println("Sending request");
-        ClientResponse<String> response = request.get(String.class);
-        System.out.println("Received response: " + response.getEntity(String.class));
+        Response response = request.get();
+        String entity = response.readEntity(String.class);
+        System.out.println("Received response: " + entity);
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertTrue("Type property is missing.", response.getEntity(String.class).contains("type"));
-       response.releaseConnection();
+        Assert.assertTrue("Type property is missing.", entity.contains("type"));
+        response.close();
 
-        request = new ClientRequest("http://localhost:8081/test/list/");
+        request = ClientBuilder.newClient().target("http://localhost:8081/test/list/").request();
         System.out.println("Sending request");
-        response = request.get(String.class);
-        System.out.println("Received response: " + response.getEntity(String.class));
+        response = request.get();
+        entity = response.readEntity(String.class);
+        System.out.println("Received response: " + entity);
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertTrue("Type property is missing.", response.getEntity(String.class).contains("type"));
-       response.releaseConnection();
+        Assert.assertTrue("Type property is missing.", entity.contains("type"));
+        response.close();
     }
 }

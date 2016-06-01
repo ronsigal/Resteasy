@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Assert;
-import org.jboss.resteasy.client.ProxyFactory;
+
 import org.jboss.resteasy.plugins.stats.DeleteResourceMethod;
 import org.jboss.resteasy.plugins.stats.GetResourceMethod;
 import org.jboss.resteasy.plugins.stats.HeadResourceMethod;
@@ -83,7 +83,7 @@ public class TestStats extends BaseResourceTest {
 
     @Test
     public void testRegistryStats() throws Exception {
-        RegistryStats stats = ProxyFactory.create(RegistryStats.class, generateBaseUrl());
+        RegistryStats stats = TestPortProvider.createProxy(RegistryStats.class, "");
 
         RegistryData data = stats.get();
         Assert.assertEquals(4, data.getEntries().size());

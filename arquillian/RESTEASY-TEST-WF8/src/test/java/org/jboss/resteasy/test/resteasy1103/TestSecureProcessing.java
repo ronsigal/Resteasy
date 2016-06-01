@@ -4,17 +4,15 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
-
-import org.junit.Assert;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.resteasy1103.Bar;
 import org.jboss.resteasy.resteasy1103.FavoriteMovie;
 import org.jboss.resteasy.resteasy1103.FavoriteMovieXmlRootElement;
@@ -22,12 +20,11 @@ import org.jboss.resteasy.resteasy1103.FavoriteMovieXmlType;
 import org.jboss.resteasy.resteasy1103.ObjectFactory;
 import org.jboss.resteasy.resteasy1103.TestApplication;
 import org.jboss.resteasy.resteasy1103.TestResource;
-import org.jboss.resteasy.spi.ReaderException;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.asset.FileAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -530,54 +527,49 @@ public class TestSecureProcessing
    void doEntityExpansionFails(String ext) throws Exception
    {
       System.out.println("entering doEntityExpansionFails(" + ext + ")");
+      Client client = ResteasyClientBuilder.newClient();
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlRootElement/");
-         request.body("application/xml", bigXmlRootElement);
-         System.out.println("bigXmlRootElement: " + bigXmlRootElement);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlRootElement/").request();
+         Response response = request.post(Entity.entity(bigXmlRootElement, "application/xml"));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(400, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("doEntityExpansionFails() result: " + entity);
          Assert.assertTrue(entity.contains("javax.xml.bind.UnmarshalException"));
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlType/");
-         request.body("application/xml", bigXmlType);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlType/").request();
+         Response response = request.post(Entity.entity(bigXmlType, "application/xml"));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(400, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("doEntityExpansionFails() result: " + entity);
          Assert.assertTrue(entity.contains("javax.xml.bind.UnmarshalException")); 
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/JAXBElement/");
-         request.body("application/xml", bigJAXBElement);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/JAXBElement/").request();
+         Response response = request.post(Entity.entity(bigJAXBElement, "application/xml"));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(400, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("doEntityExpansionFails() result: " + entity);
          Assert.assertTrue(entity.contains("javax.xml.bind.UnmarshalException")); 
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/collection/");
-         request.body("application/xml", bigCollection);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/collection/").request();
+         Response response = request.post(Entity.entity(bigCollection, "application/xml"));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(400, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("doEntityExpansionFails() result: " + entity);
          Assert.assertTrue(entity.contains("javax.xml.bind.UnmarshalException")); 
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/map/");
-         request.body("application/xml", bigMap);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/map/").request();
+         Response response = request.post(Entity.entity(bigMap, "application/xml"));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(400, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("doEntityExpansionFails() result: " + entity);
          Assert.assertTrue(entity.contains("javax.xml.bind.UnmarshalException")); 
       }
@@ -586,58 +578,53 @@ public class TestSecureProcessing
    void doEntityExpansionPasses(String ext) throws Exception
    {
       System.out.println("entering doEntityExpansionFails(" + ext + ")");
+      Client client = ResteasyClientBuilder.newClient();
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlRootElement/");
-         request.body("application/xml", bigXmlRootElement);
-         System.out.println("bigXmlRootElement: " + bigXmlRootElement);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlRootElement/").request();
+         Response response = request.post(Entity.entity(bigXmlRootElement, "application/xml"));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(200, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          int len = Math.min(entity.length(), 30);
          System.out.println("doEntityExpansionPasses() result: " + entity.substring(0, len) + "...");
          Assert.assertEquals(1000000, countFoos(entity));
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlType/");
-         request.body("application/xml", bigXmlType);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlType/").request();
+         Response response = request.post(Entity.entity(bigXmlType, "application/xml"));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(200, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          int len = Math.min(entity.length(), 30);
          System.out.println("doEntityExpansionPasses() result: " + entity.substring(0, len) + "...");
          Assert.assertEquals(1000000, countFoos(entity));
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/JAXBElement/");
-         request.body("application/xml", bigJAXBElement);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/JAXBElement/").request();
+         Response response = request.post(Entity.entity(bigJAXBElement, "application/xml"));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(200, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          int len = Math.min(entity.length(), 30);
          System.out.println("doEntityExpansionPasses() result: " + entity.substring(0, len) + "...");
          Assert.assertEquals(1000000, countFoos(entity));
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/collection/");
-         request.body("application/xml", bigCollection);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/collection/").request();
+         Response response = request.post(Entity.entity(bigCollection, "application/xml"));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(200, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          int len = Math.min(entity.length(), 30);
          System.out.println("doEntityExpansionPasses() result: " + entity.substring(0, len) + "...");
          Assert.assertEquals(2000000, countFoos(entity));
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/map/");
-         request.body("application/xml", bigMap);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/map/").request();
+         Response response = request.post(Entity.entity(bigMap, "application/xml"));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(200, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          int len = Math.min(entity.length(), 30);
          System.out.println("doEntityExpansionPasses() result: " + entity.substring(0, len) + "...");
          Assert.assertEquals(2000000, countFoos(entity));
@@ -647,11 +634,10 @@ public class TestSecureProcessing
    void doMaxAttributesFails(String ext) throws Exception
    {
       System.out.println("entering doMaxAttributesFails(" + ext + ")");
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/maxAttributes/");
-      request.body("application/xml", bigAttributeDoc);
-      ClientResponse<?> response = request.post();
+      Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/maxAttributes/").request();
+      Response response = request.post(Entity.entity(bigAttributeDoc, "application/xml"));
       System.out.println("doMaxAttributesFails() status: " + response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("doMaxAttributesFails() result: " + entity);
 //      Assert.assertEquals(400, response.getStatus());
 //      Assert.assertTrue(entity.startsWith("javax.xml.bind.UnmarshalException"));
@@ -661,11 +647,10 @@ public class TestSecureProcessing
    void doMaxAttributesPasses(String ext) throws Exception
    {
       System.out.println("entering doMaxAttributesPasses(" + ext + ")");
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/maxAttributes/");
-      request.body("application/xml", bigAttributeDoc);
-      ClientResponse<?> response = request.post();
+      Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/maxAttributes/").request();
+      Response response = request.post(Entity.entity(bigAttributeDoc, "application/xml"));
       System.out.println("doMaxAttributesPasses() status: " + response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("doMaxAttributesPasses() result: " + entity);
       Assert.assertEquals(204, response.getStatus());
 //      Assert.assertEquals("bar", entity);
@@ -674,11 +659,10 @@ public class TestSecureProcessing
    void doDTDFails(String ext) throws Exception
    {
       System.out.println("entering doDTDFails(" + ext + ")");
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/DTD/");
-      request.body("application/xml", bar);
-      ClientResponse<?> response = request.post();
+      Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/DTD/").request();
+      Response response = request.post(Entity.entity(bar, "application/xml"));
       System.out.println("status: " + response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("doDTDFails(): result: " + entity);
       Assert.assertEquals(400, response.getStatus());
       Assert.assertTrue(entity.startsWith("javax.xml.bind.UnmarshalException"));
@@ -688,11 +672,10 @@ public class TestSecureProcessing
    void doDTDPasses(String ext) throws Exception
    {
       System.out.println("entering doDTDPasses(" + ext + ")");
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/DTD/");
-      request.body("application/xml", bar);
-      ClientResponse<?> response = request.post();
+      Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/DTD/").request();
+      Response response = request.post(Entity.entity(bar, "application/xml"));
       System.out.println("status: " + response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("doDTDPasses() result: " + entity);
       Assert.assertEquals(200, response.getStatus());
       Assert.assertEquals("junk", entity);
@@ -702,50 +685,45 @@ public class TestSecureProcessing
    {
       System.out.println("entering doExternalEntityExpansionFails(" + ext + ")");
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlRootElement/");
-         request.body("application/xml", externalXmlRootElement);
-         ClientResponse<?> response = request.post();
+         Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlRootElement/").request();
+         Response response = request.post(Entity.entity(externalXmlRootElement, "application/xml"));
          System.out.println("status: " + response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("doExternalEntityExpansionFails() result: " + entity);
          Assert.assertEquals(200, response.getStatus());
          Assert.assertEquals("", entity);
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlType/");
-         request.body("application/xml", externalXmlType);
-         ClientResponse<?> response = request.post();
+         Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlType/").request();
+         Response response = request.post(Entity.entity(externalXmlType, "application/xml"));
          System.out.println("status: " + response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("doExternalEntityExpansionFails() result: " + entity);
          Assert.assertEquals(200, response.getStatus());
          Assert.assertEquals("", entity); 
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/JAXBElement/");
-         request.body("application/xml", externalJAXBElement);
-         ClientResponse<?> response = request.post();
+         Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/JAXBElement/").request();
+         Response response = request.post(Entity.entity(externalJAXBElement, "application/xml"));
          System.out.println("status: " + response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("doExternalEntityExpansionFails() result: " + entity);
          Assert.assertEquals(200, response.getStatus());
          Assert.assertEquals("", entity);; 
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/collection/");
-         request.body("application/xml", externalCollection);
-         ClientResponse<?> response = request.post();
+         Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/collection/").request();
+         Response response = request.post(Entity.entity(externalCollection, "application/xml"));
          System.out.println("status: " + response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("doExternalEntityExpansionFails() result: " + entity);
          Assert.assertEquals(200, response.getStatus());
          Assert.assertEquals("", entity);
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/map/");
-         request.body("application/xml", externalMap);
-         ClientResponse<?> response = request.post();
-         String entity = response.getEntity(String.class);
+         Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/map/").request();
+         Response response = request.post(Entity.entity(externalMap, "application/xml"));
+         String entity = response.readEntity(String.class);
          System.out.println("doExternalEntityExpansionFails() result: " + entity);
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(200, response.getStatus());
@@ -757,56 +735,50 @@ public class TestSecureProcessing
    {
       System.out.println("entering doExternalEntityExpansionPasses(" + ext + ")");
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlRootElement/");
-         request.body("application/xml", externalXmlRootElement);
-         System.out.println("bigXmlRootElement: " + bigXmlRootElement);
-         ClientResponse<?> response = request.post();
+         Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlRootElement/").request();
+         Response response = request.post(Entity.entity(externalXmlRootElement, "application/xml"));
          System.out.println("status: " + response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          int len = Math.min(entity.length(), 30);
          System.out.println("doExternalEntityExpansionPasses() result: " + entity.substring(0, len) + "...");
          Assert.assertEquals(200, response.getStatus());
          Assert.assertEquals("xx:xx:xx:xx:xx:xx:xx", entity);
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlType/");
-         request.body("application/xml", externalXmlType);
-         ClientResponse<?> response = request.post();
+         Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/xmlType/").request();
+         Response response = request.post(Entity.entity(externalXmlType, "application/xml"));
          System.out.println("status: " + response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          int len = Math.min(entity.length(), 30);
          System.out.println("doExternalEntityExpansionPasses() result: " + entity.substring(0, len) + "...");
          Assert.assertEquals(200, response.getStatus());
          Assert.assertEquals("xx:xx:xx:xx:xx:xx:xx", entity);
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/JAXBElement/");
-         request.body("application/xml", externalJAXBElement);
-         ClientResponse<?> response = request.post();
+         Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/JAXBElement/").request();
+         Response response = request.post(Entity.entity(externalJAXBElement, "application/xml"));
          System.out.println("status: " + response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          int len = Math.min(entity.length(), 30);
          System.out.println("doExternalEntityExpansionPasses() result: " + entity.substring(0, len) + "...");
          Assert.assertEquals(200, response.getStatus());
          Assert.assertEquals("xx:xx:xx:xx:xx:xx:xx", entity);
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/collection/");
-         request.body("application/xml", externalCollection);
-         ClientResponse<?> response = request.post();
+         Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/collection/").request();
+         Response response = request.post(Entity.entity(externalCollection, "application/xml"));
          System.out.println("status: " + response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          int len = Math.min(entity.length(), 30);
          System.out.println("doExternalEntityExpansionPasses() result: " + entity.substring(0, len) + "...");
          Assert.assertEquals(200, response.getStatus());
          Assert.assertEquals("xx:xx:xx:xx:xx:xx:xx" + "xx:xx:xx:xx:xx:xx:xx", entity);
       }
       {
-         ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/map/");
-         request.body("application/xml", externalMap);
-         ClientResponse<?> response = request.post();
+         Builder request = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1103-" + ext + "/entityExpansion/map/").request();
+         Response response = request.post(Entity.entity(externalMap, "application/xml"));
          System.out.println("status: " + response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          int len = Math.min(entity.length(), 30);
          System.out.println("doExternalEntityExpansionPasses() result: " + entity.substring(0, len) + "...");
          Assert.assertEquals(200, response.getStatus());

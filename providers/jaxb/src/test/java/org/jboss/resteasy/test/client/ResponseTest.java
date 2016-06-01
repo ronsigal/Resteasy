@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.client;
 
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.test.BaseResourceTest;
@@ -18,7 +16,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.net.HttpURLConnection;
 
-import static org.jboss.resteasy.test.TestPortProvider.generateBaseUrl;
+import static org.jboss.resteasy.test.TestPortProvider.createProxy;
 
 /**
  * RESTEASY-306
@@ -76,10 +74,10 @@ public class ResponseTest extends BaseResourceTest
    public void testIt() throws Exception
    {
       RegisterBuiltin.register(ResteasyProviderFactory.getInstance());
-      RESTCredits proxy = ProxyFactory.create(RESTCredits.class, generateBaseUrl());
-      ClientResponse<?> response = (ClientResponse<?>) proxy.getCredits("xx");
+      RESTCredits proxy = createProxy(RESTCredits.class, "");
+      Response response = proxy.getCredits("xx");
       Assert.assertEquals(response.getStatus(), HttpURLConnection.HTTP_OK);
-      Credit cred = response.getEntity(Credit.class);
+      response.readEntity(Credit.class);
    }
 
 

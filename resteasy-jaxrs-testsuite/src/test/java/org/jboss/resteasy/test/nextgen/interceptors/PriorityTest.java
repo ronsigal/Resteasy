@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.jboss.resteasy.core.interception.ClientResponseFilterRegistry;
 import org.jboss.resteasy.core.interception.ContainerResponseFilterRegistry;
 import org.jboss.resteasy.core.interception.JaxrsInterceptorRegistry;
-import org.jboss.resteasy.core.interception.LegacyPrecedence;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Test;
 
@@ -117,7 +116,7 @@ public class PriorityTest
    @Test
    public void testPriority() throws Exception
    {
-      ContainerResponseFilterRegistry containerResponseFilterRegistry = new ContainerResponseFilterRegistry(new ResteasyProviderFactory(), new LegacyPrecedence());
+      ContainerResponseFilterRegistry containerResponseFilterRegistry = new ContainerResponseFilterRegistry(new ResteasyProviderFactory());
       ClientResponseFilterRegistry clientResponseFilterRegistry = new ClientResponseFilterRegistry(new ResteasyProviderFactory());
       JaxrsInterceptorRegistry<ClientRequestFilter> clientRequestFilterRegistry = new JaxrsInterceptorRegistry<ClientRequestFilter>(new ResteasyProviderFactory(), ClientRequestFilter.class);
 

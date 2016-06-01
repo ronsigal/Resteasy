@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.HttpResponseCodes;
@@ -13,6 +11,11 @@ import org.junit.Test;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.InputStream;
@@ -69,13 +72,12 @@ public class FormUrlEncodedTest
    public void testPost()
    {
       dispatcher.getRegistry().addPerRequestResource(SimpleResource.class);
-      ClientRequest request = new ClientRequest(generateURL("/simple"));
-      request.formParameter("hello", "world");
       try
       {
-         ClientResponse<String> response = request.post(String.class);
+         Builder builder = ClientBuilder.newClient().target(generateURL("/simple")).request();
+         Response response = builder.post(Entity.form(new Form("hello", "world")));
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         String body = response.getEntity();
+         String body = response.readEntity(String.class);
          Assert.assertEquals("hello=world", body);
       }
       catch (Exception e)

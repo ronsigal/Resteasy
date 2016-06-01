@@ -22,26 +22,43 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
-
+import org.junit.BeforeClass;
 import org.jboss.resteasy.api.validation.ResteasyViolationException;
 import org.jboss.resteasy.api.validation.Validation;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
+import org.jboss.resteasy.test.validation.TestValidation.FooReaderWriter;
 import org.junit.Test;
 
 public class TestValidationExceptions
 {
    protected static ResteasyDeployment deployment;
    protected static Dispatcher dispatcher;
+   protected static Client client;
    
    ///////////////////////////////////////////////////////////////////////////////////////
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient().register(FooReaderWriter.class);
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    public static void before(Class<?> resourceClass) throws Exception
    {
       after();
@@ -260,13 +277,13 @@ public class TestValidationExceptions
       before(TestResourceWithIncorrectConstraint.class);
 
       // Valid
-      ClientRequest request = new ClientRequest(generateURL("/"));
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(generateURL("/")).request();
+      Response response = request.post(null);
       Assert.assertEquals(500, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       Assert.assertTrue(entity.contains("ConstraintDefinitionException"));
       after();
@@ -278,13 +295,13 @@ public class TestValidationExceptions
       before(TestSubResourceWithInvalidOverride.class);
 
       // Valid
-      ClientRequest request = new ClientRequest(generateURL("/"));
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(generateURL("/")).request();
+      Response response = request.post(null);
       Assert.assertEquals(500, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       Assert.assertTrue(entity.contains("ConstraintDeclarationException"));
       after();
@@ -296,14 +313,14 @@ public class TestValidationExceptions
       before(TestResourceWithInvalidConstraintGroup.class);
 
       // Valid
-      ClientRequest request = new ClientRequest(generateURL("/"));
-      ClientResponse<?> response = request.get(String.class);
+      Builder request = client.target(generateURL("/")).request();
+      Response response = request.get();
       Assert.assertEquals(500, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      MediaType mediaType = response.getMediaType();
-      String entity = response.getEntity(String.class);
+      response.getMediaType();
+      String entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       Assert.assertTrue(entity.contains("GroupDefinitionException"));
       after();
@@ -316,14 +333,13 @@ public class TestValidationExceptions
 
       {
          // Exception thrown during validation of field.
-         ClientRequest request = new ClientRequest(generateURL("/parameter/fail"));
-         request.body(MediaType.TEXT_PLAIN, "abc");
-         ClientResponse<?> response = request.post(String.class);
+         Builder request = client.target(generateURL("/parameter/fail")).request();
+         Response response = request.post(Entity.entity("abc", MediaType.TEXT_PLAIN));
          Assert.assertEquals(500, response.getStatus());
-         String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+         String header = response.getHeaderString(Validation.VALIDATION_HEADER);
          Assert.assertNotNull(header);
          Assert.assertTrue(Boolean.valueOf(header));
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("entity: " + entity);
          Assert.assertTrue(entity.contains("ValidationException"));
          Assert.assertTrue(entity.contains("OtherValidationException"));
@@ -331,14 +347,13 @@ public class TestValidationExceptions
       
       {
          // Exception thrown during validation of parameter.
-         ClientRequest request = new ClientRequest(generateURL("/parameter/ok"));
-         request.body(MediaType.TEXT_PLAIN, "abc");
-         ClientResponse<?> response = request.post(String.class);
+         Builder request = client.target(generateURL("/parameter/ok")).request();
+         Response response = request.post(Entity.entity("abc", MediaType.TEXT_PLAIN));
          Assert.assertEquals(500, response.getStatus());
-         String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+         String header = response.getHeaderString(Validation.VALIDATION_HEADER);
          Assert.assertNotNull(header);
          Assert.assertTrue(Boolean.valueOf(header));
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("entity: " + entity);
          Assert.assertTrue(entity.contains("ValidationException"));
          Assert.assertTrue(entity.contains("OtherValidationException"));
@@ -346,14 +361,13 @@ public class TestValidationExceptions
       
       {
          // Exception thrown during validation of return value.
-         ClientRequest request = new ClientRequest(generateURL("/return/ok"));
-         request.body(MediaType.TEXT_PLAIN, "abc");
-         ClientResponse<?> response = request.post(String.class);
+         Builder request = client.target(generateURL("/return/ok")).request();
+         Response response = request.post(Entity.entity("abc", MediaType.TEXT_PLAIN));
          Assert.assertEquals(500, response.getStatus());
-         String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+         String header = response.getHeaderString(Validation.VALIDATION_HEADER);
          Assert.assertNotNull(header);
          Assert.assertTrue(Boolean.valueOf(header));
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("entity: " + entity);
          Assert.assertTrue(entity.contains("ValidationException"));
          Assert.assertTrue(entity.contains("OtherValidationException"));
@@ -361,13 +375,13 @@ public class TestValidationExceptions
       
       {
          // Exception thrown by resource method.
-         ClientRequest request = new ClientRequest(generateURL("/execution/ok"));
-         ClientResponse<?> response = request.get(String.class);
+         Builder request = client.target(generateURL("/execution/ok")).request();
+         Response response = request.get();
          Assert.assertEquals(500, response.getStatus());
-         String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+         String header = response.getHeaderString(Validation.VALIDATION_HEADER);
          Assert.assertNotNull(header);
          Assert.assertTrue(Boolean.valueOf(header));
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("last entity: " + entity);
          Assert.assertTrue(entity.contains("OtherValidationException"));
          Assert.assertTrue(entity.contains("OtherValidationException2"));
@@ -383,15 +397,16 @@ public class TestValidationExceptions
       before(TestResourceCrazy.class);
 
       // Valid
-      ClientRequest request = new ClientRequest(generateURL("/"));
-      ClientResponse<?> response = request.get(String.class);
+      Builder request = client.target(generateURL("/")).request();
+      Response response = request.get();
       Assert.assertEquals(400, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      MediaType mediaType = response.getMediaType();
-      String entity = response.getEntity(String.class);
+      response.getMediaType();
+      String entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
+      @SuppressWarnings("unused")
       ResteasyViolationException e = new ResteasyViolationException(entity);
       after();
    }

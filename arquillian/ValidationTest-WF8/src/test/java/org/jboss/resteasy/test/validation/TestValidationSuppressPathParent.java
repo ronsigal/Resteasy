@@ -1,13 +1,15 @@
 package org.jboss.resteasy.test.validation;
 
-import org.junit.Assert;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
 import org.jboss.resteasy.api.validation.ResteasyViolationException;
 import org.jboss.resteasy.api.validation.Validation;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.validation.Foo;
+import org.junit.Assert;
 
 /**
  * 
@@ -17,18 +19,18 @@ import org.jboss.resteasy.validation.Foo;
  * Created Mar 16, 2012
  */
 public class TestValidationSuppressPathParent
-{  
+{
+   
    public void doTestInputViolations(String fieldPath, String propertyPath, String classPath, String parameterPath) throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/Validation-test/rest/all/a/z");
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/Validation-test/rest/all/a/z").request();
       Foo foo = new Foo("p");
-      request.body("application/foo", foo);
-      ClientResponse<?> response = request.post(Foo.class);
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(400, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       ResteasyViolationException e = new ResteasyViolationException(entity);
       countViolations(e, 4, 1, 1, 1, 1, 0);
       ResteasyConstraintViolation violation = e.getFieldViolations().iterator().next();
@@ -47,14 +49,14 @@ public class TestValidationSuppressPathParent
    
    public void doTestReturnValueViolations(String returnValuePath) throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/Validation-test/rest/return/native");
-      request.body("application/foo", new Foo("abcdef"));
-      ClientResponse<?> response = request.post();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/Validation-test/rest/return/native").request();
+      Foo foo = new Foo("abcdef");
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(500, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       ResteasyViolationException e = new ResteasyViolationException(entity);
       ResteasyConstraintViolation violation = e.getReturnValueViolations().iterator().next();
       System.out.println("return value path: " + violation.getPath());

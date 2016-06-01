@@ -1,9 +1,11 @@
 package org.jboss.resteasy.spring;
 
-import static org.jboss.resteasy.test.TestPortProvider.createClientRequest;
+import static org.jboss.resteasy.test.TestPortProvider.createTarget;
+
+import javax.ws.rs.core.Response;
+
 import org.junit.Assert;
 
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.plugins.spring.SpringBeanProcessor;
 import org.jboss.resteasy.spring.beanprocessor.MyInterceptor;
 import org.junit.Test;
@@ -50,8 +52,7 @@ public class TestSpringBeanProcessor
    @Test
    public void testRegistration() throws Exception
    {
-      ClientResponse<String> resp = createClientRequest("/registered/singleton/count").post(
-            String.class);
+      Response resp = createTarget("/registered/singleton/count").request().post(null);
       check(resp, 200, "0");
    }
 
@@ -59,14 +60,13 @@ public class TestSpringBeanProcessor
    // test for https://issues.jboss.org/browse/RESTEASY-1212
 	public void testRegistrationViaSuper() throws Exception
    {
-		ClientResponse<String> resp = createClientRequest("/registered/super/count").post(
-				String.class);
+	   Response resp = createTarget("/registered/super/count").request().post(null);
 		check(resp, 200, "0");
 	}
    
    @Test
    public void testNotRegisteredAtRoot() throws Exception {
-      Assert.assertEquals(404, createClientRequest("/count").post().getStatus());
+      Assert.assertEquals(404, createTarget("/count").request().post(null).getStatus());
    }
 
    @Test
@@ -84,14 +84,14 @@ public class TestSpringBeanProcessor
 
    private static void checkGet(String url, String expectedResponse) throws Exception
    {
-      check(createClientRequest(url).get(String.class), 200, expectedResponse);
+      check(createTarget(url).request().get(), 200, expectedResponse);
    }
 
-   private static void check(ClientResponse<String> resp, int expectedStatus,
+   private static void check(Response resp, int expectedStatus,
          String expectedResponse)
    {
       Assert.assertEquals(expectedStatus, resp.getStatus());
-      Assert.assertEquals(resp.getEntity(), expectedResponse);
+      Assert.assertEquals(resp.readEntity(String.class), expectedResponse);
    }
 
 }

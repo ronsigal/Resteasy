@@ -1,21 +1,24 @@
 package org.jboss.resteasy.test.providers.jaxb;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ProxyFactory;
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.plugins.providers.ProviderHelper;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.providers.jaxb.data.Order;
 import org.jboss.resteasy.test.providers.jaxb.generated.order.Ordertype;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 import java.io.InputStream;
 
+import static org.jboss.resteasy.test.TestPortProvider.createProxy;
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
 /**
@@ -26,19 +29,30 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
  */
 public class TestXmlJAXBProviders extends BaseResourceTest
 {
-   @SuppressWarnings("unused")
-   private static final Logger logger = Logger.getLogger(TestXmlJAXBProviders.class);
+   private static final String PATH = "/jaxb/orders";
+   private static final String URL = generateURL(PATH);
+   private static Client client;
 
-   private static final String URL = generateURL("/jaxb/orders");
+   private XmlOrderClient xmlOrderlient;
 
-   private XmlOrderClient client;
-
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    @Before
    public void setUp() throws Exception
    {
       addPerRequestResource(OrderResource.class);
       //RegisterBuiltin.register(ResteasyProviderFactory.getInstance());
-      client = ProxyFactory.create(XmlOrderClient.class, URL);
+      xmlOrderlient = createProxy(XmlOrderClient.class, PATH);
    }
 
    @Test
@@ -78,7 +92,7 @@ public class TestXmlJAXBProviders extends BaseResourceTest
    @Test
    public void testGetOrder()
    {
-      Order order = client.getOrderById("order_123");
+      Order order = xmlOrderlient.getOrderById("order_123");
       Assert.assertEquals("Ryan J. McDonough", order.getPerson());
    }
 
@@ -90,12 +104,12 @@ public class TestXmlJAXBProviders extends BaseResourceTest
    @Test
    public void testGetOrderWithParams() throws Exception
    {
-      ClientRequest request = new ClientRequest(URL + "/order_123");
-      request.getHeaders().add(JAXBHelper.FORMAT_XML_HEADER, "true");
-      ClientResponse<InputStream> response = request.get(InputStream.class);
+      Builder request = client.target(URL + "/order_123").request();
+      request.header(JAXBHelper.FORMAT_XML_HEADER, "true");
+      Response response = request.get();
       Assert.assertEquals(200, response.getStatus());
-      ProviderHelper.writeTo(response.getEntity(), System.out);
-      response.releaseConnection();
+      ProviderHelper.writeTo(response.readEntity(InputStream.class), System.out);
+      response.close();
    }
    
    /**
@@ -109,16 +123,16 @@ public class TestXmlJAXBProviders extends BaseResourceTest
    @Test
    public void testGetOrderAndUnmarshal() throws Exception
    {
-      ClientRequest request = new ClientRequest(URL + "/order_123");
+      Builder request = client.target(URL + "/order_123").request();
       request.header(JAXBHelper.FORMAT_XML_HEADER, "true");
-      ClientResponse<InputStream> response = request.get(InputStream.class);
+      Response response = request.get();
       Assert.assertEquals(200, response.getStatus());
       JAXBContext jaxb = JAXBContext.newInstance(Order.class);
       Unmarshaller u = jaxb.createUnmarshaller();
-      Order order = (Order) u.unmarshal(response.getEntity());
+      Order order = (Order) u.unmarshal(response.readEntity(InputStream.class));
       Assert.assertNotNull(order);
       Assert.assertEquals("Ryan J. McDonough", order.getPerson());
-      response.releaseConnection();
+      response.close();
    }
 
    /**
@@ -132,11 +146,11 @@ public class TestXmlJAXBProviders extends BaseResourceTest
    @Test
    public void testGetOrderWithParamsToOrder() throws Exception
    {
-      ClientRequest request = new ClientRequest(URL + "/order_123");
-      request.getHeaders().add(JAXBHelper.FORMAT_XML_HEADER, "true");
-      ClientResponse<Order> response = request.get(Order.class);
+      Builder request = client.target(URL + "/order_123").request();
+      request.header(JAXBHelper.FORMAT_XML_HEADER, "true");
+      Response response = request.get();
       Assert.assertEquals(200, response.getStatus());
-      Order order = response.getEntity();
+      Order order = response.readEntity(Order.class);
       Assert.assertEquals("Ryan J. McDonough", order.getPerson());
    }
    
@@ -154,7 +168,7 @@ public class TestXmlJAXBProviders extends BaseResourceTest
               "orders/order_123.xml");
       Order order = JAXBHelper.unmarshall(Order.class, in).getValue();
       int initialItemCount = order.getItems().size();
-      order = client.updateOrder(order, "order_123");
+      order = xmlOrderlient.updateOrder(order, "order_123");
       Assert.assertEquals("Ryan J. McDonough", order.getPerson());
       Assert.assertNotSame(initialItemCount, order.getItems().size());
       Assert.assertEquals(3, order.getItems().size());

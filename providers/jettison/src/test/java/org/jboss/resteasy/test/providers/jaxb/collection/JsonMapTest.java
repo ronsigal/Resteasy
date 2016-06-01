@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.providers.jaxb.collection;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -12,6 +10,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
@@ -93,30 +96,29 @@ public class JsonMapTest extends BaseResourceTest
    @Test
    public void testProvider() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/map"));
-      ClientResponse<String> response = request.get(String.class);
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/map"));
+      Response response = target.request().get();
       Assert.assertEquals(200, response.getStatus());
-      System.out.println(response.getEntity());
+      String entity = response.readEntity(String.class);
+      System.out.println(entity);
 
-      request = new ClientRequest(generateURL("/map"));
-      request.body("application/json", response.getEntity());
-      response = request.post();
+      response = target.request().post(Entity.entity(entity, "application/json"));
       Assert.assertEquals(200, response.getStatus());
+      response.close();
 
-      request = new ClientRequest(generateURL("/map"));
-      request.body("application/json", "{\"monica\":{\"foo\":{\"@name\":\"monica\"}},\"bill\":{\"foo\":{\"@name\":\"bill\"}}}");
-      response = request.post();
+      entity = "{\"monica\":{\"foo\":{\"@name\":\"monica\"}},\"bill\":{\"foo\":{\"@name\":\"bill\"}}}";
+      response = target.request().post(Entity.entity(entity, "application/json"));
       Assert.assertEquals(200, response.getStatus());
+      response.close();
    }
 
    @Test
    public void testEmptyMap() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/map/empty"));
-      request.body("application/json", "{}");
-      ClientResponse<String> response = request.post(String.class);
+      Builder request = ClientBuilder.newClient().target(generateURL("/map/empty")).request();
+      Response response = request.post(Entity.entity("{}", "application/json"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("{}", response.getEntity());
+      Assert.assertEquals("{}", response.readEntity(String.class));
 
    }
 }

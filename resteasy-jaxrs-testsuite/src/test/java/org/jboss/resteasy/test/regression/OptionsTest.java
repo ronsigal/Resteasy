@@ -1,9 +1,8 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.TestPortProvider;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,6 +15,9 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -23,6 +25,8 @@ import javax.ws.rs.Produces;
  */
 public class OptionsTest extends BaseResourceTest
 {
+   private static Client client;
+   
    @Path("params")
    public static class ParamsResource
    {
@@ -133,50 +137,55 @@ public class OptionsTest extends BaseResourceTest
    {
       addPerRequestResource(ParamsResource.class);
       addPerRequestResource(Users.class);
-
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
    }
 
    @Test
    public void testOptions() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/params/customers/333/phonenumbers"));
-      ClientResponse response = request.options();
+      Response response = client.target(TestPortProvider.generateURL("/params/customers/333/phonenumbers")).request().options();
       Assert.assertEquals(200, response.getStatus());
-
+      response.close();
    }
 
    @Test
    public void testMethodNotAllowed() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/params/customers/333/phonenumbers"));
-      ClientResponse response = request.post();
+      Response response = client.target(TestPortProvider.generateURL("/params/customers/333/phonenumbers")).request().post(null);
       Assert.assertEquals(405, response.getStatus());
+      response.close();
 
       // RESTEasy-363
 
-      request = new ClientRequest(TestPortProvider.generateURL("/users"));
-      response = request.delete();
+      response = client.target(TestPortProvider.generateURL("/users")).request().delete();
       Assert.assertEquals(405, response.getStatus());
+      response.close();
 
-      request = new ClientRequest(TestPortProvider.generateURL("/users/53"));
-      response = request.post();
+      response = client.target(TestPortProvider.generateURL("/users/53")).request().post(null);
       Assert.assertEquals(405, response.getStatus());
+      response.close();
 
-      request = new ClientRequest(TestPortProvider.generateURL("/users/53/contacts"));
-      response = request.get();
+      response = client.target(TestPortProvider.generateURL("/users/53/contacts")).request().get();
       Assert.assertEquals(200, response.getStatus());
+      response.close();
 
-      request = new ClientRequest(TestPortProvider.generateURL("/users/53/contacts"));
-      response = request.delete();
+      response = client.target(TestPortProvider.generateURL("/users/53/contacts")).request().delete();
       Assert.assertEquals(405, response.getStatus());
+      response.close();
 
-      request = new ClientRequest(TestPortProvider.generateURL("/users/53/contacts/carl"));
-      response = request.get();
+      response = client.target(TestPortProvider.generateURL("/users/53/contacts/carl")).request().get();
       Assert.assertEquals(200, response.getStatus());
+      response.close();
 
-      request = new ClientRequest(TestPortProvider.generateURL("/users/53/contacts/carl"));
-      response = request.post();
+      response = client.target(TestPortProvider.generateURL("/users/53/contacts/carl")).request().post(null);
       Assert.assertEquals(405, response.getStatus());
+      response.close();
 
 
    }

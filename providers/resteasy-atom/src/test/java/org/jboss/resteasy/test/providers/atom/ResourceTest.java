@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.providers.atom;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.plugins.providers.atom.Content;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
@@ -17,7 +15,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import java.net.URI;
 
 import static org.jboss.resteasy.test.TestPortProvider.createProxy;
@@ -227,10 +229,10 @@ public class ResourceTest extends BaseResourceTest
    @Test
    public void testAtomFeed() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/atom/feed"));
-      ClientResponse<String> response = request.get(String.class);
+      Builder request = ClientBuilder.newClient().target(generateURL("/atom/feed")).request();
+      Response response = request.get();
       Assert.assertEquals(200, response.getStatus());
-      System.out.println(response.getEntity());
+      System.out.println(response.readEntity(String.class));
       
       AtomServerInterface intf = createProxy(AtomServerInterface.class);
       Feed feed = intf.postFeed(RFC_COMPLEX_XML);
@@ -243,10 +245,10 @@ public class ResourceTest extends BaseResourceTest
    @Test
    public void testAtomEntry() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/atom/entry"));
-      ClientResponse<String> response = request.get(String.class);
+      Builder request = ClientBuilder.newClient().target(generateURL("/atom/entry")).request();
+      Response response = request.get();
       Assert.assertEquals(200, response.getStatus());
-      System.out.println(response.getEntity());
+      System.out.println(response.readEntity(String.class));
    }
 
    @Test

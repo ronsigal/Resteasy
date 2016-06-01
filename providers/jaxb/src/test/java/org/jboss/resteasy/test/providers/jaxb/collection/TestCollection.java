@@ -1,11 +1,11 @@
 package org.jboss.resteasy.test.providers.jaxb.collection;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.ws.rs.Consumes;
@@ -13,6 +13,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
@@ -28,6 +32,8 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
  */
 public class TestCollection extends BaseResourceTest
 {
+   private static Client client;
+   
    @Path("/")
    public static class MyResource
    {
@@ -173,6 +179,18 @@ public class TestCollection extends BaseResourceTest
          return Response.ok(genericEntity).build();
       }
    }
+   
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
 
    @Before
    public void setUp() throws Exception
@@ -184,75 +202,69 @@ public class TestCollection extends BaseResourceTest
    @Test
    public void testArray() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/array"));
-      ClientResponse<?> response = request.get();
+      WebTarget target =  client.target(generateURL("/array"));
+      Response response = target.request().get();
       Assert.assertEquals(200, response.getStatus());
-      String str = response.getEntity(String.class);
+      String str = response.readEntity(String.class);
       System.out.println(str);
-      request.body("application/xml", str);
-      response = request.put();
+      response = target.request().put(Entity.entity(str, "application/xml"));
       Assert.assertEquals(204, response.getStatus());  
-      response.releaseConnection();
+      response.close();
    }
 
    @Test
    public void testList() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/list"));
-      ClientResponse<?> response = request.get();
+      WebTarget target =  client.target(generateURL("/list"));
+      Response response = target.request().get();
       Assert.assertEquals(200, response.getStatus());
-      String str = response.getEntity(String.class);
+      String str = response.readEntity(String.class);
       System.out.println(str);
-      request.body("application/xml", str);
-      response = request.put();
+      response = target.request().put(Entity.entity(str, "application/xml"));
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 
    @Test
    public void testResponse() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/list/response"));
-      ClientResponse<String> response = request.get(String.class);
+      Response response = client.target(generateURL("/list/response")).request().get();
       Assert.assertEquals(200, response.getStatus());
-      System.out.println(response.getEntity());
+      System.out.println(response.readEntity(String.class));
    }
 
    @Test
    public void testNamespacedArray() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/namespaced/array"));
-      ClientResponse<?> response = request.get();
+      WebTarget target =  client.target(generateURL("/namespaced/array"));
+      Response response = target.request().get();
       Assert.assertEquals(200, response.getStatus());
-      String str = response.getEntity(String.class);
+      String str = response.readEntity(String.class);
       System.out.println(str);
-      request.body("application/xml", str);
-      response = request.put();
+      response = target.request().put(Entity.entity(str, "application/xml"));
       Assert.assertEquals(204, response.getStatus());      
-      response.releaseConnection();
+      response.close();
    }
 
    @Test
    public void testNamespacedList() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/namespaced/list"));
-      ClientResponse<?> response = request.get();
+      WebTarget target =  client.target(generateURL("/namespaced/list"));
+      Response response = target.request().get();
       Assert.assertEquals(200, response.getStatus());
-      String str = response.getEntity(String.class);
+      String str = response.readEntity(String.class);
       System.out.println(str);
-      request.body("application/xml", str);
-      response = request.put();
+      response = target.request().put(Entity.entity(str, "application/xml"));
       Assert.assertEquals(204, response.getStatus());      
-      response.releaseConnection();
+      response.close();
    }
 
    @Test
    public void testNamespacedResponse() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/namespaced/list/response"));
-      ClientResponse<?> response = request.get();
+      Response response = client.target(generateURL("/namespaced/list/response")).request().get();
       Assert.assertEquals(200, response.getStatus());
-      String str = response.getEntity(String.class);
+      String str = response.readEntity(String.class);
       System.out.println(str);
    }
 

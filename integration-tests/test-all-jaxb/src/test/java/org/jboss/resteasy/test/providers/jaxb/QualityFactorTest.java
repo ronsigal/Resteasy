@@ -1,6 +1,5 @@
 package org.jboss.resteasy.test.providers.jaxb;
 
-import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -10,6 +9,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
@@ -59,10 +60,10 @@ public class QualityFactorTest extends BaseResourceTest
    @Test
    public void testHeader() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/test"));
+      Builder request = ClientBuilder.newClient().target(generateURL("/test")).request();
       request.accept("application/xml; q=0.5");
       request.accept("application/json; q=0.8");
-      String response = request.getTarget(String.class);
+      String response = request.get(String.class);
       System.out.println(response);
       Assert.assertTrue(response.startsWith("{"));
 

@@ -1,23 +1,23 @@
 package org.jboss.resteasy.tests.context;
 
-import org.jboss.resteasy.annotations.interception.EncoderPrecedence;
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.spi.interception.MessageBodyWriterContext;
-import org.jboss.resteasy.spi.interception.MessageBodyWriterInterceptor;
 import org.junit.Assert;
 
+import javax.annotation.Priority;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.ext.WriterInterceptor;
+import javax.ws.rs.ext.WriterInterceptorContext;
+
 import java.io.IOException;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-@EncoderPrecedence
-@ServerInterceptor
-public class EncoderInterceptor implements MessageBodyWriterInterceptor
+@Priority(0)
+public class EncoderInterceptor implements WriterInterceptor
 {
-   public void write(MessageBodyWriterContext context) throws IOException, WebApplicationException
+   @Override
+   public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException
    {
       Assert.assertTrue(context.getHeaders().containsKey("before-encoder"));
       Assert.assertFalse(context.getHeaders().containsKey("after-encoder"));

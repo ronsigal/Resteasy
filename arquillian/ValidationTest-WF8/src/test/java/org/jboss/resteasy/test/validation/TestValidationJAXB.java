@@ -1,17 +1,16 @@
 package org.jboss.resteasy.test.validation;
 
-import org.junit.Assert;
-
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
-import org.jboss.resteasy.api.validation.ResteasyViolationException;
 import org.jboss.resteasy.api.validation.Validation;
 import org.jboss.resteasy.api.validation.ViolationReport;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.validation.Foo;
 import org.jboss.resteasy.validation.FooConstraint;
 import org.jboss.resteasy.validation.FooReaderWriter;
@@ -25,6 +24,7 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -37,7 +37,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class TestValidationJAXB
-{  
+{
    @Deployment
    public static Archive<?> createTestArchive()
    {
@@ -80,16 +80,15 @@ public class TestValidationJAXB
    
    public void doTest(MediaType mediaType) throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/Validation-test/rest/all/a/z");
-      Foo foo = new Foo("p");
-      request.body("application/foo", foo);
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/Validation-test/rest/all/a/z").request();
       request.accept(mediaType);
-      ClientResponse<?> response = request.post(Foo.class);
+      Foo foo = new Foo("p");
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(400, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      ViolationReport r = response.getEntity(ViolationReport.class);
+      ViolationReport r = response.readEntity(ViolationReport.class);
       countViolations(r, 1, 1, 1, 1, 0);
       ResteasyConstraintViolation violation = r.getFieldViolations().iterator().next();
       System.out.println("field path: " + violation.getPath());
@@ -107,16 +106,15 @@ public class TestValidationJAXB
 
    public void doRawTest(MediaType mediaType, String expected) throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/Validation-test/rest/all/a/z");
-      Foo foo = new Foo("p");
-      request.body("application/foo", foo);
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/Validation-test/rest/all/a/z").request();
       request.accept(mediaType);
-      ClientResponse<?> response = request.post(Foo.class);
+      Foo foo = new Foo("p");
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(400, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      String report = response.getEntity(String.class);
+      String report = response.readEntity(String.class);
       System.out.println("raw report: " + report);
       Assert.assertTrue(report.contains(expected));
    }

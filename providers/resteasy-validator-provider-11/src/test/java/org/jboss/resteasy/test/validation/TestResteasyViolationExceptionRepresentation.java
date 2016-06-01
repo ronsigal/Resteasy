@@ -29,19 +29,23 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
-
+import org.junit.BeforeClass;
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
 import org.jboss.resteasy.api.validation.ResteasyViolationException;
 import org.jboss.resteasy.api.validation.Validation;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -58,6 +62,7 @@ public class TestResteasyViolationExceptionRepresentation
 {
    protected static ResteasyDeployment deployment;
    protected static Dispatcher dispatcher;
+   protected static Client client;
 
    @FooConstraint(min=1,max=3)
    public static class Foo implements Serializable
@@ -238,6 +243,18 @@ public class TestResteasyViolationExceptionRepresentation
       }
    }
    
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient().register(FooReaderWriter.class);
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    public static void before(Class<?> resourceClass) throws Exception
    {
       after();
@@ -266,38 +283,34 @@ public class TestResteasyViolationExceptionRepresentation
       beforeFoo(TestResourceWithReturnValues.class);
 
       // Valid native constraint
-      ClientRequest request = new ClientRequest(generateURL("/native"));
+      Builder request = client.target(generateURL("/native")).request();
       Foo foo = new Foo("a");
-      request.body("application/foo", foo);
-      ClientResponse<?> response = request.post(Foo.class);     
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(foo, response.getEntity());
+      Assert.assertEquals(foo, response.readEntity(Foo.class));
       
       // Valid imposed constraint
-      request = new ClientRequest(generateURL("/imposed"));
+      request = client.target(generateURL("/imposed")).request();
       foo = new Foo("abcde");
-      request.body("application/foo", foo);
-      response = request.post(Foo.class);      
+      response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(foo, response.getEntity());
+      Assert.assertEquals(foo, response.readEntity(Foo.class));
 
       // Valid native and imposed constraints.
-      request = new ClientRequest(generateURL("/nativeAndImposed"));
-      foo = new Foo("abc");
-      request.body("application/foo", foo);
-      response = request.post(Foo.class);      
+      request = client.target(generateURL("/nativeAndImposed")).request();
+      foo = new Foo("abc");  
+      response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(foo, response.getEntity());
+      Assert.assertEquals(foo, response.readEntity(Foo.class));
 
       // Invalid native constraint
-      request = new ClientRequest(generateURL("/native"));
-      request.body("application/foo", new Foo("abcdef"));
-      response = request.post(Foo.class);
+      request = client.target(generateURL("/native")).request();
+      response = request.post(Entity.entity(new Foo("abcdef"), "application/foo"));
       Assert.assertEquals(500, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      Object entity = response.getEntity(String.class);
+      Object entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       ResteasyViolationException e = new ResteasyViolationException(String.class.cast(entity));
       System.out.println("exception: " + e.toString());
@@ -307,14 +320,13 @@ public class TestResteasyViolationExceptionRepresentation
       Assert.assertEquals("Foo[abcdef]", cv.getValue());
 
       // Invalid imposed constraint
-      request = new ClientRequest(generateURL("/imposed"));
-      request.body("application/foo", new Foo("abcdef"));
-      response = request.post(Foo.class);
+      request = client.target(generateURL("/imposed")).request();
+      response = request.post(Entity.entity(new Foo("abcdef"), "application/foo"));
       Assert.assertEquals(500, response.getStatus());
-      header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      entity = response.getEntity(String.class);
+      entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       e = new ResteasyViolationException(String.class.cast(entity));
       countViolations(e, 1, 0, 0, 0, 0, 1);
@@ -323,14 +335,13 @@ public class TestResteasyViolationExceptionRepresentation
       Assert.assertEquals("Foo[abcdef]", cv.getValue());
 
       // Invalid native and imposed constraints
-      request = new ClientRequest(generateURL("/nativeAndImposed"));
-      request.body("application/foo", new Foo("abcdef"));
-      response = request.post(Foo.class); 
+      request = client.target(generateURL("/nativeAndImposed")).request();
+      response = request.post(Entity.entity(new Foo("abcdef"), "application/foo"));
       Assert.assertEquals(500, response.getStatus());
-      header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      entity = response.getEntity(String.class);
+      entity = response.readEntity(String.class);
       System.out.println("entity: " + entity); 
       e = new ResteasyViolationException(String.class.cast(entity));
       countViolations(e, 2, 0, 0, 0, 0, 2);
@@ -356,24 +367,22 @@ public class TestResteasyViolationExceptionRepresentation
       beforeFoo(TestResourceWithAllFivePotentialViolations.class);
 
       // Valid
-      ClientRequest request = new ClientRequest(generateURL("/abc/wxyz/unused/unused"));
-      Foo foo = new Foo("pqrs");
-      request.body("application/foo", foo);
-      ClientResponse<?> response = request.post(Foo.class);     
+      Builder request = client.target(generateURL("/abc/wxyz/unused/unused")).request();
+      Foo foo = new Foo("pqrs");  
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(foo, response.getEntity());
+      Assert.assertEquals(foo, response.readEntity(Foo.class));
 
       // Invalid: Should have 1 each of field, property, class, and parameter violations,
       //          and no return value violations.
-      request = new ClientRequest(generateURL("/a/z/unused/unused"));
+      request = client.target(generateURL("/a/z/unused/unused")).request();
       foo = new Foo("p");
-      request.body("application/foo", foo);
-      response = request.post(Foo.class);
+      response = request.post(Entity.entity(foo, "application/foo"));
       System.out.println("response: " + response);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity(String.class);
+      Object entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
       ResteasyViolationException e = new ResteasyViolationException(String.class.cast(entity));

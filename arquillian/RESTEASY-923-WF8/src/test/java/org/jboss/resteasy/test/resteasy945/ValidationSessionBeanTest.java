@@ -1,14 +1,18 @@
 package org.jboss.resteasy.test.resteasy945;
 
 import static org.junit.Assert.assertEquals;
+
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+
 import org.junit.Assert;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
 import org.jboss.resteasy.api.validation.ResteasyViolationException;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.resteasy923.SessionApplication;
 import org.jboss.resteasy.resteasy923.SessionResourceImpl;
 import org.jboss.resteasy.resteasy923.SessionResourceLocal;
@@ -50,10 +54,9 @@ public class ValidationSessionBeanTest
    @Test
    public void testInvalidParam() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-923/test/resource");
-      request.queryParameter("param", "abc");
-      ClientResponse<?> response = request.get();
-      String answer = response.getEntity(String.class);
+      WebTarget target = ClientBuilder.newClient().target("http://localhost:8080/RESTEASY-923/test/resource");
+      Response response = target.queryParam("param", "abc").request().get();
+      String answer = response.readEntity(String.class);
       System.out.println("status: " + response.getStatus());
       System.out.println("entity: " + answer);
       assertEquals(400, response.getStatus());

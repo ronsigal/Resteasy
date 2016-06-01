@@ -7,13 +7,16 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
-
+import org.junit.BeforeClass;
 import org.jboss.resteasy.api.validation.ViolationReport;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -30,6 +33,7 @@ public class TestValidationNullErrorValue
 {
    protected static ResteasyDeployment deployment;
    protected static Dispatcher dispatcher;
+   protected static Client client;
 
    @Path("")
    public static class TestResourceWithNullFieldAndProperty
@@ -73,6 +77,18 @@ public class TestValidationNullErrorValue
    }
 
    //////////////////////////////////////////////////////////////////////////////
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    public static void before(Class<?> resourceClass) throws Exception
    {
       after();
@@ -93,10 +109,10 @@ public class TestValidationNullErrorValue
    public void testNullFieldAndProperty() throws Exception
    {
       before(TestResourceWithNullFieldAndProperty.class);
-      ClientRequest request = new ClientRequest(generateURL("/get"));
+      Builder request = client.target(generateURL("/get")).request();
       request.accept(MediaType.APPLICATION_XML);
-      ClientResponse<?> response = request.get();
-      ViolationReport report = response.getEntity(ViolationReport.class);
+      Response response = request.get();
+      ViolationReport report = response.readEntity(ViolationReport.class);
       System.out.println("report: " + report.toString());
       countViolations(report, 2, 1, 1, 0, 0, 0);
       after();
@@ -109,20 +125,20 @@ public class TestValidationNullErrorValue
 
       {
          // Null query parameter
-         ClientRequest request = new ClientRequest(generateURL("/post"));
+         Builder request = client.target(generateURL("/post")).request();
          request.accept(MediaType.APPLICATION_XML);
-         ClientResponse<?> response = request.post();
-         ViolationReport report = response.getEntity(ViolationReport.class);
+         Response response = request.post(null);
+         ViolationReport report = response.readEntity(ViolationReport.class);
          System.out.println("report: " + report.toString());
          countViolations(report, 1, 0, 0, 0, 1, 0);
       }
 
       {
          // Null return value
-         ClientRequest request = new ClientRequest(generateURL("/get"));
+         Builder request = client.target(generateURL("/get")).request();
          request.accept(MediaType.APPLICATION_XML);
-         ClientResponse<?> response = request.get();
-         ViolationReport report = response.getEntity(ViolationReport.class);
+         Response response = request.get();
+         ViolationReport report = response.readEntity(ViolationReport.class);
          System.out.println("report: " + report.toString());
          countViolations(report, 1, 0, 0, 0, 0, 1);
       }

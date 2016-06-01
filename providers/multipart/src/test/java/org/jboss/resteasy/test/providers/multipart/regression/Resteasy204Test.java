@@ -2,8 +2,6 @@ package org.jboss.resteasy.test.providers.multipart.regression;
 
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -13,7 +11,10 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
@@ -66,10 +67,9 @@ public class Resteasy204Test extends BaseResourceTest
    @Test
    public void test() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/rest/zba"));
-      ClientResponse<String> response = request.get(String.class);
+      Response response = ClientBuilder.newClient().target(generateURL("/rest/zba")).request().get();
       Assert.assertEquals(200, response.getStatus());
-      String string = response.getEntity();
+      String string = response.readEntity(String.class);
       System.out.println(string);
       Assert.assertTrue(string.indexOf("Content-Length") > -1);      
    }

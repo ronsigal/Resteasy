@@ -1,10 +1,11 @@
 package org.jboss.resteasy.test.client.cache;
 
 import org.jboss.resteasy.annotations.cache.Cache;
-import org.jboss.resteasy.client.ProxyFactory;
-import org.jboss.resteasy.client.cache.CacheFactory;
-import org.jboss.resteasy.client.cache.LightweightBrowserCache;
+import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
+import org.jboss.resteasy.client.jaxrs.cache.BrowserCacheFeature;
+import org.jboss.resteasy.client.jaxrs.cache.LightweightBrowserCache;
 import org.jboss.resteasy.test.BaseResourceTest;
+import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -14,6 +15,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.EntityTag;
@@ -147,8 +149,9 @@ public class ClientCacheTest extends BaseResourceTest
    @Test
    public void testProxy() throws Exception
    {
-      MyProxy proxy = ProxyFactory.create(MyProxy.class, generateBaseUrl());
-      CacheFactory.makeCacheable(proxy);
+      ResteasyWebTarget target = (ResteasyWebTarget) ClientBuilder.newClient().target(generateBaseUrl());
+      BrowserCacheFeature cacheFeature = new BrowserCacheFeature();
+      MyProxy proxy = target.register(cacheFeature).proxy(MyProxy.class);
       
       count = 0;
       String rtn = null;
@@ -218,9 +221,12 @@ public class ClientCacheTest extends BaseResourceTest
    @Test
    public void testMaxSize() throws Exception
    {
-      MyProxy proxy = ProxyFactory.create(MyProxy.class, generateBaseUrl());
-      LightweightBrowserCache cache = CacheFactory.makeCacheable(proxy);
+      ResteasyWebTarget target = (ResteasyWebTarget) ClientBuilder.newClient().target(generateBaseUrl());
+      LightweightBrowserCache cache = new LightweightBrowserCache();
       cache.setMaxBytes(20);
+      BrowserCacheFeature cacheFeature = new BrowserCacheFeature();
+      cacheFeature.setCache(cache);
+      MyProxy proxy = target.register(cacheFeature).proxy(MyProxy.class);
 
       count = 0;
 

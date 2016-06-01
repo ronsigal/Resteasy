@@ -28,7 +28,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 
-import static org.jboss.resteasy.test.TestPortProvider.createClientRequest;
+import static org.jboss.resteasy.test.TestPortProvider.createTarget;
 
 public class RequestScopedBeanTest
 {
@@ -142,8 +142,7 @@ public class RequestScopedBeanTest
    @Test
    public void testBean() throws Exception
    {
-      String result = createClientRequest("/").accept(MediaType.TEXT_PLAIN_TYPE).get(String.class)
-            .getEntity();
+      String result = createTarget("/").request().accept(MediaType.TEXT_PLAIN_TYPE).get().readEntity(String.class);
       Assert.assertEquals("configuredValue", result);
    }
 

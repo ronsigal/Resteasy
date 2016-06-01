@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.providers.jaxb.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.plugins.providers.jaxb.JAXBContextWrapper;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -12,10 +10,13 @@ import org.junit.Test;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
 /**
@@ -84,35 +85,18 @@ public class AbstractJAXBClassTest
    @Test
    public void testPost() throws Exception
    {
+      Client client = ClientBuilder.newClient();
       {
-         try
-         {
-            ClientRequest request = new ClientRequest(generateURL(""));
-            String s = "<?xml version=\"1.0\"?><person><name>bill</name></person>";
-            request.body("application/xml", s);
-            ClientResponse<?> response = request.post();
-            Assert.assertEquals(204, response.getStatus());
-            response.releaseConnection();
-         }
-         catch (IOException e)
-         {
-            throw new RuntimeException(e);
-         }
-         
-         {
-            try
-            {
-               ClientRequest request = new ClientRequest(generateURL("/kunde"));
-               request.body("application/xml", kundeXml);
-               ClientResponse<?> response = request.post();
-               Assert.assertEquals(204, response.getStatus());
-               response.releaseConnection();
-            }
-            catch (IOException e)
-            {
-               throw new RuntimeException(e);
-            }
-         }
+                     WebTarget target = client.target(generateURL(""));
+                     String s = "<?xml version=\"1.0\"?><person><name>bill</name></person>";
+                     Response response = target.request().post(Entity.entity(s, "application/xml"));
+                     Assert.assertEquals(204, response.getStatus());
+                     response.close();
+   
+                     target = client.target(generateURL("/kunde"));
+                     response = target.request().post(Entity.entity(kundeXml, "application/xml"));
+                     Assert.assertEquals(204, response.getStatus());
+                     response.close();
       }
    }
 
