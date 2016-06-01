@@ -1,16 +1,18 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -30,6 +32,8 @@ import static org.jboss.resteasy.test.TestPortProvider.generateBaseUrl;
  */
 public class ExceptionMapperInjectionTest extends BaseResourceTest
 {
+   private static Client client;
+   
    public static class MyException extends RuntimeException
    {
    }
@@ -96,6 +100,18 @@ public class ExceptionMapperInjectionTest extends BaseResourceTest
       }
    }
 
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    @Before
    public void init() throws Exception
    {
@@ -113,26 +129,25 @@ public class ExceptionMapperInjectionTest extends BaseResourceTest
    @Test
    public void testNotFound() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateBaseUrl() + "/test/nonexistent");
-      ClientResponse response = request.get();
+      Response response = client.target(generateBaseUrl() + "/test/nonexistent").request().get();
       Assert.assertEquals(505, response.getStatus());
-
+      response.close();
    }
 
    @Test
    public void testMapper() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateBaseUrl() + "/test");
-      ClientResponse response = request.get();
+      Response response = client.target(generateBaseUrl() + "/test").request().get();
       Assert.assertEquals(Response.Status.PRECONDITION_FAILED.getStatusCode(), response.getStatus());
+      response.close();
    }
 
    @Test
    public void testMapper2() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateBaseUrl() + "/test/null");
-      ClientResponse response = request.get();
+      Response response = client.target(generateBaseUrl() + "/test/null").request().get();
       Assert.assertEquals(204, response.getStatus());
+      response.close();
    }
 
 }

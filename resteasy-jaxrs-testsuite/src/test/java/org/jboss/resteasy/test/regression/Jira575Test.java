@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientResponseFailure;
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
@@ -9,8 +7,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.core.Response;
 
 /**
@@ -51,15 +51,15 @@ public class Jira575Test extends BaseResourceTest
    @Test
    public void testProxy() throws Exception
    {
-      RegressionProxy proxy = ProxyFactory.create(RegressionProxy.class, TestPortProvider.generateURL("/"));
+      RegressionProxy proxy = TestPortProvider.createProxy(RegressionProxy.class, "/");
       try
       {
          proxy.getFoo();
       }
-      catch (ClientResponseFailure e)
+      catch (NotAuthorizedException e)
       {
          Assert.assertEquals(e.getResponse().getStatus(), 401);
-         String val = (String)e.getResponse().getEntity(String.class);
+         String val = (String)e.getResponse().readEntity(String.class);
          Assert.assertEquals("hello", val);
 
       }

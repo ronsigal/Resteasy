@@ -1,8 +1,7 @@
 package org.jboss.resteasy.test.matching;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -10,6 +9,8 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -26,6 +27,8 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
  */
 public class ContentTypeMatchingTest extends BaseResourceTest
 {
+   private static Client client;
+   
    @XmlRootElement
    public static class Error
    {
@@ -96,18 +99,23 @@ public class ContentTypeMatchingTest extends BaseResourceTest
    {
       addPerRequestResource(MapperResource.class);
       deployment.getProviderFactory().registerProvider(MyErrorExceptinMapper.class);
+      client = ClientBuilder.newClient();
+   }
 
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
    }
 
    @Test
    public void testProduces() throws Exception
    {
       // test that media type is chosen from resource method
-      ClientRequest request = new ClientRequest(generateURL("/mapper/produces"));
-      ClientResponse response = request.get();
+      Response response = client.target(generateURL("/mapper/produces")).request().get();
       Assert.assertEquals(412, response.getStatus());
-      Assert.assertEquals("application/xml", response.getResponseHeaders().getFirst("Content-Type"));
-      String error = (String) response.getEntity(String.class);
+      Assert.assertEquals("application/xml", response.getHeaderString("Content-Type"));
+      String error = (String) response.readEntity(String.class);
       Assert.assertNotNull(error);
       System.out.println(error);
 
@@ -118,23 +126,19 @@ public class ContentTypeMatchingTest extends BaseResourceTest
    {
       // test that media type is chosen from resource method and accepts
       {
-         ClientRequest request = new ClientRequest(generateURL("/mapper/accepts-produces"));
-         request.accept("application/json");
-         ClientResponse response = request.get();
+         Response response = client.target(generateURL("/mapper/accepts-produces")).request().accept("application/json").get();
          Assert.assertEquals(412, response.getStatus());
-         Assert.assertEquals("application/json", response.getResponseHeaders().getFirst("Content-Type"));
-         String error = (String) response.getEntity(String.class);
+         Assert.assertEquals("application/json", response.getHeaderString("Content-Type"));
+         String error = (String) response.readEntity(String.class);
          Assert.assertNotNull(error);
          System.out.println(error);
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/mapper/accepts-produces"));
-         request.accept("application/xml");
-         ClientResponse response = request.get();
+         Response response = client.target(generateURL("/mapper/accepts-produces")).request().accept("application/xml").get();
          Assert.assertEquals(412, response.getStatus());
-         Assert.assertEquals("application/xml", response.getResponseHeaders().getFirst("Content-Type"));
-         String error = (String) response.getEntity(String.class);
+         Assert.assertEquals("application/xml", response.getHeaderString("Content-Type"));
+         String error = (String) response.readEntity(String.class);
          Assert.assertNotNull(error);
          System.out.println(error);
       }
@@ -145,23 +149,19 @@ public class ContentTypeMatchingTest extends BaseResourceTest
    {
       // test that media type is chosen from accepts
       {
-         ClientRequest request = new ClientRequest(generateURL("/mapper/accepts"));
-         request.accept("application/json");
-         ClientResponse response = request.get();
+         Response response = client.target(generateURL("/mapper/accepts")).request().accept("application/json").get();
          Assert.assertEquals(412, response.getStatus());
-         Assert.assertEquals("application/json", response.getResponseHeaders().getFirst("Content-Type"));
-         String error = (String) response.getEntity(String.class);
+         Assert.assertEquals("application/json", response.getHeaderString("Content-Type"));
+         String error = (String) response.readEntity(String.class);
          Assert.assertNotNull(error);
          System.out.println(error);
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/mapper/accepts"));
-         request.accept("application/xml");
-         ClientResponse response = request.get();
+         Response response = client.target(generateURL("/mapper/accepts")).request().accept("application/xml").get();
          Assert.assertEquals(412, response.getStatus());
-         Assert.assertEquals("application/xml", response.getResponseHeaders().getFirst("Content-Type"));
-         String error = (String) response.getEntity(String.class);
+         Assert.assertEquals("application/xml", response.getHeaderString("Content-Type"));
+         String error = (String) response.readEntity(String.class);
          Assert.assertNotNull(error);
          System.out.println(error);
       }
@@ -172,23 +172,19 @@ public class ContentTypeMatchingTest extends BaseResourceTest
    {
       // test that media type is chosen from accepts
       {
-         ClientRequest request = new ClientRequest(generateURL("/mapper/accepts-entity"));
-         request.accept("application/json");
-         ClientResponse response = request.get();
+         Response response = client.target(generateURL("/mapper/accepts-entity")).request().accept("application/json").get();
          Assert.assertEquals(200, response.getStatus());
-         Assert.assertEquals("application/json", response.getResponseHeaders().getFirst("Content-Type"));
-         String error = (String) response.getEntity(String.class);
+         Assert.assertEquals("application/json", response.getHeaderString("Content-Type"));
+         String error = (String) response.readEntity(String.class);
          Assert.assertNotNull(error);
          System.out.println(error);
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/mapper/accepts-entity"));
-         request.accept("application/xml");
-         ClientResponse response = request.get();
+         Response response = client.target(generateURL("/mapper/accepts-entity")).request().accept("application/xml").get();
          Assert.assertEquals(200, response.getStatus());
-         Assert.assertEquals("application/xml", response.getResponseHeaders().getFirst("Content-Type"));
-         String error = (String) response.getEntity(String.class);
+         Assert.assertEquals("application/xml", response.getHeaderString("Content-Type"));
+         String error = (String) response.readEntity(String.class);
          Assert.assertNotNull(error);
          System.out.println(error);
       }

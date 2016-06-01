@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.providers.jaxb.regression.resteasy143;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.junit.AfterClass;
@@ -10,6 +8,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 /**
  * Simple smoke test
@@ -21,17 +25,20 @@ public class TestJAXB
 {
 
    private static Dispatcher dispatcher;
+   private static Client client;
 
    @BeforeClass
    public static void before() throws Exception
    {
       dispatcher = EmbeddedContainer.start().getDispatcher();
       dispatcher.getRegistry().addPerRequestResource(StoreResource.class);
+      client = ClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
    }
 
@@ -100,19 +107,17 @@ public class TestJAXB
    public void testWire() throws Exception
    {
       {
-         ClientRequest request = new ClientRequest(generateURL("/storeXML"));
-         request.body("application/xml", XML_CONTENT);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target(generateURL("/storeXML")).request();
+         Response response = request.post(Entity.entity(XML_CONTENT, "application/xml"));
          Assert.assertEquals(201, response.getStatus());
-         response.releaseConnection();
+         response.close();
       }
       
       {
-         ClientRequest request = new ClientRequest(generateURL("/storeXML/abstract"));
-         request.body("application/xml", XML_CONTENT);
-         ClientResponse<?> response = request.post();
+         Builder request = client.target(generateURL("/storeXML/abstract")).request();
+         Response response = request.post(Entity.entity(XML_CONTENT, "application/xml"));
          Assert.assertEquals(201, response.getStatus());
-         response.releaseConnection();
+         response.close();
       }
    }
 }

@@ -7,16 +7,20 @@ import java.util.Hashtable;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.junit.Assert;
-
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import org.junit.BeforeClass;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 /**
@@ -29,6 +33,7 @@ public class TestXXESecureProcessing
 {
    protected static ResteasyDeployment deployment;
    protected static Dispatcher dispatcher;
+   protected static Client client;
    
    String doctype =
          "<!DOCTYPE foodocument [" +
@@ -71,6 +76,18 @@ public class TestXXESecureProcessing
        _title = title;
      }
    }
+   
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
 
    public static void before(String expandEntityReferences) throws Exception
    {
@@ -105,12 +122,11 @@ public class TestXXESecureProcessing
    public void testXmlRootElementDefaultSmall() throws Exception
    {
       before();
-      ClientRequest request = new ClientRequest(generateURL("/xmlRootElement"));
-      request.body("application/xml", small);
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(generateURL("/xmlRootElement")).request();
+      Response response = request.post(Entity.entity(small, "application/xml"));
       System.out.println("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("Result: " + entity.substring(0, 30));
       System.out.println("foos: " + countFoos(entity));
       Assert.assertEquals(10000, countFoos(entity));
@@ -120,12 +136,11 @@ public class TestXXESecureProcessing
    public void testXmlRootElementDefaultBig() throws Exception
    {
       before();
-      ClientRequest request = new ClientRequest(generateURL("/xmlRootElement"));
-      request.body("application/xml", big);
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(generateURL("/xmlRootElement")).request();
+      Response response = request.post(Entity.entity(big, "application/xml"));
       System.out.println("status: " + response.getStatus());
       Assert.assertEquals(400, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("Result: " + entity);
       Assert.assertTrue(entity.contains("javax.xml.bind.UnmarshalException"));
    }
@@ -134,12 +149,11 @@ public class TestXXESecureProcessing
    public void testXmlRootElementWithoutExternalExpansionSmall() throws Exception
    {
       before("false");
-      ClientRequest request = new ClientRequest(generateURL("/xmlRootElement"));
-      request.body("application/xml", small);
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(generateURL("/xmlRootElement")).request();
+      Response response = request.post(Entity.entity(small, "application/xml"));
       System.out.println("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("Result: " + entity.substring(0, 30));
       System.out.println("foos: " + countFoos(entity));
       Assert.assertEquals(10000, countFoos(entity));
@@ -149,12 +163,11 @@ public class TestXXESecureProcessing
    public void testXmlRootElementWithoutExternalExpansionBig() throws Exception
    {
       before("false");
-      ClientRequest request = new ClientRequest(generateURL("/xmlRootElement"));
-      request.body("application/xml", big);
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(generateURL("/xmlRootElement")).request();
+      Response response = request.post(Entity.entity(big, "application/xml"));
       System.out.println("status: " + response.getStatus());
       Assert.assertEquals(400, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("Result: " + entity);
       Assert.assertTrue(entity.contains("javax.xml.bind.UnmarshalException"));
    }
@@ -163,12 +176,11 @@ public class TestXXESecureProcessing
    public void testXmlRootElementWithExternalExpansionSmall() throws Exception
    {
       before("true");
-      ClientRequest request = new ClientRequest(generateURL("/xmlRootElement"));
-      request.body("application/xml", small);
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(generateURL("/xmlRootElement")).request();
+      Response response = request.post(Entity.entity(small, "application/xml"));
       System.out.println("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("Result: " + entity.substring(0, 30));
       System.out.println("foos: " + countFoos(entity));
       Assert.assertEquals(10000, countFoos(entity));
@@ -178,12 +190,11 @@ public class TestXXESecureProcessing
    public void testXmlRootElementWithExternalExpansionBig() throws Exception
    {
       before("true");
-      ClientRequest request = new ClientRequest(generateURL("/xmlRootElement"));
-      request.body("application/xml", big);
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(generateURL("/xmlRootElement")).request();
+      Response response = request.post(Entity.entity(big, "application/xml"));
       System.out.println("status: " + response.getStatus());
       Assert.assertEquals(400, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("Result: " + entity);
       Assert.assertTrue(entity.contains("javax.xml.bind.UnmarshalException"));
    }

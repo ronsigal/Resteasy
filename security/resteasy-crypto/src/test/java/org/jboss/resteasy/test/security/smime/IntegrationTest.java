@@ -1,16 +1,15 @@
 package org.jboss.resteasy.test.security.smime;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.security.KeyTools;
 import org.jboss.resteasy.security.smime.EnvelopedInput;
 import org.jboss.resteasy.security.smime.EnvelopedOutput;
 import org.jboss.resteasy.security.smime.PKCS7SignatureInput;
 import org.jboss.resteasy.security.smime.SignedInput;
 import org.jboss.resteasy.security.smime.SignedOutput;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.test.BaseResourceTest;
-import org.jboss.resteasy.test.TestPortProvider;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -20,7 +19,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import java.io.FileOutputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -28,12 +33,16 @@ import java.security.PrivateKey;
 import java.security.Security;
 import java.security.cert.X509Certificate;
 
+import static org.jboss.resteasy.test.TestPortProvider.generateURL;;
+
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
 public class IntegrationTest extends BaseResourceTest
 {
+   private static Client client;
+   
    @Path("/smime/encrypted")
    public static class EncryptedResource
    {
@@ -161,25 +170,29 @@ public class IntegrationTest extends BaseResourceTest
       dispatcher.getRegistry().addPerRequestResource(SignedResource.class);
       dispatcher.getRegistry().addPerRequestResource(EncryptedSignedResource.class);
       dispatcher.getRegistry().addPerRequestResource(Pkcs7SignedResource.class);
-
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
    }
 
    @Test
    public void testSignedOutput() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/signed"));
-      ClientResponse<String> res = request.get(String.class);
+      Response res = client.target(generateURL("/smime/signed")).request().get();
       Assert.assertEquals(200, res.getStatus());
-      System.out.println(res.getEntity());
-      MediaType contentType = MediaType.valueOf(res.getResponseHeaders().getFirst("Content-Type"));
+      System.out.println(res.readEntity(String.class));
+      MediaType contentType = MediaType.valueOf(res.getHeaderString("Content-Type"));
       System.out.println(contentType);
    }
 
    @Test
    public void testSignedOutput2() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/signed"));
-      SignedInput signed = request.getTarget(SignedInput.class);
+      SignedInput<?> signed = client.target(generateURL("/smime/signed")).request().get(SignedInput.class);
       String output = (String) signed.getEntity(String.class);
       System.out.println(output);
       Assert.assertEquals("hello world", output);
@@ -189,8 +202,7 @@ public class IntegrationTest extends BaseResourceTest
    @Test
    public void testPKCS7SignedOutput() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/pkcs7-signature"));
-      PKCS7SignatureInput signed = request.getTarget(PKCS7SignatureInput.class);
+      PKCS7SignatureInput<?> signed = client.target(generateURL("/smime/pkcs7-signature")).request().get(PKCS7SignatureInput.class);
       String output = (String) signed.getEntity(String.class, MediaType.TEXT_PLAIN_TYPE);
       System.out.println(output);
       Assert.assertEquals("hello world", output);
@@ -199,11 +211,11 @@ public class IntegrationTest extends BaseResourceTest
    @Test
    public void testPKCS7SignedTextOutput() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/pkcs7-signature/text"));
-      String base64 = request.getTarget(String.class);
+      String base64 = client.target(generateURL("/smime/pkcs7-signature/text")).request().get(String.class);
+      
       System.out.println(base64);
-      PKCS7SignatureInput signed = new PKCS7SignatureInput(base64);
-      signed.setProviders(request.getProviderFactory());
+      PKCS7SignatureInput<?> signed = new PKCS7SignatureInput<Object>(base64);
+      signed.setProviders(ResteasyProviderFactory.getInstance());
 
       String output = (String) signed.getEntity(String.class, MediaType.TEXT_PLAIN_TYPE);
       System.out.println(output);
@@ -215,19 +227,17 @@ public class IntegrationTest extends BaseResourceTest
    @Test
    public void testEncryptedOutput() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/encrypted"));
-      ClientResponse<String> res = request.get(String.class);
+      Response res = client.target(generateURL("/smime/encrypted")).request().get();
       Assert.assertEquals(200, res.getStatus());
-      System.out.println(res.getEntity());
-      MediaType contentType = MediaType.valueOf(res.getResponseHeaders().getFirst("Content-Type"));
+      System.out.println(res.readEntity(String.class));
+      MediaType contentType = MediaType.valueOf(res.getHeaderString("Content-Type"));
       System.out.println(contentType);
    }
 
    @Test
    public void testEncryptedOutput2() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/encrypted"));
-      EnvelopedInput enveloped = request.getTarget(EnvelopedInput.class);
+      EnvelopedInput<?> enveloped = client.target(generateURL("/smime/encrypted")).request().get(EnvelopedInput.class);
       String output = (String) enveloped.getEntity(String.class, privateKey, cert);
       System.out.println(output);
       Assert.assertEquals("hello world", output);
@@ -236,27 +246,26 @@ public class IntegrationTest extends BaseResourceTest
    @Test
    public void testEncryptedSignedOutputToFile() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/encrypted/signed"));
-      ClientResponse<String> res = request.get(String.class);
-      MediaType contentType = MediaType.valueOf(res.getResponseHeaders().getFirst("Content-Type"));
+      Response res = client.target(generateURL("/smime/encrypted/signed")).request().get();
+      MediaType contentType = MediaType.valueOf(res.getHeaderString("Content-Type"));
       System.out.println(contentType);
       System.out.println();
-      System.out.println(res.getEntity());
+      String entity = res.readEntity(String.class);
+      System.out.println(entity);
 
       FileOutputStream os = new FileOutputStream("target/python_encrypted_signed.txt");
       os.write("Content-Type: ".getBytes());
       os.write(contentType.toString().getBytes());
       os.write("\r\n".getBytes());
-      os.write(res.getEntity().getBytes());
+      os.write(entity.getBytes());
       os.close();
    }
 
    @Test
    public void testEncryptedSignedOutput() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/encrypted/signed"));
-      EnvelopedInput enveloped = request.getTarget(EnvelopedInput.class);
-      SignedInput signed = (SignedInput) enveloped.getEntity(SignedInput.class, privateKey, cert);
+      EnvelopedInput<?> enveloped = client.target(generateURL("/smime/encrypted/signed")).request().get(EnvelopedInput.class);
+      SignedInput<?> signed = (SignedInput<?>) enveloped.getEntity(SignedInput.class, privateKey, cert);
       String output = (String) signed.getEntity(String.class);
       System.out.println(output);
       Assert.assertEquals("hello world", output);
@@ -267,45 +276,49 @@ public class IntegrationTest extends BaseResourceTest
    @Test
    public void testEncryptedInput() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/encrypted"));
+      Builder request = client.target(generateURL("/smime/encrypted")).request();
       EnvelopedOutput output = new EnvelopedOutput("input", "text/plain");
       output.setCertificate(cert);
-      ClientResponse res = request.body("*/*", output).post();
+      Response res = request.post(Entity.entity(output, "*/*"));
       Assert.assertEquals(204, res.getStatus());
+      res.close();
    }
 
    @Test
    public void testEncryptedSignedInput() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/encrypted/signed"));
+      Builder request = client.target(generateURL("/smime/encrypted/signed")).request();
       SignedOutput signed = new SignedOutput("input", "text/plain");
       signed.setPrivateKey(privateKey);
       signed.setCertificate(cert);
       EnvelopedOutput output = new EnvelopedOutput(signed, "multipart/signed");
       output.setCertificate(cert);
-      ClientResponse res = request.body("*/*", output).post();
+      Response res = request.post(Entity.entity(output, "*/*"));
       Assert.assertEquals(204, res.getStatus());
+      res.close();
    }
 
    @Test
    public void testSignedInput() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/signed"));
+      Builder request = client.target(generateURL("/smime/signed")).request();
       SignedOutput output = new SignedOutput("input", "text/plain");
       output.setCertificate(cert);
       output.setPrivateKey(privateKey);
-      ClientResponse res = request.body("multipart/signed", output).post();
+      Response res = request.post(Entity.entity(output, "multipart/signed"));
       Assert.assertEquals(204, res.getStatus());
+      res.close();
    }
 
    @Test
    public void testPKCS7SignedInput() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/smime/pkcs7-signature"));
+      Builder request = client.target(generateURL("/smime/pkcs7-signature")).request();
       SignedOutput output = new SignedOutput("input", "text/plain");
       output.setCertificate(cert);
       output.setPrivateKey(privateKey);
-      ClientResponse res = request.body("application/pkcs7-signature", output).post();
+      Response res = request.post(Entity.entity(output, "application/pkcs7-signature"));
       Assert.assertEquals(204, res.getStatus());
+      res.close();
    }
 }

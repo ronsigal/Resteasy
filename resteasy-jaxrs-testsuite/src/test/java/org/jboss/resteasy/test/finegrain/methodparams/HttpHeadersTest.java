@@ -1,7 +1,6 @@
 package org.jboss.resteasy.test.finegrain.methodparams;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
@@ -11,11 +10,14 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -245,12 +247,12 @@ public class HttpHeadersTest extends BaseResourceTest
    @Test
    public void RequestHeadersTest() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/HeadersTest/headers"));
-      request.header("Accept", "text/plain, text/html, text/html;level=1, */*");
-      request.header("Content-Type", "application/xml;charset=utf8");
-      ClientResponse<String> response = request.get(String.class);
+      Builder builder = ResteasyClientBuilder.newClient().target(TestPortProvider.generateURL("/HeadersTest/headers")).request();
+      builder.header("Accept", "text/plain, text/html, text/html;level=1, */*");
+      builder.header("Content-Type", "application/xml;charset=utf8");
+      Response response = builder.get();
       Assert.assertEquals(200, response.getStatus());
-      String content = response.getEntity();
+      String content = response.readEntity(String.class);
       
       Assert.assertTrue(-1 < content.indexOf("Accept:"));
       Assert.assertTrue(-1 < content.indexOf("Content-Type:"));

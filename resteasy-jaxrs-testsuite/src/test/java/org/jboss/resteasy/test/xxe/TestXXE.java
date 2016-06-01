@@ -1,14 +1,11 @@
 package org.jboss.resteasy.test.xxe;
 
 import org.junit.Assert;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -17,6 +14,10 @@ import org.w3c.dom.NodeList;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+
 import java.util.Hashtable;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
@@ -78,7 +79,6 @@ public class TestXXE
    public void testXXEWithoutExpansion() throws Exception
    {
       before("false");
-      ClientRequest request = new ClientRequest(generateURL("/"));
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -86,10 +86,9 @@ public class TestXXE
                    "]>\r" + 
                    "<search><user>&xxe;</user></search>";
       System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = ClientBuilder.newClient().target(generateURL("/")).request().post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(204, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("result: " + entity);
       Assert.assertEquals(entity, null);
    }
@@ -98,7 +97,6 @@ public class TestXXE
    public void testXXEWithExpansion() throws Exception
    {
       before("true");
-      ClientRequest request = new ClientRequest(generateURL("/"));
       String filename = "src/test/java/org/jboss/resteasy/test/xxe/testpasswd";
       String str = "<?xml version=\"1.0\"?>\r" +
                    "<!DOCTYPE foo\r" +
@@ -106,10 +104,9 @@ public class TestXXE
                    "]>\r" + 
                    "<search><user>&xxe;</user></search>";
       System.out.println(str);
-      request.body("application/xml", str);
-      ClientResponse<?> response = request.post();
+      Response response = ClientBuilder.newClient().target(generateURL("/")).request().post(Entity.entity(str, "application/xml"));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("result: " + entity);
       Assert.assertEquals("xx:xx:xx:xx:xx:xx:xx", entity);
    }

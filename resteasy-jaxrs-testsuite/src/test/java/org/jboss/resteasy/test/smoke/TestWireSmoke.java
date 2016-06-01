@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.smoke;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.junit.AfterClass;
@@ -10,6 +8,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
@@ -23,16 +25,19 @@ public class TestWireSmoke
 {
 
    private static Dispatcher dispatcher;
+   private static Client client;
 
    @BeforeClass
    public static void before() throws Exception
    {
       dispatcher = EmbeddedContainer.start().getDispatcher();
+      client = ClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
    }
 
@@ -44,32 +49,27 @@ public class TestWireSmoke
       Assert.assertTrue(oldSize < dispatcher.getRegistry().getSize());
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/basic"));
-         ClientResponse<String> response = request.get(String.class);
+         Response response = client.target(generateURL("/basic")).request().get();
          Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
-         Assert.assertEquals("basic", response.getEntity());
+         Assert.assertEquals("basic", response.readEntity(String.class));
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/basic"));
-         request.body("text/plain", "basic");
-         ClientResponse<?> response = request.put();
+         Response response = client.target(generateURL("/basic")).request().put(Entity.entity("basic", "text/plain"));
          Assert.assertEquals(204, response.getStatus());
+         response.close();
       }
       
       {
-         ClientRequest request = new ClientRequest(generateURL("/queryParam"));
-         request.queryParameter("param", "hello world");
-         ClientResponse<String> response = request.get(String.class);
+         Response response = client.target(generateURL("/queryParam")).queryParam("param", "hello world").request().get();
          Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
-         Assert.assertEquals("hello world", response.getEntity());
+         Assert.assertEquals("hello world", response.readEntity(String.class));
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/uriParam/1234"));
-         ClientResponse<String> response = request.get(String.class);
+         Response response = client.target(generateURL("/uriParam/1234")).request().get();
          Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
-         Assert.assertEquals("1234", response.getEntity());         
+         Assert.assertEquals("1234", response.readEntity(String.class));
       }
 
       dispatcher.getRegistry().removeRegistrations(SimpleResource.class);
@@ -84,32 +84,27 @@ public class TestWireSmoke
       Assert.assertTrue(oldSize < dispatcher.getRegistry().getSize());
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/locating/basic"));
-         ClientResponse<String> response = request.get(String.class);
+         Response response = client.target(generateURL("/locating/basic")).request().get();
          Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
-         Assert.assertEquals("basic", response.getEntity());
+         Assert.assertEquals("basic", response.readEntity(String.class));
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/locating/basic"));
-         request.body("text/plain", "basic");
-         ClientResponse<?> response = request.put(String.class);
+         Response response = client.target(generateURL("/locating/basic")).request().put(Entity.entity("basic", "text/plain"));
          Assert.assertEquals(204, response.getStatus());
+         response.close();
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/locating/queryParam"));
-         request.queryParameter("param", "hello world");
-         ClientResponse<String> response = request.get(String.class);
+         Response response = client.target(generateURL("/locating/queryParam")).queryParam("param", "hello world").request().get();
          Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
-         Assert.assertEquals("hello world", response.getEntity());
+         Assert.assertEquals("hello world", response.readEntity(String.class));
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/locating/uriParam/1234"));
-         ClientResponse<String> response = request.get(String.class);
+         Response response = client.target(generateURL("/locating/uriParam/1234")).request().get();
          Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus());
-         Assert.assertEquals("1234", response.getEntity());
+         Assert.assertEquals("1234", response.readEntity(String.class));
       }
 
       dispatcher.getRegistry().removeRegistrations(LocatingResource.class);

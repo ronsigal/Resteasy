@@ -5,12 +5,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.MediaTypeMap;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.test.BaseResourceTest;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -24,9 +23,14 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +46,8 @@ import static org.jboss.resteasy.util.HttpClient4xUtils.consumeEntity;
  */
 public class RegressionBasketTest extends BaseResourceTest
 {
+   private static Client client;
+   
    @Path("/inputstream")
    public static class MyTest
    {
@@ -91,13 +97,20 @@ public class RegressionBasketTest extends BaseResourceTest
       addPerRequestResource(MyTest.class);
       addPerRequestResource(Api.class);
       addPerRequestResource(DeleteTest.class);
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
    }
 
    @Test
    public void test631() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/delete"));
-      ClientResponse response = request.body("text/plain", "hello").delete();
+      Builder builder = client.target(generateURL("/delete")).request();
+      Response response = builder.method("delete", Entity.entity("hello", "text/plain"));
       Assert.assertEquals(204, response.getStatus());
 
 
@@ -106,20 +119,19 @@ public class RegressionBasketTest extends BaseResourceTest
    @Test
    public void test534() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/inputstream/test/json"));
-      request.body(MediaType.APPLICATION_OCTET_STREAM, "hello world".getBytes());
-      ClientResponse<?> response = request.post();
+      Builder builder = client.target(generateURL("/inputstream/test/json")).request();
+      Response response = builder.post(Entity.entity("hello world".getBytes(), MediaType.APPLICATION_OCTET_STREAM));
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 
    @Test
    public void test624() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/ApI/FuNc"));
-      ClientResponse<?> response = request.get();
+      Builder builder = client.target(generateURL("/ApI/FuNc")).request();
+      Response response = builder.get();
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
    }
 

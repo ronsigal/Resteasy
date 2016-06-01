@@ -9,7 +9,6 @@ import org.example.a.testcanonical.TestBase;
 import org.example.b.test.TestExtends;
 import org.jboss.resteasy.annotations.providers.jaxb.json.Mapped;
 import org.jboss.resteasy.annotations.providers.jaxb.json.XmlNsMap;
-import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.plugins.providers.jaxb.JAXBXmlTypeProvider;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
@@ -21,6 +20,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -165,15 +166,12 @@ public class NamespaceMappingTest extends BaseResourceTest
    private String postDataToUrl(String data, String contentType) throws Exception
    {
       String result = null;
-      ClientRequest request = new ClientRequest(generateURL("/test/v1"));
-      request.body(contentType, data);
-      return request.postTarget(String.class);
+      return ClientBuilder.newClient().target(generateURL("/test/v1")).request().post(Entity.entity(data, contentType), String.class);
    }
 
    private String getDataFromUrl() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/test/v1"));
-      return request.getTarget(String.class);
+      return ClientBuilder.newClient().target(generateURL("/test/v1")).request().get(String.class);
    }
 
 

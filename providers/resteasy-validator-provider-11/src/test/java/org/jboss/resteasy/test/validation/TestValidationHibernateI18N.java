@@ -7,13 +7,14 @@ import java.util.Locale;
 import javax.validation.constraints.Size;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 
 import org.jboss.resteasy.api.validation.ViolationReport;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -73,11 +74,11 @@ public class TestValidationHibernateI18N
    
    protected void doTestI18NSetAcceptLanguage(String locale, String expectedMessage) throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/test"));
+      Builder request = ClientBuilder.newClient().target(generateURL("/test")).request();
       request.accept(MediaType.APPLICATION_XML);
-      request.getHeadersAsObjects().add(HttpHeaderNames.ACCEPT_LANGUAGE, locale);
-      ClientResponse<?> response = request.get(ViolationReport.class);
-      ViolationReport report = response.getEntity(ViolationReport.class);
+      request.header(HttpHeaderNames.ACCEPT_LANGUAGE, locale);
+      Response response = request.get();
+      ViolationReport report = response.readEntity(ViolationReport.class);
       System.out.println("report: " + report.toString());
       String message = report.getReturnValueViolations().iterator().next().getMessage();
       System.out.println("message: " + message);

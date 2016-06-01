@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.providers.atom.jaxb.extended.testcases;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.plugins.providers.atom.Content;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Person;
@@ -11,7 +9,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
@@ -92,6 +94,7 @@ public class SmokeTest extends BaseResourceTest {
                 "<summary>desc for testCreatePackageFromAtom</summary>" +
                 "<metadata xmlns=\"\"><categories><value>c1</value></categories> <note><value>meta</value> </note></metadata>" +
                 "</entry>";
+        Client client = ClientBuilder.newClient();
 
         {
             URL url = new URL(generateURL("/entry"));
@@ -116,13 +119,13 @@ public class SmokeTest extends BaseResourceTest {
 
         {
 
-            ClientRequest request = new ClientRequest(generateURL("/entry2"));
+            Builder request = client.target(generateURL("/entry2")).request();
             request.header("Accept", MediaType.APPLICATION_ATOM_XML);
             request.header("Content-Type", MediaType.APPLICATION_ATOM_XML);
-            ClientResponse<Entry> response = request.get(Entry.class);
+            Response response = request.get();
             Assert.assertEquals(200, response.getStatus());
 
-            assertNotNull(response.getEntity().getAnyOtherJAXBObject(AtomAssetMetadata.class));
+            assertNotNull(response.readEntity(Entry.class).getAnyOtherJAXBObject(AtomAssetMetadata.class));
         }
 
         {
@@ -149,16 +152,16 @@ public class SmokeTest extends BaseResourceTest {
 
         {
 
-            ClientRequest request = new ClientRequest(generateURL("/entry4"));
+            Builder request = client.target(generateURL("/entry4")).request();
             request.header("Accept", MediaType.APPLICATION_XML);
             request.header("Content-Type", MediaType.APPLICATION_XML);
-            ClientResponse<Entry> response = request.get(Entry.class);
+            Response response = request.get();
             Assert.assertEquals(200, response.getStatus());
 
-            assertNotNull(response.getEntity().getAnyOtherJAXBObject(AtomAssetMetadata.class));
+            assertNotNull(response.readEntity(Entry.class).getAnyOtherJAXBObject(AtomAssetMetadata.class));
         }
 
-
+        client.close();
     }
 
     @Before

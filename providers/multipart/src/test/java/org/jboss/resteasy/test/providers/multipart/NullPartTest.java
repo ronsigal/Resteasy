@@ -2,7 +2,7 @@ package org.jboss.resteasy.test.providers.multipart;
 
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
-import org.jboss.resteasy.client.ProxyFactory;
+import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -12,6 +12,7 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 
@@ -80,7 +81,8 @@ public class NullPartTest extends BaseResourceTest
    @Test
    public void testNull() throws Exception
    {
-      MyServiceProxy proxy = ProxyFactory.create(MyServiceProxy.class, TEST_URI);
+      ResteasyWebTarget target = (ResteasyWebTarget) ClientBuilder.newClient().target(TEST_URI);
+      MyServiceProxy proxy = target.proxy(MyServiceProxy.class);
 
       MyBean bean = proxy.createMyBean(); // should just be ok
       Assert.assertNotNull(bean);

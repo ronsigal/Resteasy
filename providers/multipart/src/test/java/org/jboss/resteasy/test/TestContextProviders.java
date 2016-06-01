@@ -39,8 +39,6 @@ import org.junit.Assert;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
 import org.jboss.resteasy.annotations.providers.multipart.XopWithMultipartRelated;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -101,8 +99,6 @@ public class TestContextProviders
    
    protected static ResteasyDeployment deployment;
    protected static Dispatcher dispatcher;
-   
-   protected enum Version {TWO, THREE};
    
    @XmlRootElement(name = "customer")
    @XmlAccessorType(XmlAccessType.FIELD)
@@ -418,13 +414,12 @@ public class TestContextProviders
    @Test
    public void testGetFormData() throws Exception
    {
-      doTestGetFormData(Version.TWO);
-      doTestGetFormData(Version.THREE);
+      doTestGetFormData();
    }
    
-   public void doTestGetFormData(Version version) throws Exception
+   public void doTestGetFormData() throws Exception
    {
-      MultipartFormDataInput entity = get(version, "/get/form", MultipartFormDataInput.class);
+      MultipartFormDataInput entity = get("/get/form", MultipartFormDataInput.class);
       
       // Get parts by name.
       Customer c = entity.getFormDataPart("bill", Customer.class, null);
@@ -462,13 +457,12 @@ public class TestContextProviders
    @Test
    public void testGetMixed() throws Exception
    {
-      doTestGetMixed(Version.TWO);
-      doTestGetMixed(Version.THREE);
+      doTestGetMixed();
    }
    
-   void doTestGetMixed(Version version) throws Exception
+   void doTestGetMixed() throws Exception
    {
-      MultipartInput entity = get(version, "/get/mixed", MultipartInput.class);
+      MultipartInput entity = get("/get/mixed", MultipartInput.class);
       
       // Iterate over list of parts.
       List<InputPart> parts = entity.getParts();
@@ -492,13 +486,12 @@ public class TestContextProviders
    @Test
    public void testGetList() throws Exception
    {
-      doTestGetList(Version.TWO);
-      doTestGetList(Version.THREE);
+      doTestGetList();
    }
    
-   void doTestGetList(Version version) throws Exception
+   void doTestGetList() throws Exception
    {
-      MultipartInput entity = get(version, "/get/list", MultipartInput.class);
+      MultipartInput entity = get("/get/list", MultipartInput.class);
       
       // Iterate over list of parts.
       List<InputPart> parts = entity.getParts();
@@ -516,13 +509,12 @@ public class TestContextProviders
    @Test
    public void testGetMap() throws Exception
    {
-      doTestGetMap(Version.TWO);
-      doTestGetMap(Version.THREE);
+      doTestGetMap();
    }
    
-   public void doTestGetMap(Version version) throws Exception
+   public void doTestGetMap() throws Exception
    {
-      MultipartFormDataInput entity = get(version, "/get/map", MultipartFormDataInput.class);
+      MultipartFormDataInput entity = get("/get/map", MultipartFormDataInput.class);
       
       // Get parts by name.
       Customer c = entity.getFormDataPart("bill", Customer.class, null);
@@ -553,13 +545,12 @@ public class TestContextProviders
    @Test
    public void testGetRelated() throws Exception
    {
-      doTestGetRelated(Version.TWO);
-      doTestGetRelated(Version.THREE);
+      doTestGetRelated();
    }
    
-   void doTestGetRelated(Version version) throws Exception
+   void doTestGetRelated() throws Exception
    {
-      MultipartRelatedInput entity = get(version, "/get/related", MultipartRelatedInput.class);
+      MultipartRelatedInput entity = get("/get/related", MultipartRelatedInput.class);
       
       // Iterate over map of parts.
       Map<String, InputPart> map = entity.getRelatedMap();
@@ -579,15 +570,14 @@ public class TestContextProviders
    @Test
    public void testGetMultipartForm() throws Exception
    {
-      doTestGetMultipartForm(Version.TWO);
-      doTestGetMultipartForm(Version.THREE);
+      doTestGetMultipartForm();
    }
    
-   void doTestGetMultipartForm(Version version) throws Exception
+   void doTestGetMultipartForm() throws Exception
    {
       Annotation[] annotations = new Annotation[1];
       annotations[0] = MULTIPART_FORM;
-      CustomerForm form = get(version, "/get/multipartform", CustomerForm.class, annotations);
+      CustomerForm form = get("/get/multipartform", CustomerForm.class, annotations);
       Customer customer = form.getCustomer();
       Assert.assertEquals("Bill", customer.getName());
    }
@@ -595,15 +585,14 @@ public class TestContextProviders
    @Test
    public void testGetXop() throws Exception
    {
-      doTestGetXop(Version.TWO);
-      doTestGetXop(Version.THREE);
+      doTestGetXop();
    }
    
-   void doTestGetXop(Version version) throws Exception
+   void doTestGetXop() throws Exception
    {
       Annotation[] annotations = new Annotation[1];
       annotations[0] = XOP_WITH_MULTIPART_RELATED;
-      Xop xop = get(version, "/get/xop", Xop.class, annotations);
+      Xop xop = get("/get/xop", Xop.class, annotations);
       System.out.println("xop: " + new String(xop.getBytes()));
       Assert.assertEquals("goodbye world", new String(xop.getBytes()));
    }
@@ -611,12 +600,11 @@ public class TestContextProviders
    @Test
    public void testPostMixed() throws Exception
    {
-      doTestPostMixed(Version.TWO);
-      doTestPostMixed(Version.THREE);
+      doTestPostMixed();
    }
    
    @SuppressWarnings("unchecked")
-   void doTestPostMixed(Version version) throws Exception
+   void doTestPostMixed() throws Exception
    {
       MultipartOutput output = new MultipartOutput();
       output.addPart(new Customer("Bill"), MediaType.APPLICATION_XML_TYPE);
@@ -624,7 +612,7 @@ public class TestContextProviders
       Annotation[] annotations = new Annotation[1];
       annotations[0] = PART_TYPE_APPLICATION_XML;
       List<Name> names = new ArrayList<Name>();
-      names = post(version, "/post/mixed", output, MULTIPART_MIXED, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
+      names = post("/post/mixed", output, MULTIPART_MIXED, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
       Assert.assertEquals(2, names.size());
       Assert.assertTrue(names.contains(new Name("Bill")));
       Assert.assertTrue(names.contains(new Name("Bob"))); 
@@ -633,12 +621,11 @@ public class TestContextProviders
    @Test
    public void testPostFormData() throws Exception
    {
-      doTestPostFormData(Version.TWO);
-      doTestPostFormData(Version.THREE);
+      doTestPostFormData();
    }
    
    @SuppressWarnings("unchecked")
-   public void doTestPostFormData(Version version) throws Exception
+   public void doTestPostFormData() throws Exception
    {
       
       MultipartFormDataOutput output = new MultipartFormDataOutput();
@@ -647,7 +634,7 @@ public class TestContextProviders
       Annotation[] annotations = new Annotation[1];
       annotations[0] = PART_TYPE_APPLICATION_XML;
       List<Name> names = new ArrayList<Name>();
-      names = post(version, "/post/form", output, MULTIPART_FORM_DATA, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
+      names = post("/post/form", output, MULTIPART_FORM_DATA, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
       Assert.assertEquals(2, names.size());
       Assert.assertTrue(names.contains(new Name("Bill")));
       Assert.assertTrue(names.contains(new Name("Bob"))); 
@@ -656,12 +643,11 @@ public class TestContextProviders
    @Test
    public void testPostList() throws Exception
    {
-      doTestPostList(Version.TWO);
-      doTestPostList(Version.THREE);
+      doTestPostList();
    }
    
    @SuppressWarnings("unchecked")
-   public void doTestPostList(Version version) throws Exception
+   public void doTestPostList() throws Exception
    {
       List<Customer> customers = new ArrayList<Customer>();
       customers.add(new Customer("Bill"));
@@ -669,7 +655,7 @@ public class TestContextProviders
       Annotation[] annotations = new Annotation[1];
       annotations[0] = PART_TYPE_APPLICATION_XML;
       List<Name> names = new ArrayList<Name>();
-      names = post(version, "/post/list", customers, MULTIPART_MIXED, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
+      names = post("/post/list", customers, MULTIPART_MIXED, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
       Assert.assertEquals(2, names.size());
       Assert.assertTrue(names.contains(new Name("Bill")));
       Assert.assertTrue(names.contains(new Name("Bob"))); 
@@ -678,12 +664,11 @@ public class TestContextProviders
    @Test
    public void testPostMap() throws Exception
    {
-      doTestPostMap(Version.TWO);
-      doTestPostMap(Version.THREE);
+      doTestPostMap();
    }
    
    @SuppressWarnings("unchecked")
-   public void doTestPostMap(Version version) throws Exception
+   public void doTestPostMap() throws Exception
    {
       Map<String, Customer> customers = new HashMap<String, Customer>();
       customers.put("bill", new Customer("Bill"));
@@ -691,7 +676,7 @@ public class TestContextProviders
       Annotation[] annotations = new Annotation[1];
       annotations[0] = PART_TYPE_APPLICATION_XML;
       List<Name> names = new ArrayList<Name>();
-      names = post(version, "/post/map", customers, MULTIPART_FORM_DATA, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
+      names = post("/post/map", customers, MULTIPART_FORM_DATA, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
       Assert.assertEquals(2, names.size());
       Assert.assertTrue(names.contains(new Name("bill:Bill")));
       Assert.assertTrue(names.contains(new Name("bob:Bob"))); 
@@ -700,12 +685,11 @@ public class TestContextProviders
    @Test
    public void testPostRelated() throws Exception
    {
-      doTestPostRelated(Version.TWO);
-      doTestPostRelated(Version.THREE);
+      doTestPostRelated();
    }
    
    @SuppressWarnings("unchecked")
-   void doTestPostRelated(Version version) throws Exception
+   void doTestPostRelated() throws Exception
    {
       MultipartRelatedOutput output = new MultipartRelatedOutput();
       output.setStartInfo("text/html");
@@ -714,7 +698,7 @@ public class TestContextProviders
       Annotation[] annotations = new Annotation[1];
       annotations[0] = PART_TYPE_APPLICATION_XML;
       List<Name> names = new ArrayList<Name>();
-      names = post(version, "/post/related", output, MULTIPART_RELATED, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
+      names = post("/post/related", output, MULTIPART_RELATED, names.getClass(), LIST_NAME_TYPE.getType(), annotations);
       Assert.assertEquals(2, names.size());
       Assert.assertTrue(names.contains(new Name("Bill")));
       Assert.assertTrue(names.contains(new Name("Bob")));
@@ -723,17 +707,16 @@ public class TestContextProviders
    @Test
    public void testPostMultipartForm() throws Exception
    {
-      doTestPostMultipartForm(Version.TWO);
-      doTestPostMultipartForm(Version.THREE);
+      doTestPostMultipartForm();
    }
    
-   void doTestPostMultipartForm(Version version) throws Exception
+   void doTestPostMultipartForm() throws Exception
    {
       CustomerForm form = new CustomerForm();
       form.setCustomer(new Customer("Bill"));
       Annotation[] annotations = new Annotation[1];
       annotations[0] = MULTIPART_FORM;
-      String name = post(version, "/post/multipartform", form, MULTIPART_FORM_DATA, String.class, null, annotations);
+      String name = post("/post/multipartform", form, MULTIPART_FORM_DATA, String.class, null, annotations);
       System.out.println("name: " + name);
       Assert.assertEquals("Bill", name);
    }
@@ -741,99 +724,52 @@ public class TestContextProviders
    @Test
    public void testPostXop() throws Exception
    {
-      doTestPostXop(Version.TWO);
-      doTestPostXop(Version.THREE);
+      doTestPostXop();
    }
 
-   void doTestPostXop(Version version) throws Exception
+   void doTestPostXop() throws Exception
    {
       Xop xop = new Xop("hello world".getBytes());
       Annotation[] annotations = new Annotation[1];
       annotations[0] = XOP_WITH_MULTIPART_RELATED;
-      String s = post(version, "/post/xop", xop, MULTIPART_RELATED, String.class, null, annotations);
+      String s = post("/post/xop", xop, MULTIPART_RELATED, String.class, null, annotations);
       Assert.assertEquals("hello world", s);
    }
 
-   <T> T get(Version version, String path, Class<T> clazz) throws Exception
+   <T> T get(String path, Class<T> clazz) throws Exception
    {
-      return get(version, path, clazz, null);
+      return get(path, clazz, null);
    }
    
-   <T> T get(Version version, String path, Class<T> clazz, Annotation[] annotations) throws Exception
+   <T> T get(String path, Class<T> clazz, Annotation[] annotations) throws Exception
    {
-      switch (version)
-      {
-         case TWO:
-         {
-            ClientRequest request = new ClientRequest(generateURL(path));
-            ClientResponse<T> response = request.get(clazz);
-            System.out.println("status: " + response.getStatus());
-            Assert.assertEquals(200, response.getStatus());
-            T entity = response.getEntity(clazz, null, annotations);
-            return entity;
-         }
-            
-         case THREE:
-         {
-            Client client = ClientBuilder.newClient();
-            WebTarget target = client.target(generateURL(path));
-            Response response = target.request().get();
-            System.out.println("status: " + response.getStatus());
-            Assert.assertEquals(200, response.getStatus());
-            T entity = response.readEntity(clazz, annotations);
-            return entity;
-         }
-         
-         default:
-            throw new Exception("Unknown version: " + version);
-      }
+      Client client = ClientBuilder.newClient();
+      WebTarget target = client.target(generateURL(path));
+      Response response = target.request().get();
+      System.out.println("status: " + response.getStatus());
+      Assert.assertEquals(200, response.getStatus());
+      T entity = response.readEntity(clazz, annotations);
+      return entity;
    }
    
-   @SuppressWarnings({"unchecked"})
-   <S, T> T post(Version version, String path, S payload, MediaType mediaType, Class<T> returnType, Type genericReturnType, Annotation[] annotations) throws Exception
+   @SuppressWarnings({})
+   <S, T> T post(String path, S payload, MediaType mediaType, Class<T> returnType, Type genericReturnType, Annotation[] annotations) throws Exception
    {
-      switch (version)
+      Client client = ClientBuilder.newClient();
+      WebTarget target = client.target(generateURL(path));
+      Entity<S> entity = Entity.entity(payload, mediaType, annotations);
+      Response response = target.request().post(entity);
+      System.out.println("status: " + response.getStatus());
+      Assert.assertEquals(200, response.getStatus());
+      T result = null;
+      if (genericReturnType != null)
       {
-          case TWO:
-          {
-             ClientRequest request = new ClientRequest(generateURL(path));;
-             request.body(mediaType, payload, payload.getClass(), null, annotations);
-             ClientResponse<T> response = request.post();
-             T entity = null;
-             if (genericReturnType != null)
-             {
-                entity = response.getEntity(returnType, genericReturnType);
-             }
-             else
-             {
-                entity = response.getEntity(returnType);
-             }
-           
-             return entity;
-          }
-          
-          case THREE:
-          {
-             Client client = ClientBuilder.newClient();
-             WebTarget target = client.target(generateURL(path));
-             Entity<S> entity = Entity.entity(payload, mediaType, annotations);
-             Response response = target.request().post(entity);
-             System.out.println("status: " + response.getStatus());
-             Assert.assertEquals(200, response.getStatus());
-             T result = null;
-             if (genericReturnType != null)
-             {
-                result = response.readEntity(new GenericType<T>(genericReturnType));  
-             }
-             else
-             {
-                result = response.readEntity(returnType);
-             }
-             return result;
-          }
-
-          default:
-             throw new Exception("Unknown version: " + version);
+         result = response.readEntity(new GenericType<T>(genericReturnType));  
       }
+      else
+      {
+         result = response.readEntity(returnType);
+      }
+      return result;
    }
 }

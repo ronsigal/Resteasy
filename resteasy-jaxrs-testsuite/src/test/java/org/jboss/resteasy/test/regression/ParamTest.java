@@ -1,7 +1,7 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.test.BaseResourceTest;
+import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -76,7 +76,7 @@ public class ParamTest extends BaseResourceTest
    @Test
    public void testNullMatrixParam() throws Exception
    {
-      MyTest proxy = ProxyFactory.create(MyTest.class, generateBaseUrl());
+      MyTest proxy = TestPortProvider.createProxy(MyTest.class, "");
       String rtn = proxy.getMatrix(null);
       Assert.assertEquals("null", rtn);
    }
@@ -89,7 +89,7 @@ public class ParamTest extends BaseResourceTest
    @Test
    public void testNullCookieParam() throws Exception
    {
-      MyTest proxy = ProxyFactory.create(MyTest.class, generateBaseUrl());
+      MyTest proxy = TestPortProvider.createProxy(MyTest.class, "");
       String rtn = proxy.getCookie(null);
       Assert.assertEquals("null", rtn);
    }
@@ -97,7 +97,7 @@ public class ParamTest extends BaseResourceTest
    @Test
    public void testNullHeaderParam() throws Exception
    {
-      MyTest proxy = ProxyFactory.create(MyTest.class, generateBaseUrl());
+      MyTest proxy = TestPortProvider.createProxy(MyTest.class, "");
       String rtn = proxy.getHeader(null);
       Assert.assertEquals("null", rtn);
    }

@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -11,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
@@ -56,8 +55,7 @@ public class PrivateConstructorTest extends BaseResourceTest
    @Test
    public void testMapper() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateBaseUrl() + "/test");
-      ClientResponse response = request.get();
+      Response response = ClientBuilder.newClient().target(generateBaseUrl() + "/test").request().get();
       Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
    }
 

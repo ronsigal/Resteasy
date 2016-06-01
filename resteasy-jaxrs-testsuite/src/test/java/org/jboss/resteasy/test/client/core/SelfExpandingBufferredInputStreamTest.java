@@ -1,11 +1,11 @@
 package org.jboss.resteasy.test.client.core;
 
-import org.jboss.resteasy.client.core.SelfExpandingBufferredInputStream;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import org.jboss.resteasy.client.jaxrs.engines.SelfExpandingBufferredInputStream;
 
 import static org.junit.Assert.assertEquals;
 

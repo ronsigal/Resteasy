@@ -28,19 +28,22 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
-
+import org.junit.BeforeClass;
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
-import org.jboss.resteasy.api.validation.Validation;
 import org.jboss.resteasy.api.validation.ViolationReport;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -57,7 +60,8 @@ public class TestValidationXML
 {
    protected static ResteasyDeployment deployment;
    protected static Dispatcher dispatcher;
-
+   protected static Client client;
+   
    @FooConstraint(min=1,max=3)
    public static class Foo implements Serializable
    {
@@ -211,6 +215,18 @@ public class TestValidationXML
       }
    }
 
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient().register(FooReaderWriter.class);
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    public static void before(Class<?> resourceClass) throws Exception
    {
       after();
@@ -308,13 +324,12 @@ public class TestValidationXML
 
       {
          // Text form
-         ClientRequest request = new ClientRequest(generateURL("/a/b/c"));
-         Foo foo = new Foo("p");
-         request.body("application/foo", foo);
+         Builder request = client.target(generateURL("/a/b/c")).request();
          request.accept(mediaType);
-         ClientResponse<?> response = request.post(Foo.class);
+         Foo foo = new Foo("p");
+         Response response = request.post(Entity.entity(foo, "application/foo"));
          Assert.assertEquals(400, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("report: " + entity);
          String start = "<violationReport>";
          String fieldViolation1 = "<fieldViolations><constraintType>FIELD</constraintType><path>s</path><message>size must be between 2 and 4</message><value>a</value></fieldViolations>";
@@ -335,14 +350,13 @@ public class TestValidationXML
       }
 
       {
-         // Unmarshal report,
-         ClientRequest request = new ClientRequest(generateURL("/a/b/c"));
-         Foo foo = new Foo("p");
-         request.body("application/foo", foo);
+         // Unmarshal report
+         Builder request = client.target(generateURL("/a/b/c")).request();
          request.accept(MediaType.APPLICATION_XML);
-         ClientResponse<?> response = request.post(Foo.class);
+         Foo foo = new Foo("p");
+         Response response = request.post(Entity.entity(foo, "application/foo"));
          Assert.assertEquals(400, response.getStatus());
-         ViolationReport report = response.getEntity(ViolationReport.class);
+         ViolationReport report = response.readEntity(ViolationReport.class);
          System.out.println("report: " + report);
          countViolations(report, 4, 2, 1, 1, 1, 0);
          Iterator<ResteasyConstraintViolation> iterator = report.getFieldViolations().iterator();
@@ -379,27 +393,25 @@ public class TestValidationXML
 
       {
          // Text form
-         ClientRequest request = new ClientRequest(generateURL("/abc/pqr/xyz"));
-         Foo foo = new Foo("123");
-         request.body("application/foo", foo);
+         Builder request = client.target(generateURL("/abc/pqr/xyz")).request();
          request.accept(mediaType);
-         ClientResponse<?> response = request.post(Foo.class);
+         Foo foo = new Foo("123");
+         Response response = request.post(Entity.entity(foo, "application/foo"));
          Assert.assertEquals(500, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("report: " + entity);
          String expected = "<violationReport><returnValueViolations><constraintType>RETURN_VALUE</constraintType><path>post.&lt;return value&gt;</path><message>s must have length: 4 &lt;= length &lt;= 5</message><value>Foo[123]</value></returnValueViolations></violationReport>";
          Assert.assertTrue(entity.contains(expected));
       }
 
       {
-         // Unmarshal report,
-         ClientRequest request = new ClientRequest(generateURL("/abc/pqr/xyz"));
-         Foo foo = new Foo("123");
-         request.body("application/foo", foo);
+         // Unmarshal report
+         Builder request = client.target(generateURL("/abc/pqr/xyz")).request();
          request.accept(MediaType.APPLICATION_XML);
-         ClientResponse<?> response = request.post(Foo.class);
+         Foo foo = new Foo("123");
+         Response response = request.post(Entity.entity(foo, "application/foo"));
          Assert.assertEquals(500, response.getStatus());
-         ViolationReport report = response.getEntity(ViolationReport.class);
+         ViolationReport report = response.readEntity(ViolationReport.class);
          System.out.println("report: " + report);
          countViolations(report, 1, 0, 0, 0, 0, 1);
          ResteasyConstraintViolation cv = report.getReturnValueViolations().iterator().next();
@@ -418,13 +430,12 @@ public class TestValidationXML
 
       {
          // Text form
-         ClientRequest request = new ClientRequest(generateURL("/a/b/c"));
-         Foo foo = new Foo("p");
-         request.body("application/foo", foo);
+         Builder request = client.target(generateURL("/a/b/c")).request();
          request.accept(mediaType);
-         ClientResponse<?> response = request.post(Foo.class);
+         Foo foo = new Foo("p");
+         Response response = request.post(Entity.entity(foo, "application/foo"));
          Assert.assertEquals(400, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("report: " + entity);
          String start = "{\"exception\":null,\"fieldViolations\":[";
          String fieldViolation1 = "{\"constraintType\":\"FIELD\",\"path\":\"s\",\"message\":\"size must be between 2 and 4\",\"value\":\"a\"}";
@@ -447,14 +458,13 @@ public class TestValidationXML
       }
 
       {
-         // Unmarshal report,
-         ClientRequest request = new ClientRequest(generateURL("/a/b/c"));
-         Foo foo = new Foo("p");
-         request.body("application/foo", foo);
+         // Unmarshal report
+         Builder request = client.target(generateURL("/a/b/c")).request();
          request.accept(MediaType.APPLICATION_XML);
-         ClientResponse<?> response = request.post(Foo.class);
+         Foo foo = new Foo("p");
+         Response response = request.post(Entity.entity(foo, "application/foo"));
          Assert.assertEquals(400, response.getStatus());
-         ViolationReport report = response.getEntity(ViolationReport.class);
+         ViolationReport report = response.readEntity(ViolationReport.class);
          System.out.println("report: " + report);
          countViolations(report, 4, 2, 1, 1, 1, 0);
          Iterator<ResteasyConstraintViolation> iterator = report.getFieldViolations().iterator();
@@ -492,13 +502,12 @@ public class TestValidationXML
 
       {
          // Text form
-         ClientRequest request = new ClientRequest(generateURL("/abc/pqr/xyz"));
-         Foo foo = new Foo("123");
-         request.body("application/foo", foo);
+         Builder request = client.target(generateURL("/abc/pqr/xyz")).request();
          request.accept(mediaType);
-         ClientResponse<?> response = request.post(Foo.class);
+         Foo foo = new Foo("123");
+         Response response = request.post(Entity.entity(foo, "application/foo"));
          Assert.assertEquals(500, response.getStatus());
-         String entity = response.getEntity(String.class);
+         String entity = response.readEntity(String.class);
          System.out.println("report: " + entity);
          String start = "\"exception\":null";
          String fieldViolation = "\"fieldViolations\":[]";
@@ -515,14 +524,13 @@ public class TestValidationXML
       }
 
       {
-         // Unmarshal report,
-         ClientRequest request = new ClientRequest(generateURL("/abc/pqr/xyz"));
-         Foo foo = new Foo("123");
-         request.body("application/foo", foo);
+         // Unmarshal report
+         Builder request = client.target(generateURL("/abc/pqr/xyz")).request();
          request.accept(MediaType.APPLICATION_XML);
-         ClientResponse<?> response = request.post(Foo.class);
+         Foo foo = new Foo("123");
+         Response response = request.post(Entity.entity(foo, "application/foo"));
          Assert.assertEquals(500, response.getStatus());
-         ViolationReport report = response.getEntity(ViolationReport.class);
+         ViolationReport report = response.readEntity(ViolationReport.class);
          System.out.println("report: " + report);
          countViolations(report, 1, 0, 0, 0, 0, 1);
          ResteasyConstraintViolation cv = report.getReturnValueViolations().iterator().next();
@@ -538,13 +546,12 @@ public class TestValidationXML
    protected void doTestText_pre(String mediaType) throws Exception
    {
       beforeFoo(TestResourceWithAllFivePotentialViolations.class);
-      ClientRequest request = new ClientRequest(generateURL("/a/b/c"));
-      Foo foo = new Foo("p");
-      request.body("application/foo", foo);
+      Builder request = client.target(generateURL("/a/b/c")).request();
       request.accept(mediaType);
-      ClientResponse<?> response = request.post(Foo.class);
+      Foo foo = new Foo("p");
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(400, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("report:");
       System.out.println(entity);
       String fieldViolation1 =
@@ -583,13 +590,12 @@ public class TestValidationXML
    protected void doTestText_post(String mediaType) throws Exception
    {
       beforeFoo(TestResourceWithAllFivePotentialViolations.class);
-      ClientRequest request = new ClientRequest(generateURL("/abc/pqr/xyz"));
-      Foo foo = new Foo("123");
-      request.body("application/foo", foo);
+      Builder request = client.target(generateURL("/abc/pqr/xyz")).request();
       request.accept(mediaType);
-      ClientResponse<?> response = request.post(Foo.class);
+      Foo foo = new Foo("123");
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(500, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("report: " + entity);
       String returnValueViolation =
             "[RETURN_VALUE]\r" +

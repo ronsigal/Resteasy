@@ -4,6 +4,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.jboss.resteasy.test.TestPortProvider.createProxy;
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
 import java.io.IOException;
@@ -38,6 +39,7 @@ import javax.ws.rs.CookieParam;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -45,24 +47,26 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
-
+import org.junit.BeforeClass;
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
-import org.jboss.resteasy.api.validation.ResteasyViolationException;
 import org.jboss.resteasy.api.validation.Validation;
 import org.jboss.resteasy.api.validation.ViolationReport;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ClientResponseFailure;
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -79,6 +83,7 @@ public class TestValidation
 {
    protected static ResteasyDeployment deployment;
    protected static Dispatcher dispatcher;
+   protected static Client client;
 
    @Path("/")
    public static class TestResourceWithValidField
@@ -925,6 +930,18 @@ public class TestValidation
       }
    }
    
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient().register(FooReaderWriter.class);
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    public static void before(Class<?> resourceClass) throws Exception
    {
       after();
@@ -959,26 +976,22 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testFieldValid() throws Exception
    {
       before(TestResourceWithValidField.class);
-      ClientRequest request = new ClientRequest(generateURL("/"));
-      ClientResponse<?> response = request.post();
+      Response response = client.target(generateURL("/")).request().post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
       after();
    }
 
    @Test
-//   @Ignore
    public void testFieldInvalid() throws Exception
    {
       before(TestResourceWithInvalidField.class);
-      ClientRequest request = new ClientRequest(generateURL("/"));
-      ClientResponse<?> response = request.post();
+      Response response = client.target(generateURL("/")).request().post(null);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity(String.class);
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 1, 0, 0, 0, 0);
       ResteasyConstraintViolation cv = r.getFieldViolations().iterator().next();
@@ -989,26 +1002,22 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testPropertyValid() throws Exception
    {
       before(TestResourceWithProperty.class);
-      ClientRequest request = new ClientRequest(generateURL("/abc/unused"));
-      ClientResponse<?> response = request.post();
+      Response response = client.target(generateURL("/abc/unused")).request().post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
       after();
    }
 
    @Test
-//   @Ignore
    public void testPropertyInvalid() throws Exception
    {
       before(TestResourceWithProperty.class);
-      ClientRequest request = new ClientRequest(generateURL("/abcdef/unused"));
-      ClientResponse<?> response = request.post(String.class);
+      Response response = client.target(generateURL("/abcdef/unused")).request().post(null);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 1, 0, 0, 0);
       ResteasyConstraintViolation cv = r.getPropertyViolations().iterator().next();
@@ -1018,22 +1027,19 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testFieldAndProperty() throws Exception
    {
       before(TestResourceWithFieldAndProperty.class);
 
       // Valid
-      ClientRequest request = new ClientRequest(generateURL("/abc/wxyz"));
-      ClientResponse<?> response = request.post();
+      Response response = client.target(generateURL("/abc/wxyz")).request().post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Invalid
-      request = new ClientRequest(generateURL("/a/uvwxyz"));
-      response = request.post(String.class);
+      response = client.target(generateURL("/a/uvwxyz")).request().post(null);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 1, 1, 0, 0, 0);
       ResteasyConstraintViolation cv = r.getFieldViolations().iterator().next();
@@ -1046,22 +1052,19 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testClassConstraint() throws Exception
    {
       before(TestResourceWithClassConstraint.class);
 
-      // Valid
-      ClientRequest request = new ClientRequest(generateURL("/abc/xyz"));
-      ClientResponse<?> response = request.post();      
+      // Valid   
+      Response response = client.target(generateURL("/abc/xyz")).request().post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Invalid
-      request = new ClientRequest(generateURL("/a/b"));
-      response = request.post(String.class);
+      response = client.target(generateURL("/a/b")).request().post(null);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 0, 1, 0, 0);
       ResteasyConstraintViolation cv = r.getClassViolations().iterator().next();
@@ -1072,22 +1075,19 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testGraph() throws Exception
    {
       before(TestResourceWithGraph.class);
 
       // Valid
-      ClientRequest request = new ClientRequest(generateURL("/abcd/vwxyz"));
-      ClientResponse<?> response = request.post();      
+      Response response = client.target(generateURL("/abcd/vwxyz")).request().post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Invalid
-      request = new ClientRequest(generateURL("/abc/xyz"));
-      response = request.post(String.class);
+      response = client.target(generateURL("/abc/xyz")).request().post(null);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 2, 0, 0, 0, 0);
       
@@ -1115,22 +1115,19 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testArray() throws Exception
    {
       before(TestResourceWithArray.class);
 
-      // Valid
-      ClientRequest request = new ClientRequest(generateURL("/abcde"));
-      ClientResponse<?> response = request.post();      
+      // Valid     
+      Response response = client.target(generateURL("/abcde")).request().post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Invalid
-      request = new ClientRequest(generateURL("/abc"));
-      response = request.post(String.class);
+      response = client.target(generateURL("/abc")).request().post(null);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 1, 0, 0, 0, 0);
       ResteasyConstraintViolation cv = r.getFieldViolations().iterator().next();
@@ -1140,22 +1137,19 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testList() throws Exception
    {
       before(TestResourceWithList.class);
 
-      // Valid
-      ClientRequest request = new ClientRequest(generateURL("/abcde"));
-      ClientResponse<?> response = request.post();      
+      // Valid  
+      Response response = client.target(generateURL("/abcde")).request().post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Invalid
-      request = new ClientRequest(generateURL("/abc"));
-      response = request.post(String.class);
+      response = client.target(generateURL("/abc")).request().post(null);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 1, 0, 0, 0, 0);
       ResteasyConstraintViolation cv = r.getFieldViolations().iterator().next();
@@ -1165,22 +1159,19 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testMap() throws Exception
    {
       before(TestResourceWithMap.class);
 
-      // Valid
-      ClientRequest request = new ClientRequest(generateURL("/abcde"));
-      ClientResponse<?> response = request.post();      
+      // Valid    
+      Response response = client.target(generateURL("/abcde")).request().post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Invalid
-      request = new ClientRequest(generateURL("/abc"));
-      response = request.post(String.class);
+      response = client.target(generateURL("/abc")).request().post(null);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 1, 0, 0, 0, 0);
       ResteasyConstraintViolation cv = r.getFieldViolations().iterator().next();
@@ -1190,22 +1181,19 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testMapOfListOfArrayOfStrings() throws Exception
    {
       before(TestResourceWithMapOfListOfArrayOfStrings.class);
 
       // Valid
-      ClientRequest request = new ClientRequest(generateURL("/abcde"));
-      ClientResponse<?> response = request.post();      
+      Response response = client.target(generateURL("/abcde")).request().post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Invalid
-      request = new ClientRequest(generateURL("/abc"));
-      response = request.post(String.class);
+      response = client.target(generateURL("/abc")).request().post(null);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       System.out.println("exception: " + r);
       countViolations(r, 1, 0, 0, 0, 0);
@@ -1216,38 +1204,33 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testParameters() throws Exception
    {
       beforeFoo(TestResourceWithParameters.class);
       
       // Valid native constraint
-      ClientRequest request = new ClientRequest(generateURL("/native"));
-      request.body("application/foo", new Foo("a"));
-      ClientResponse<?> response = request.post();      
+      Builder request = client.target(generateURL("/native")).request();
+      Response response = request.post(Entity.entity(new Foo("a"), "application/foo"));
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Valid imposed constraint
-      request = new ClientRequest(generateURL("/imposed"));
-      request.body("application/foo", new Foo("abcde"));
-      response = request.post();      
+      request = client.target(generateURL("/imposed")).request();
+      response = request.post(Entity.entity(new Foo("abcde"), "application/foo"));   
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
-      // Valid native and imposed constraints.
-      request = new ClientRequest(generateURL("/nativeAndImposed"));
-      request.body("application/foo", new Foo("abc"));
-      response = request.post();      
+      // Valid native and imposed constraints.   
+      request = client.target(generateURL("/nativeAndImposed")).request();
+      response = request.post(Entity.entity(new Foo("abc"), "application/foo"));
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Invalid native constraint
-      request = new ClientRequest(generateURL("/native"));
-      request.body("application/foo", new Foo("abcdef"));
-      response = request.post(String.class);
+      request = client.target(generateURL("/native")).request();
+      response = request.post(Entity.entity(new Foo("abcdef"), "application/foo"));
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 0, 0, 1, 0);
       ResteasyConstraintViolation cv = r.getParameterViolations().iterator().next();
@@ -1255,11 +1238,10 @@ public class TestValidation
       Assert.assertEquals("Foo[abcdef]", cv.getValue());
       
       // Invalid imposed constraint
-      request = new ClientRequest(generateURL("/imposed"));
-      request.body("application/foo", new Foo("abcdef"));
-      response = request.post(String.class);
+      request = client.target(generateURL("/imposed")).request();
+      response = request.post(Entity.entity(new Foo("abcdef"), "application/foo"));
       Assert.assertEquals(400, response.getStatus());
-      entity = response.getEntity();
+      entity = response.readEntity(String.class);
       r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 0, 0, 1, 0);
       cv = r.getParameterViolations().iterator().next();
@@ -1267,11 +1249,10 @@ public class TestValidation
       Assert.assertEquals("Foo[abcdef]", cv.getValue());
 
       // Invalid native and imposed constraints
-      request = new ClientRequest(generateURL("/nativeAndImposed"));
-      request.body("application/foo", new Foo("abcdef"));
-      response = request.post(String.class);
+      request = client.target(generateURL("/nativeAndImposed")).request();
+      response = request.post(Entity.entity(new Foo("abcdef"), "application/foo"));
       Assert.assertEquals(400, response.getStatus());
-      entity = response.getEntity();
+      entity = response.readEntity(String.class);
       r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 0, 0, 2, 0);
       Iterator<ResteasyConstraintViolation> it = r.getParameterViolations().iterator(); 
@@ -1292,25 +1273,23 @@ public class TestValidation
       String url = generateURL("/other/ppp"); // path param
       url += ";m=mmm";                        // matrix param
       url += "?q=qqq";                        // query param
-      request = new ClientRequest(url);
-      request.formParameter("f", "fff");      // form param
+      request = client.target(url).request();
       request.header("h", "hhh");             // header param
       request.cookie(new Cookie("c", "ccc")); // cookie param
-      response = request.post();
+      response = request.post(Entity.form(new Form("f", "fff")));
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
       
       // Invalid other parameters
       url = generateURL("/other/pppp");        // path param
       url += ";m=mmmm";                        // matrix param
       url += "?q=qqqq";                        // query param
-      request = new ClientRequest(url);
-      request.formParameter("f", "ffff");      // form param
+      request = client.target(url).request();
       request.header("h", "hhhh");             // header param
       request.cookie(new Cookie("c", "cccc")); // cookie param
-      response = request.post(String.class);
+      response = request.post(Entity.form(new Form("f", "ffff")));
       Assert.assertEquals(400, response.getStatus());
-      entity = response.getEntity();
+      entity = response.readEntity(String.class);
       r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 0, 0, 6, 0);
       List<String> list = getMessages(r);
@@ -1324,41 +1303,37 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testReturnValues() throws Exception
    {
       beforeFoo(TestResourceWithReturnValues.class);
 
       // Valid native constraint
-      ClientRequest request = new ClientRequest(generateURL("/native"));
-      Foo foo = new Foo("a");
-      request.body("application/foo", foo);
-      ClientResponse<?> response = request.post(Foo.class);     
+      Foo foo = new Foo("a");  
+      Builder request = client.target(generateURL("/native")).request();
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(foo, response.getEntity());
+      Assert.assertEquals(foo, response.readEntity(Foo.class));
       
       // Valid imposed constraint
-      request = new ClientRequest(generateURL("/imposed"));
-      foo = new Foo("abcde");
-      request.body("application/foo", foo);
-      response = request.post(Foo.class);      
+      request = client.target(generateURL("/imposed")).request();
+      foo = new Foo("abcde"); 
+      response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(foo, response.getEntity());
+      Assert.assertEquals(foo, response.readEntity(Foo.class));
 
-      // Valid native and imposed constraints.
-      request = new ClientRequest(generateURL("/nativeAndImposed"));
-      foo = new Foo("abc");
-      request.body("application/foo", foo);
-      response = request.post(Foo.class);      
+      // Valid native and imposed constraints.  
+      request = client.target(generateURL("/nativeAndImposed")).request();
+      foo = new Foo("abc");      
+      response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(foo, response.getEntity());
+      Assert.assertEquals(foo, response.readEntity(Foo.class));
 
       // Invalid native constraint
-      request = new ClientRequest(generateURL("/native"));
-      request.body("application/foo", new Foo("abcdef"));
-      response = request.post(Foo.class);
+      request = client.target(generateURL("/native")).request();
+      foo = new Foo("abcdef");      
+      response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(500, response.getStatus());
-      Object entity = response.getEntity(String.class);
+      Object entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 0, 0, 0, 1);
@@ -1367,11 +1342,11 @@ public class TestValidation
       Assert.assertEquals("Foo[abcdef]", cv.getValue());
 
       // Invalid imposed constraint
-      request = new ClientRequest(generateURL("/imposed"));
-      request.body("application/foo", new Foo("abcdef"));
-      response = request.post(Foo.class);
+      request = client.target(generateURL("/imposed")).request();
+      foo = new Foo("abcdef");      
+      response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(500, response.getStatus());
-      entity = response.getEntity(String.class);
+      entity = response.readEntity(String.class);
       r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 0, 0, 0, 1);
       cv = r.getReturnValueViolations().iterator().next();
@@ -1379,11 +1354,11 @@ public class TestValidation
       Assert.assertEquals("Foo[abcdef]", cv.getValue());
 
       // Invalid native and imposed constraints
-      request = new ClientRequest(generateURL("/nativeAndImposed"));
-      request.body("application/foo", new Foo("abcdef"));
-      response = request.post(Foo.class); 
+      request = client.target(generateURL("/nativeAndImposed")).request();
+      foo = new Foo("abcdef");      
+      response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(500, response.getStatus());
-      entity = response.getEntity(String.class);
+      entity = response.readEntity(String.class);
       r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 0, 0, 0, 2);
       Iterator<ResteasyConstraintViolation> it = r.getReturnValueViolations().iterator(); 
@@ -1403,27 +1378,24 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testViolationsBeforeReturnValue() throws Exception
    {
       beforeFoo(TestResourceWithAllFivePotentialViolations.class);
 
       // Valid
-      ClientRequest request = new ClientRequest(generateURL("/abc/wxyz/unused/unused"));
+      Builder request = client.target(generateURL("/abc/wxyz/unused/unused")).request();
       Foo foo = new Foo("pqrs");
-      request.body("application/foo", foo);
-      ClientResponse<?> response = request.post(Foo.class);     
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(foo, response.getEntity());
+      Assert.assertEquals(foo, response.readEntity(Foo.class));
 
       // Invalid: Should have 1 each of field, property, class, and parameter violations,
       //          and no return value violations.
-      request = new ClientRequest(generateURL("/a/z/unused/unused"));
+      request = client.target(generateURL("/a/z/unused/unused")).request();
       foo = new Foo("p");
-      request.body("application/foo", foo);
-      response = request.post(Foo.class);
+      response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity(String.class);
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 1, 1, 1, 1, 0);
       ResteasyConstraintViolation cv = r.getFieldViolations().iterator().next();
@@ -1442,7 +1414,6 @@ public class TestValidation
    }
    
    @Test
-//   @Ignore
    public void testInheritence() throws Exception
    {
       before(InterfaceTestSub.class);
@@ -1451,34 +1422,31 @@ public class TestValidation
          // Valid - inherited annotations
          InterfaceTestSuper.t = "aaa";
          InterfaceTestSub.u = "bbb";
-         ClientRequest request = new ClientRequest(generateURL("/inherit"));
-         request.body(MediaType.TEXT_PLAIN_TYPE, "ccc");
-         ClientResponse<?> response = request.post(String.class);
+         Builder request = client.target(generateURL("/inherit")).request();
+         Response response = request.post(Entity.entity("ccc", MediaType.TEXT_PLAIN_TYPE));
          Assert.assertEquals(200, response.getStatus());
-         Assert.assertEquals("ccc", response.getEntity());
+         Assert.assertEquals("ccc", response.readEntity(String.class));
       }
       
       {
          // Valid - overridden annotations
          InterfaceTestSuper.t = "aaa";
          InterfaceTestSub.u = "bbb";
-         ClientRequest request = new ClientRequest(generateURL("/override"));
-         request.body(MediaType.TEXT_PLAIN_TYPE, "ccc");
-         ClientResponse<?> response = request.post(String.class);     
+         Builder request = client.target(generateURL("/override")).request();
+         Response response = request.post(Entity.entity("ccc", MediaType.TEXT_PLAIN_TYPE));
          Assert.assertEquals(200, response.getStatus());
-         Assert.assertEquals("ccc", response.getEntity());
+         Assert.assertEquals("ccc", response.readEntity(String.class));
       }
       
       {
          // Invalid - inherited class, parameter annotations
          InterfaceTestSuper.t = "a";
          InterfaceTestSub.u = "d";
-         ClientRequest request = new ClientRequest(generateURL("/inherit"));
-         request.body(MediaType.TEXT_PLAIN_TYPE, "e");
-         ClientResponse<?> response = request.post(String.class);
+         Builder request = client.target(generateURL("/inherit")).request();
+         Response response = request.post(Entity.entity("e", MediaType.TEXT_PLAIN_TYPE));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(400, response.getStatus());
-         Object entity = response.getEntity();
+         Object entity = response.readEntity(String.class);
          ViolationReport r = new ViolationReport(String.class.cast(entity));
          countViolations(r, 0, 0, 2, 1, 0);
       }
@@ -1487,12 +1455,11 @@ public class TestValidation
          // Invalid - overridden class, parameter annotations
          InterfaceTestSuper.t = "a";
          InterfaceTestSub.u = "d";
-         ClientRequest request = new ClientRequest(generateURL("/override"));
-         request.body(MediaType.TEXT_PLAIN_TYPE, "e");
-         ClientResponse<?> response = request.post(String.class);
+         Builder request = client.target(generateURL("/override")).request();
+         Response response = request.post(Entity.entity("e", MediaType.TEXT_PLAIN_TYPE));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(400, response.getStatus());
-         Object entity = response.getEntity();
+         Object entity = response.readEntity(String.class);
          ViolationReport r = new ViolationReport(String.class.cast(entity));
          countViolations(r, 0, 0, 2, 1, 0);
       }
@@ -1501,12 +1468,11 @@ public class TestValidation
          // Invalid - inherited return value annotations
          InterfaceTestSuper.t = "aaa";
          InterfaceTestSub.u = "bbb";
-         ClientRequest request = new ClientRequest(generateURL("/inherit"));
-         request.body(MediaType.TEXT_PLAIN_TYPE, "eeee");
-         ClientResponse<?> response = request.post(String.class);
+         Builder request = client.target(generateURL("/inherit")).request();
+         Response response = request.post(Entity.entity("eeee", MediaType.TEXT_PLAIN_TYPE));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(500, response.getStatus());
-         Object entity = response.getEntity();
+         Object entity = response.readEntity(String.class);
          ViolationReport r = new ViolationReport(String.class.cast(entity));
          countViolations(r, 0, 0, 0, 0, 1);
       }
@@ -1515,12 +1481,11 @@ public class TestValidation
          // Invalid - overridden return value annotations
          InterfaceTestSuper.t = "aaa";
          InterfaceTestSub.u = "bbb";
-         ClientRequest request = new ClientRequest(generateURL("/override"));
-         request.body(MediaType.TEXT_PLAIN_TYPE, "eeee");
-         ClientResponse<?> response = request.post(String.class);
+         Builder request = client.target(generateURL("/override")).request();
+         Response response = request.post(Entity.entity("eeee", MediaType.TEXT_PLAIN_TYPE));
          System.out.println("status: " + response.getStatus());
          Assert.assertEquals(500, response.getStatus());
-         Object entity = response.getEntity();
+         Object entity = response.readEntity(String.class);
          ViolationReport r = new ViolationReport(String.class.cast(entity));
          countViolations(r, 0, 0, 0, 0, 2);
       }
@@ -1528,22 +1493,21 @@ public class TestValidation
    }
    
    @Test
-//   @Ignore
    public void testLocators() throws Exception
    {
       beforeFoo(TestResourceWithSubLocators.class);
       
       // Sub-resource locator returns resource with valid field.
-      ClientRequest request = new ClientRequest(generateURL("/validField"));
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(generateURL("/validField")).request();
+      Response response = request.post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Sub-resource locator returns resource with invalid field.
-      request = new ClientRequest(generateURL("/invalidField"));
-      response = request.post(String.class);
+      request = client.target(generateURL("/invalidField")).request();
+      response = request.post(null);
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 1, 0, 0, 0, 0);
       ResteasyConstraintViolation cv = r.getFieldViolations().iterator().next();
@@ -1553,16 +1517,16 @@ public class TestValidation
       // Sub-resource locator returns resource with valid property.
       // Note: The resource TestResourceWithProperty has a @PathParam annotation used by a setter,
       //       but it is not used when TestResourceWithProperty is used a sub-resource.  Hence "unused".
-      request = new ClientRequest(generateURL("/property/abc/unused"));
-      response = request.post();
+      request = client.target(generateURL("/property/abc/unused")).request();
+      response = request.post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
       
       // Sub-resource locator returns resource with invalid property.
-      request = new ClientRequest(generateURL("/property/abcdef/unused"));
-      response = request.post(String.class);
+      request = client.target(generateURL("/property/abcdef/unused")).request();
+      response = request.post(null);
       Assert.assertEquals(400, response.getStatus());
-      entity = response.getEntity();
+      entity = response.readEntity(String.class);
       r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 1, 0, 0, 0);
       cv = r.getPropertyViolations().iterator().next();
@@ -1570,22 +1534,20 @@ public class TestValidation
       Assert.assertEquals("abcdef", cv.getValue());
 
       // Valid
-      request = new ClientRequest(generateURL("/everything/abc/wxyz/unused/unused"));
+      request = client.target(generateURL("/everything/abc/wxyz/unused/unused")).request();
       Foo foo = new Foo("pqrs");
-      request.body("application/foo", foo);
-      response = request.post(Foo.class);     
+      response = request.post(Entity.entity(foo, "application/foo"));     
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(foo, response.getEntity());
+      Assert.assertEquals(foo, response.readEntity(Foo.class));
 
       // Invalid: Should have 1 each of field, property, class, and parameter violations,and no return value violations.
       // Note: expect warning because TestResourceWithAllFivePotentialViolations is being used a sub-resource and it has an injectible field:
       //       WARN org.jboss.resteasy.core.ResourceLocator - Field s of subresource org.jboss.resteasy.test.validation.TestValidation$TestResourceWithAllFivePotentialViolations will not be injected according to spec
-      request = new ClientRequest(generateURL("/everything/a/z/unused/unused"));
+      request = client.target(generateURL("/everything/a/z/unused/unused")).request();
       foo = new Foo("p");
-      request.body("application/foo", foo);
-      response = request.post(Foo.class);
+      response = request.post(Entity.entity(foo, "application/foo"));  
       Assert.assertEquals(400, response.getStatus());
-      entity = response.getEntity(String.class);
+      entity = response.readEntity(String.class);
       r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 1, 1, 1, 1, 0);
       cv = r.getFieldViolations().iterator().next();
@@ -1598,16 +1560,15 @@ public class TestValidation
       Assert.assertTrue(cv.getValue().startsWith("org.jboss.resteasy.test.validation.TestValidation$TestResourceWithAllFivePotentialViolations@"));
       
       // Sub-sub-resource locator returns resource with valid property.
-      request = new ClientRequest(generateURL("/locator/sublocator/abc"));
-      response = request.post();
-      Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      request = client.target(generateURL("/locator/sublocator/abc")).request();
+      response = request.post(null); 
+      response.close();
 
       // Sub-resource locator returns resource with invalid property.
-      request = new ClientRequest(generateURL("/locator/sublocator/abcdef"));
-      response = request.post(String.class);
+      request = client.target(generateURL("/locator/sublocator/abcdef")).request();
+      response = request.post(null); 
       Assert.assertEquals(400, response.getStatus());
-      entity = response.getEntity(String.class);
+      entity = response.readEntity(String.class);
       r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 1, 0, 0, 0, 0);
       cv = r.getFieldViolations().iterator().next();
@@ -1618,33 +1579,31 @@ public class TestValidation
    }
 
    @Test
-//   @Ignore
    public void testAsynch() throws Exception
    {
       beforeFooAsynch(TestResourceWithAllFivePotentialViolations.class);
       
       // Submit asynchronous job with violations prior to execution of resource method.
-      ClientRequest request = new ClientRequest(generateURL("/a/z/unused/unused?asynch=true"));
+      Builder request = client.target(generateURL("/a/z/unused/unused?asynch=true")).request();
       Foo foo = new Foo("p");
-      request.body("application/foo", foo);
-      ClientResponse<?> response = request.post(Foo.class);
+      Response response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(HttpServletResponse.SC_ACCEPTED, response.getStatus());
-      String jobUrl = response.getResponseHeaders().getFirst(HttpHeaders.LOCATION);
+      String jobUrl = response.getHeaderString(HttpHeaders.LOCATION);
       System.out.println("JOB: " + jobUrl);
-      response.releaseConnection();
+      response.close();
       
       // Get result: Should have 1 each of field, property, class, and parameter violations,
       //             and no return value violations.
-      request = new ClientRequest(jobUrl);
+      request = client.target(jobUrl).request();
       response = request.get();
       while (HttpServletResponse.SC_ACCEPTED == response.getStatus())
       {
          Thread.sleep(1000);
-         response.releaseConnection();
+         response.close();
          response = request.get();
       }
       Assert.assertEquals(400, response.getStatus());
-      Object entity = response.getEntity(String.class);
+      Object entity = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 1, 1, 1, 1, 0);
       ResteasyConstraintViolation cv = r.getFieldViolations().iterator().next();
@@ -1661,33 +1620,32 @@ public class TestValidation
       Assert.assertEquals("Foo[p]", cv.getValue());
 
       // Delete job.
-      request = new ClientRequest(jobUrl);
+      request = client.target(jobUrl).request();
       response = request.delete();
       Assert.assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-      response.releaseConnection();
+      response.close();
       
       // Submit asynchronous job with violations in result of resource method.
-      request = new ClientRequest(generateURL("/abc/xyz/unused/unused?asynch=true"));
+      request = client.target(generateURL("/abc/xyz/unused/unused?asynch=true")).request();
       foo = new Foo("pqr");
-      request.body("application/foo", foo);
-      response = request.post(Foo.class);
+      response = request.post(Entity.entity(foo, "application/foo"));
       Assert.assertEquals(HttpServletResponse.SC_ACCEPTED, response.getStatus());
-      jobUrl = response.getResponseHeaders().getFirst(HttpHeaders.LOCATION);
+      jobUrl = response.getHeaderString(HttpHeaders.LOCATION);
       System.out.println("JOB: " + jobUrl);
-      response.releaseConnection();
+      response.close();
 
       // Get result: Should have no field, property, class, or parameter violations,
       //             and one return value violation.
-      request = new ClientRequest(jobUrl);
+      request = client.target(jobUrl).request();
       response = request.get();
       while (HttpServletResponse.SC_ACCEPTED == response.getStatus())
       {
          Thread.sleep(1000);
-         response.releaseConnection();
+         response.close();
          response = request.get();
       }
       Assert.assertEquals(500, response.getStatus());
-      entity = response.getEntity(String.class);
+      entity = response.readEntity(String.class);
       r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 0, 0, 0, 1);
       cv = r.getReturnValueViolations().iterator().next();
@@ -1695,10 +1653,10 @@ public class TestValidation
       Assert.assertEquals("Foo[pqr]", cv.getValue());
       
       // Delete job.
-      request = new ClientRequest(jobUrl);
+      request = client.target(jobUrl).request();
       response = request.delete();
       Assert.assertEquals(HttpServletResponse.SC_NO_CONTENT, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       after();
    }
@@ -1709,19 +1667,19 @@ public class TestValidation
       before(TestSubResourceWithCrossParameterConstraint.class);
 
       // Valid
-      ClientRequest request = new ClientRequest(generateURL("/2/3"));
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(generateURL("/2/3")).request();
+      Response response = request.post(null);
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
      
       // Invalid
-      request = new ClientRequest(generateURL("/5/7"));
-      response = request.post();
+      request = client.target(generateURL("/5/7")).request();
+      response = request.post(null);
       Assert.assertEquals(400, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNotNull(header);
       Assert.assertTrue(Boolean.valueOf(header));
-      Object entity = response.getEntity(String.class);
+      Object entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       ViolationReport r = new ViolationReport(String.class.cast(entity));
       countViolations(r, 0, 0, 0, 1, 0);
@@ -1740,7 +1698,7 @@ public class TestValidation
       before(TestProxyResource.class);
 
       // Valid
-      TestProxyInterface client = ProxyFactory.create(TestProxyInterface.class, generateURL("/"));
+      TestProxyInterface client = createProxy(TestProxyInterface.class, "");
       client.s("abcd");
       String result = client.g();
       Assert.assertEquals("abcd", result);
@@ -1751,14 +1709,14 @@ public class TestValidation
       {
          result = client.g();
       }
-      catch (ClientResponseFailure e)
+      catch (InternalServerErrorException e)
       {
-         ClientResponse<?> response = e.getResponse();
+         Response response = e.getResponse();
          System.out.println("status: " + response.getStatus());
-         String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+         String header = response.getHeaderString(Validation.VALIDATION_HEADER);
          Assert.assertNotNull(header);
          Assert.assertTrue(Boolean.valueOf(header));
-         Object entity = response.getEntity(String.class);
+         Object entity = response.readEntity(String.class);
          System.out.println("entity: " + entity);
          ViolationReport r = new ViolationReport(String.class.cast(entity));
          countViolations(r, 0, 0, 0, 0, 1);
@@ -1769,6 +1727,7 @@ public class TestValidation
       }
       catch (Exception e)
       {
+         e.printStackTrace();
          Assert.fail("expected ClientResponseFailure");
       }
       finally
@@ -1783,10 +1742,10 @@ public class TestValidation
       before(TestResourceWithOtherGroups.class);
 
       // Test invalid field, property, parameter, and class.
-      ClientRequest request = new ClientRequest(generateURL("/test/a/z"));
-      ClientResponse<?> response = request.post(String.class);
+      Builder request = client.target(generateURL("/test/a/z")).request();
+      Response response = request.post(null);
       Assert.assertEquals(200, response.getStatus());
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       Assert.assertEquals("z", entity);
       after();

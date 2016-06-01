@@ -1,6 +1,5 @@
 package org.jboss.resteasy.test.providers.jaxb.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.BeforeClass;
@@ -10,6 +9,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -101,13 +103,12 @@ public class CustomOverrideTest extends BaseResourceTest
    @Test
    public void testRegression() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/test"));
-      request.accept("text/x-vcard");
-      String response = request.getTarget(String.class);
+      WebTarget target = ClientBuilder.newClient().target(TestPortProvider.generateURL("/test"));
+      Builder request = target.request().accept("text/x-vcard");
+      String response = request.get(String.class);
       System.out.println(response);
-      request.clear();
-      request.accept("application/xml");
-      response = request.getTarget(String.class);
+      request = target.request().accept("application/xml");
+      response = request.get(String.class);
       System.out.println(response);
 
 

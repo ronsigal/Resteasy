@@ -1,6 +1,5 @@
 package org.jboss.resteasy.test;
 
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.util.ReadFromStream;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -52,7 +51,7 @@ public class ProxyInputStreamTest extends BaseResourceTest
    @Test
    public void testInputStream() throws Exception
    {
-      MyResource proxy = ProxyFactory.create(MyResource.class, "http://localhost:8081");
+      MyResource proxy = TestPortProvider.createProxy(MyResource.class, "");
       InputStream is = proxy.get();
       byte[] bytes = ReadFromStream.readFromStream(100, is);
       is.close();

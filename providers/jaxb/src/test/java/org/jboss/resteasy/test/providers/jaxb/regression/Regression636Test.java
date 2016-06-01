@@ -1,8 +1,6 @@
 package org.jboss.resteasy.test.providers.jaxb.regression;
 
 import org.jboss.resteasy.annotations.providers.jaxb.Formatted;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.util.Types;
@@ -18,6 +16,9 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -394,20 +395,20 @@ public class Regression636Test extends BaseResourceTest
 
    }
 
-   //@Test
+   //@Test 
+   // Note. Commented before Client framework change.
    public void testInheritance() throws Exception
    {
       ResteasyDeployment dep = deployment;
-      ClientRequest request = new ClientRequest(generateURL("/datacenters/1"));
-      ClientResponse res = request.get();
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/datacenters/1"));
+      Response res = target.request().get();
       Assert.assertEquals(200, res.getStatus());
-      DataCenter dc = (DataCenter) res.getEntity(DataCenter.class);
+      DataCenter dc = (DataCenter) res.readEntity(DataCenter.class);
       Assert.assertEquals(dc.getName(), "Bill");
-      request = new ClientRequest(generateURL("/datacenters/1"));
 
-      res = request.body("application/xml", dc).put();
+      res = target.request().post(Entity.entity(dc, "application/xml"));
       Assert.assertEquals(200, res.getStatus());
-      dc = (DataCenter) res.getEntity(DataCenter.class);
+      dc = (DataCenter) res.readEntity(DataCenter.class);
       Assert.assertEquals(dc.getName(), "Bill");
 
 

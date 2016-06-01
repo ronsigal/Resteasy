@@ -1,8 +1,13 @@
 package org.jboss.resteasy.test.application;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
+
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -13,11 +18,24 @@ import org.junit.Test;
  */
 public class ApplicationTest
 {
+   private static Client client;
+   
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ResteasyClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    @Test
    public void testCount() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:9095/my/application/count");
-      String count = request.getTarget(String.class);
+      String count = client.target("http://localhost:9095/my/application/count").request().get(String.class);
       Assert.assertEquals("1", count);
    }
 
@@ -30,11 +48,11 @@ public class ApplicationTest
    @Test
    public void testNullJaxb() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:9095/my/null");
-//      request.header("Content-Length", "0");
+      Builder request = client.target("http://localhost:9095/my/null").request();
       request.header("Content-Type", "application/xml");
-      ClientResponse res = request.post();
+      Response res = request.post(null);
       Assert.assertEquals(400, res.getStatus());
+      res.close();
    }
 
    /**
@@ -46,10 +64,11 @@ public class ApplicationTest
    @Test
    public void testBadMediaTypeNoSubtype() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:9095/my/application/count");
+      Builder request = client.target("http://localhost:9095/my/application/count").request();
       request.accept("text");
-      final ClientResponse response = request.get();
+      Response response = request.get();
       Assert.assertEquals(400, response.getStatus());
+      response.close();
    }
 
    /**
@@ -61,9 +80,10 @@ public class ApplicationTest
    @Test
    public void testBadMediaTypeNonNumericQualityValue() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:9095/my/application/count");
+      Builder request = client.target("http://localhost:9095/my/application/count").request();
       request.accept("text/plain; q=bad");
-      final ClientResponse response = request.get();
+      Response response = request.get();
       Assert.assertEquals(400, response.getStatus());
+      response.close();
    }
 }

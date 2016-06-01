@@ -1,8 +1,6 @@
 package org.jboss.resteasy.test.finegrain.methodparams;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.HttpHeaderNames;
@@ -17,6 +15,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
+
 import java.util.List;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
@@ -31,6 +33,7 @@ public class MatrixParamAsPrimitiveTest
    private static final double ASSERT_DOUBLE_THRESHOLD = 0.000000000000001d;
 
    private static Dispatcher dispatcher;
+   private static Client client;
 
    //private static IResourceUriBoolean resourceUriBoolean;
 
@@ -55,11 +58,13 @@ public class MatrixParamAsPrimitiveTest
       dispatcher.getRegistry().addPerRequestResource(ResourceMatrixPrimitiveArrayDefaultNull.class);
       dispatcher.getRegistry().addPerRequestResource(ResourceMatrixPrimitiveArrayDefaultOverride.class);
       //resourceUriBoolean = ProxyFactory.create(IResourceUriBoolean.class, generateBaseUrl());
+      client = ResteasyClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
    }
 
@@ -1067,120 +1072,129 @@ public class MatrixParamAsPrimitiveTest
 
    public void _test(String type, String value)
    {
+      Response response = null;
       String param = ";" + type + "=" + value;
       {
-         ClientRequest request = new ClientRequest(generateURL("/" + param));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/" + param)).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-//            response.releaseConnection();
-            shutdown(request);
          } catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }
       
       {
-         ClientRequest request = new ClientRequest(generateURL("/wrappers" + param));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/wrappers" + param)).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-//            response.releaseConnection();
-            shutdown(request);
          } catch (Exception e)
          {
             throw new RuntimeException(e);
          }
-      }
-
-      {
-         ClientRequest request = new ClientRequest(generateURL("/list" + param + param + param));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         ClientResponse<?> response;
-         try
+         finally
          {
-            response = request.get();
-            Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-//            response.releaseConnection();
-            shutdown(request);
-         } catch (Exception e)
-         {
-            throw new RuntimeException(e);
+            response.close();
          }
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/array" + param + param + param));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/list" + param + param + param)).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-//            response.releaseConnection();
-            shutdown(request);
          } catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
+         }
+      }
+
+      {
+         Builder builder = client.target(generateURL("/array" + param + param + param)).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
+         try
+         {
+            response = builder.get();
+            Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
+         } catch (Exception e)
+         {
+            throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }      
    }
 
    public void _testDefault(String base, String type, String value)
    {
+      Response response = null;
       {
-         ClientRequest request = new ClientRequest(generateURL("" + base + "default/null"));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("" + base + "default/null")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-//            response.releaseConnection();
-            shutdown(request);
          } catch (Exception e)
          {
             throw new RuntimeException(e);
          }
+         finally
+         {
+            response.close();
+         }
       }  
       
       {
-         ClientRequest request = new ClientRequest(generateURL("" + base + "default"));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("" + base + "default")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-//            response.releaseConnection();
-            shutdown(request);
          } catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }  
 
       String param = ";" + type + "=" + value;
       {
-         ClientRequest request = new ClientRequest(generateURL("" + base + "default/override" + param));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("" + base + "default/override" + param)).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-//            response.releaseConnection();
-            shutdown(request);
          } catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }  
    }
@@ -1383,19 +1397,21 @@ public class MatrixParamAsPrimitiveTest
    @Test
    public void testBadPrimitiveValue()
    {
+      Response response = null;
       {
-         ClientRequest request = new ClientRequest(generateURL("/;int=abcdef"));
-         request.header(HttpHeaderNames.ACCEPT, "application/int");
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/;int=abcdef")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/int");
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(404, response.getStatus());
-//            response.releaseConnection();
-            shutdown(request);
          } catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }
    }
@@ -1403,19 +1419,21 @@ public class MatrixParamAsPrimitiveTest
    @Test
    public void testBadPrimitiveWrapperValue()
    {
+      Response response = null;
       {
-         ClientRequest request = new ClientRequest(generateURL("/wrappers;int=abcdef"));
-         request.header(HttpHeaderNames.ACCEPT, "application/int");
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/wrappers;int=abcdef")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/int");
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(404, response.getStatus());
-//            response.releaseConnection();
-            shutdown(request);
          } catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }
    }
@@ -1423,28 +1441,22 @@ public class MatrixParamAsPrimitiveTest
    @Test
    public void testBadPrimitiveListValue()
    {
+      Response response = null;
       {
-         ClientRequest request = new ClientRequest(generateURL("/list;int=abcdef;int=abcdef"));
-         request.header(HttpHeaderNames.ACCEPT, "application/int");
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/list;int=abcdef;int=abcdef")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/int");
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(404, response.getStatus());
-//            response.releaseConnection();
-            shutdown(request);
          } catch (Exception e)
          {
             throw new RuntimeException(e);
          }
+         finally
+         {
+            response.close();
+         }
       }
-   }
-   
-   
-   static private void shutdown(ClientRequest request) throws Exception
-   {
-      ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-      executor.getHttpClient().getConnectionManager().shutdown();
-//      request.getExecutor().close();
    }
 }

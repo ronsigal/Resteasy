@@ -4,7 +4,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
@@ -35,7 +34,7 @@ public class ClientExecutorShutdownTest extends BaseResourceTest
    public interface TestService
    {  
       @POST
-      ClientResponse<String> post();
+      Response post();
    }
    
    @Path("/test")

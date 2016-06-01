@@ -1,29 +1,30 @@
 package org.jboss.resteasy.test.providers.multipart;
 
 import org.junit.Assert;
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.core.ResourceMethodInvoker;
-import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
-import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -32,8 +33,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * @author Attila Kiraly
  */
-public class InputPartDefaultContentTypeWildcardOverwriteTest extends
-		BaseResourceTest {
+public class InputPartDefaultContentTypeWildcardOverwriteTest extends BaseResourceTest {
 	protected static final String WILDCARD_WITH_CHARSET_UTF_8 = "*/*; charset=UTF-8";
 
 	@Path("/mime")
@@ -85,16 +85,14 @@ public class InputPartDefaultContentTypeWildcardOverwriteTest extends
 	}
 
 	@Provider
-	@ServerInterceptor
-	public static class ContentTypeSetterPreProcessorInterceptor implements
-			PreProcessInterceptor {
+	public static class ContentTypeSetterPreProcessorInterceptor implements ContainerRequestFilter {
 
-		public ServerResponse preProcess(HttpRequest request,
-				ResourceMethodInvoker method) throws Failure, WebApplicationException {
-			request.setAttribute(InputPart.DEFAULT_CONTENT_TYPE_PROPERTY,
-					WILDCARD_WITH_CHARSET_UTF_8);
-			return null;
-		}
+      @Override
+      public void filter(ContainerRequestContext requestContext) throws IOException
+      {
+         HttpRequest request = ResteasyProviderFactory.getContextData(HttpRequest.class);
+         request.setAttribute(InputPart.DEFAULT_CONTENT_TYPE_PROPERTY, WILDCARD_WITH_CHARSET_UTF_8);
+      }
 
 	}
 
@@ -115,11 +113,10 @@ public class InputPartDefaultContentTypeWildcardOverwriteTest extends
 				+ "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
 				+ "<xmlBean><myInt>27</myInt><myString>Lorem Ipsum</myString></xmlBean>\r\n"
 				+ "--boo--\r\n";
-		
-		ClientRequest request = new ClientRequest(TEST_URI + "/mime");
-		request.body("multipart/form-data; boundary=boo", message.getBytes("utf-8"));
-		ClientResponse<String> response = request.post(String.class);
+
+		Builder request = ClientBuilder.newClient().target(TEST_URI + "/mime").request();
+		Response response = request.post(Entity.entity(message.getBytes("utf-8"), "multipart/form-data; boundary=boo"));
         Assert.assertEquals("Status code is wrong.", 20, response.getStatus() / 10);
-        Assert.assertEquals("Response text is wrong", "27", response.getEntity());
+        Assert.assertEquals("Response text is wrong", "27", response.readEntity(String.class));
 	}
 }

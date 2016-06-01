@@ -2,11 +2,12 @@ package org.jboss.resteasy.test.validation;
 
 import org.junit.Assert;
 
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.resteasy.api.validation.Validation;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.validation.JaxRsActivator;
 import org.jboss.resteasy.validation.TestResourceWithGetterViolation;
 import org.jboss.shrinkwrap.api.Archive;
@@ -41,13 +42,12 @@ public class TestGetterReturnValueNotValidated
    public void testReturnValues() throws Exception
    {
       // Valid native constraint
-      ClientRequest request = new ClientRequest("http://localhost:8080/Validation-test/rest/get");
-      ClientResponse<?> response = request.get(String.class);
+      Response response = ClientBuilder.newClient().target("http://localhost:8080/Validation-test/rest/get").request().get();
       System.out.println("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      String header = response.getResponseHeaders().getFirst(Validation.VALIDATION_HEADER);
+      String header = response.getHeaderString(Validation.VALIDATION_HEADER);
       Assert.assertNull(header);
-      Object entity = response.getEntity();
+      Object entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       Assert.assertEquals("a", entity);
    }

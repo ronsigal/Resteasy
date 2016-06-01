@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.providers.jaxb.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -11,6 +9,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -108,11 +109,11 @@ public class StringCharsetTest extends BaseResourceTest
    @Test
    public void testIt() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/charset/test.xml"));
-      request.getHeaders().add("Accept", "application/xml;charset=iso-8859-2");
-      ClientResponse<String> response = request.get(String.class);
+      Builder request = ClientBuilder.newClient().target(generateURL("/charset/test.xml")).request();
+      request.accept("application/xml;charset=iso-8859-2");
+      Response response = request.get();
       Assert.assertEquals(200, response.getStatus());
-      String str = response.getEntity();
+      String str = response.readEntity(String.class);
       System.out.println(str);
    }
 }

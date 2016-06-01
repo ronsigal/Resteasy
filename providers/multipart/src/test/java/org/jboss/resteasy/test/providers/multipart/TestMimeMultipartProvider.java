@@ -6,9 +6,6 @@ package org.jboss.resteasy.test.providers.multipart;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
 import org.jboss.resteasy.annotations.providers.multipart.XopWithMultipartRelated;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartConstants;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
@@ -16,8 +13,10 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartOutput;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartRelatedOutput;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.LocateTestData;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.activation.DataHandler;
@@ -27,7 +26,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import java.io.BufferedInputStream;
@@ -38,7 +42,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.jboss.resteasy.test.TestPortProvider.generateBaseUrl;
+import static org.jboss.resteasy.test.TestPortProvider.createProxy;
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
 /**
@@ -52,7 +56,20 @@ public class TestMimeMultipartProvider extends BaseResourceTest
            .getLogger(TestMimeMultipartProvider.class);
 
    private static final String TEST_URI = generateURL("/mime");
+   private static Client client;
 
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    /**
     * @throws java.lang.Exception
     */
@@ -71,11 +88,10 @@ public class TestMimeMultipartProvider extends BaseResourceTest
       mpfdo.addFormData("part1", "This is Value 1", MediaType.TEXT_PLAIN_TYPE);
       mpfdo.addFormData("part2", "This is Value 2", MediaType.TEXT_PLAIN_TYPE);
       mpfdo.addFormData("data.txt",  LocateTestData.getTestData("data.txt"), MediaType.TEXT_PLAIN_TYPE);
-      ClientRequest request = new ClientRequest(TEST_URI);
-      request.body(MediaType.MULTIPART_FORM_DATA_TYPE, mpfdo);
-      ClientResponse<String> response = request.put(String.class);
+      Builder request = client.target(TEST_URI).request();
+      Response response = request.put(Entity.entity(mpfdo, MediaType.MULTIPART_FORM_DATA_TYPE));
       Assert.assertEquals(200, response.getStatus());
-      String responseBody = response.getEntity();
+      String responseBody = response.readEntity(String.class);
       Assert.assertEquals(responseBody, "Count: 3");      
    }
 
@@ -86,11 +102,10 @@ public class TestMimeMultipartProvider extends BaseResourceTest
       mpo.addPart("This is Value 1", MediaType.TEXT_PLAIN_TYPE);
       mpo.addPart("This is Value 2", MediaType.TEXT_PLAIN_TYPE);
       mpo.addPart(LocateTestData.getTestData("data.txt"), MediaType.TEXT_PLAIN_TYPE);
-      ClientRequest request = new ClientRequest(TEST_URI);
-      request.body(MediaType.MULTIPART_FORM_DATA_TYPE, mpo);
-      ClientResponse<String> response = request.put(String.class);
+      Builder request = client.target(TEST_URI).request();
+      Response response = request.put(Entity.entity(mpo, MediaType.MULTIPART_FORM_DATA_TYPE));
       Assert.assertEquals(200, response.getStatus());
-      String responseBody = response.getEntity();
+      String responseBody = response.readEntity(String.class);
       Assert.assertEquals(responseBody, "Count: 3");      
    }
 
@@ -110,11 +125,10 @@ public class TestMimeMultipartProvider extends BaseResourceTest
       MultipartFormDataOutput mpfdo = new MultipartFormDataOutput();
       mpfdo.addFormData("bill", createCustomerData("bill"), MediaType.APPLICATION_XML_TYPE);
       mpfdo.addFormData("monica", createCustomerData("monica"), MediaType.APPLICATION_XML_TYPE);
-      ClientRequest request = new ClientRequest(uri);
-      request.body(MediaType.MULTIPART_FORM_DATA_TYPE, mpfdo);
-      ClientResponse<?> response = request.put();
+      Builder request = client.target(uri).request();
+      Response response = request.put(Entity.entity(mpfdo, MediaType.MULTIPART_FORM_DATA_TYPE));
       Assert.assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 
    @Path("mime")
@@ -163,8 +177,7 @@ public class TestMimeMultipartProvider extends BaseResourceTest
    @Test
    public void testMultipartOutput() throws Exception
    {
-      MultipartClient client = ProxyFactory.create(MultipartClient.class,
-              generateBaseUrl());
+      MultipartClient client = createProxy(MultipartClient.class, "");
       MultipartOutput output = new MultipartOutput();
       output.addPart(new Customer("bill"), MediaType.APPLICATION_XML_TYPE);
       output.addPart(new Customer("monica"), MediaType.APPLICATION_XML_TYPE);
@@ -174,8 +187,7 @@ public class TestMimeMultipartProvider extends BaseResourceTest
    @Test
    public void testMultipartFormDataOutput() throws Exception
    {
-      MultipartClient client = ProxyFactory.create(MultipartClient.class,
-              generateBaseUrl());
+      MultipartClient client = createProxy(MultipartClient.class, "");
       MultipartFormDataOutput output = new MultipartFormDataOutput();
       output.addFormData("bill", new Customer("bill"),
               MediaType.APPLICATION_XML_TYPE);
@@ -187,8 +199,7 @@ public class TestMimeMultipartProvider extends BaseResourceTest
    @Test
    public void testMultipartRelatedOutput() throws Exception
    {
-      MultipartClient client = ProxyFactory.create(MultipartClient.class,
-              generateBaseUrl());
+      MultipartClient client = createProxy(MultipartClient.class, "");
       MultipartRelatedOutput output = new MultipartRelatedOutput();
       output.setStartInfo("text/xml");
 
@@ -215,8 +226,7 @@ public class TestMimeMultipartProvider extends BaseResourceTest
    @Test
    public void testMultipartList() throws Exception
    {
-      MultipartClient client = ProxyFactory.create(MultipartClient.class,
-              generateBaseUrl());
+      MultipartClient client = createProxy(MultipartClient.class, "");
       ArrayList<Customer> customers = new ArrayList<Customer>();
       customers.add(new Customer("bill"));
       customers.add(new Customer("monica"));
@@ -226,8 +236,7 @@ public class TestMimeMultipartProvider extends BaseResourceTest
    @Test
    public void testMultipartMap() throws Exception
    {
-      MultipartClient client = ProxyFactory.create(MultipartClient.class,
-              generateBaseUrl());
+      MultipartClient client = createProxy(MultipartClient.class, "");
       LinkedHashMap<String, Customer> customers = new LinkedHashMap<String, Customer>();
       customers.put("bill", new Customer("bill"));
       customers.put("monica", new Customer("monica"));
@@ -237,8 +246,7 @@ public class TestMimeMultipartProvider extends BaseResourceTest
    @Test
    public void testMultipartForm() throws Exception
    {
-      MultipartClient client = ProxyFactory.create(MultipartClient.class,
-              generateBaseUrl());
+      MultipartClient client = createProxy(MultipartClient.class, "");
       SimpleMimeMultipartResource.Form form = new SimpleMimeMultipartResource.Form(
               new Customer("bill"), new Customer("monica"));
       client.putFormDataMap(form);
@@ -248,8 +256,7 @@ public class TestMimeMultipartProvider extends BaseResourceTest
    public void testXop() throws Exception
    {
       //logger.info("System encoding: " + System.getProperty("file.encoding"));
-      MultipartClient client = ProxyFactory.create(MultipartClient.class,
-              generateBaseUrl());
+      MultipartClient client = createProxy(MultipartClient.class, "");
       SimpleMimeMultipartResource.Xop xop = new SimpleMimeMultipartResource.Xop(
               new Customer("bill\u00E9"), new Customer("monica"),
               "Hello Xop World!".getBytes("UTF-8"), new DataHandler(
@@ -271,28 +278,23 @@ public class TestMimeMultipartProvider extends BaseResourceTest
    @Test
    public void testGet() throws Exception
    {
-      ClientRequest request = new ClientRequest(TEST_URI);
-      ClientResponse<InputStream> response = request.get(InputStream.class);
+      Response response = client.target(TEST_URI).request().get();
       Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus()); 
-      BufferedInputStream in = new BufferedInputStream(response.getEntity());
-      String contentType = response.getResponseHeaders().getFirst("content-type");
+      BufferedInputStream in = new BufferedInputStream(response.readEntity(InputStream.class));
+      String contentType = response.getHeaderString("content-type");
       ByteArrayDataSource ds = new ByteArrayDataSource(in, contentType);
       MimeMultipart mimeMultipart = new MimeMultipart(ds);
       Assert.assertEquals(mimeMultipart.getCount(), 2);
-      response.releaseConnection();
+      response.close();
    }
 
    @Test
    public void testFile() throws Exception
    {
-      ClientRequest request = new ClientRequest(TEST_URI + "/file/test");
-      request
-              .body(
-                      "multipart/form-data; boundary=---------------------------52524491016334132001492192799",
-                      form);
-      ClientResponse<?> response = request.post();
+      Builder request = client.target(TEST_URI + "/file/test").request();
+      Response response = request.post(Entity.entity(form, "multipart/form-data; boundary=---------------------------52524491016334132001492192799"));
       Assert.assertEquals(200, response.getStatus());
-
+      response.close();
    }
 
    private static final String form = "-----------------------------52524491016334132001492192799\r\n"

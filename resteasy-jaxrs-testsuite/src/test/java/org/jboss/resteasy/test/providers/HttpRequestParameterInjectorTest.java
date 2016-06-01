@@ -20,6 +20,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Form;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -28,7 +31,8 @@ import java.lang.annotation.Target;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 
-import static org.jboss.resteasy.test.TestPortProvider.createClientRequest;
+import static org.jboss.resteasy.test.TestPortProvider.createTarget;
+import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
 public class HttpRequestParameterInjectorTest extends BaseResourceTest
 {
@@ -63,12 +67,12 @@ public class HttpRequestParameterInjectorTest extends BaseResourceTest
    @Test
    public void testCustomInjectorFactory() throws Exception
    {
-      String getResult = createClientRequest("/foo").queryParameter("param", "getValue").accept(
-              "text/plain").get(String.class).getEntity();
+      String getResult = createTarget("/foo").queryParam("param", "getValue").request().accept(
+              "text/plain").get().readEntity(String.class);
       Assert.assertEquals("getValue, getValue, ", getResult);
 
-      String postResult = createClientRequest("/foo").formParameter("param", "postValue").accept(
-              "text/plain").post(String.class).getEntity();
+      String postResult = createTarget("/foo").request().accept(
+              "text/plain").post(Entity.form(new Form("param", "postValue"))).readEntity(String.class);
       Assert.assertEquals("postValue, , postValue", postResult);
    }
 

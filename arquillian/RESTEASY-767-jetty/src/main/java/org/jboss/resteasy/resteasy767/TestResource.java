@@ -1,12 +1,12 @@
 package org.jboss.resteasy.resteasy767;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Response;
-
-import org.jboss.resteasy.annotations.Suspend;
-import org.jboss.resteasy.spi.AsynchronousResponse;
-
 
 /**
  * 
@@ -27,8 +27,9 @@ public class TestResource
    
    @GET
    @Path("async/delay")
-   public void asyncDelay(final @Suspend(10000) AsynchronousResponse response) throws Exception
+   public void asyncDelay(final @Suspended AsyncResponse response) throws Exception
    {
+      response.setTimeout(10000, TimeUnit.MILLISECONDS);
       Thread t = new Thread()
       {
          @Override
@@ -38,7 +39,7 @@ public class TestResource
             {
                Thread.sleep(5000);
                Response jaxrs = Response.ok("async/delay").build();
-               response.setResponse(jaxrs);
+               response.resume(jaxrs);
             }
             catch (Exception e)
             {
@@ -51,10 +52,11 @@ public class TestResource
    
    @GET
    @Path("async/nodelay")
-   public void asyncNoDelay(final @Suspend(10000) AsynchronousResponse response) throws Exception
+   public void asyncNoDelay(final @Suspended AsyncResponse response) throws Exception
    {
+      response.setTimeout(10000, TimeUnit.MILLISECONDS);
       Response jaxrs = Response.ok("async/nodelay").build();
-      response.setResponse(jaxrs);
+      response.resume(jaxrs);
    }
    
 }

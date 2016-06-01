@@ -1,6 +1,5 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -16,6 +15,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
@@ -356,8 +357,8 @@ public class Regression657 extends BaseResourceTest
    @Test
    public void test657() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateBaseUrl() + "/platform/users/89080/data/ada/jsanchez110");
-      String s = request.getTarget(String.class);
+      Builder builder = ClientBuilder.newClient().target(generateBaseUrl() + "/platform/users/89080/data/ada/jsanchez110").request();
+      String s = builder.get(String.class);
       Assert.assertEquals(s, "bill");
 
    }

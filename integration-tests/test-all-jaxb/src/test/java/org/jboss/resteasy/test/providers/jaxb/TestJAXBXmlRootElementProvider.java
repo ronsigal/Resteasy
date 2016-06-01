@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.providers.jaxb;
 
-import org.jboss.resteasy.client.ProxyFactory;
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -10,7 +8,7 @@ import org.junit.Test;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
-import static org.jboss.resteasy.test.TestPortProvider.generateURL;
+import static org.jboss.resteasy.test.TestPortProvider.createProxy;
 
 /**
  * A TestJAXBXmlRootElementProvider.
@@ -20,16 +18,12 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
  */
 public class TestJAXBXmlRootElementProvider extends BaseResourceTest
 {
-
-   private static final String JAXB_URL = generateURL("/jaxb");
-
+   private static final String JAXB_URL = "/jaxb";
+   
    private static final String FAST_PARENT = "Fast Parent";
    private static final String JSON_PARENT = "JSON Parent";
 
    private static final String XML_PARENT = "XML Parent";
-
-   private static final Logger logger = Logger
-           .getLogger(TestJAXBXmlRootElementProvider.class);
 
    private JAXBXmlRootElementClient client;
    private JAXBElementClient elementClient;
@@ -46,13 +40,13 @@ public class TestJAXBXmlRootElementProvider extends BaseResourceTest
    {
       addPerRequestResource(JAXBXmlRootElementResource.class);
       //RegisterBuiltin.register(ResteasyProviderFactory.getInstance());
-      client = ProxyFactory.create(JAXBXmlRootElementClient.class, JAXB_URL);
-      elementClient = ProxyFactory.create(JAXBElementClient.class, JAXB_URL);
-      jsonClient = ProxyFactory.create(JsonJAXBXmlRootElementClient.class, JAXB_URL);
-      jsonElementClient = ProxyFactory.create(JsonJAXBElementClient.class, JAXB_URL);
-      fastClient = ProxyFactory.create(FastinfoSetJAXBXmlRootElementClient.class, JAXB_URL);
-      fastElementClient = ProxyFactory.create(FastinfoSetJAXBElementClient.class, JAXB_URL);
-      junkClient = ProxyFactory.create(JunkXmlOrderClient.class, JAXB_URL);
+      client = createProxy(JAXBXmlRootElementClient.class, JAXB_URL);
+      elementClient = createProxy(JAXBElementClient.class, JAXB_URL);
+      jsonClient = createProxy(JsonJAXBXmlRootElementClient.class, JAXB_URL);
+      jsonElementClient = createProxy(JsonJAXBElementClient.class, JAXB_URL);
+      fastClient = createProxy(FastinfoSetJAXBXmlRootElementClient.class, JAXB_URL);
+      fastElementClient = createProxy(FastinfoSetJAXBElementClient.class, JAXB_URL);
+      junkClient = createProxy(JunkXmlOrderClient.class, JAXB_URL);
    }
 
    /**

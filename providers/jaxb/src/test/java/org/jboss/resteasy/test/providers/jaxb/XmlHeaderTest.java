@@ -4,7 +4,6 @@ import org.jboss.resteasy.annotations.DecorateTypes;
 import org.jboss.resteasy.annotations.Decorator;
 import org.jboss.resteasy.annotations.providers.jaxb.Stylesheet;
 import org.jboss.resteasy.annotations.providers.jaxb.XmlHeader;
-import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.spi.interception.DecoratorProcessor;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
@@ -14,6 +13,8 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -118,8 +119,8 @@ public class XmlHeaderTest extends BaseResourceTest
    @Test
    public void testHeader() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/test/header"));
-      String response = request.getTarget(String.class);
+      Builder request = ClientBuilder.newClient().target(generateURL("/test/header")).request();
+      String response = request.get(String.class);
       System.out.println(response);
       Assert.assertTrue(response.contains("<?xml-stylesheet"));
 
@@ -128,8 +129,8 @@ public class XmlHeaderTest extends BaseResourceTest
    @Test
    public void testStylesheet() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/test/stylesheet"));
-      String response = request.getTarget(String.class);
+      Builder request = ClientBuilder.newClient().target(generateURL("/test/stylesheet")).request();
+      String response = request.get(String.class);
       System.out.println(response);
       Assert.assertTrue(response.contains("<?xml-stylesheet"));
 

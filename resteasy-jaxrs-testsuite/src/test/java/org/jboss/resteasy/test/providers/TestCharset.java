@@ -11,11 +11,16 @@ import javax.ws.rs.Encoded;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
 import org.junit.Assert;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -34,6 +39,7 @@ public class TestCharset
 {
 	protected static ResteasyDeployment deployment;
 	protected static Dispatcher dispatcher;
+	protected static Client client;
 	protected static final MediaType TEXT_PLAIN_UTF16_TYPE;
 	protected static final MediaType WILDCARD_UTF16_TYPE;
 	protected static final String TEXT_PLAIN_UTF16 = "text/plain;charset=UTF-16";
@@ -127,11 +133,13 @@ public class TestCharset
 		deployment = EmbeddedContainer.start(initParams, contextParams);
 		dispatcher = deployment.getDispatcher();
 		deployment.getRegistry().addPerRequestResource(TestResource.class);
+		client = ClientBuilder.newClient();
 	}
 	
 	@After
 	public void after() throws Exception
 	{
+	   client.close();
 		EmbeddedContainer.stop();
 		dispatcher = null;
 		deployment = null;
@@ -146,13 +154,12 @@ public class TestCharset
 	public void testStringDefault() throws Exception
 	{
       System.out.println("client default charset: " + Charset.defaultCharset());
-		ClientRequest request = new ClientRequest(generateURL("/accepts/string/default"));
+      Builder builder = client.target(generateURL("/accepts/string/default")).request();
 		String str = "La Règle du Jeu";
 		System.out.println(str);
-		request.body(MediaType.WILDCARD_TYPE, str);
-		ClientResponse<?> response = request.post();
+		Response response = builder.post(Entity.entity(str, MediaType.WILDCARD_TYPE));
 		Assert.assertEquals(200, response.getStatus());
-		String entity = response.getEntity(String.class);
+		String entity = response.readEntity(String.class);
 		System.out.println("Result: " + entity);
 		Assert.assertEquals(str, entity);
 	}
@@ -166,13 +173,12 @@ public class TestCharset
 	@Test
 	public void testStringProducesUtf16() throws Exception
 	{
-		ClientRequest request = new ClientRequest(generateURL("/produces/string/utf16"));
+	   Builder builder = client.target(generateURL("/produces/string/utf16")).request();
 		String str = "La Règle du Jeu";
 		System.out.println(str);
-		request.body(TEXT_PLAIN_UTF16_TYPE, str);
-		ClientResponse<?> response = request.post();
+		Response response = builder.post(Entity.entity(str, TEXT_PLAIN_UTF16_TYPE));
 		Assert.assertEquals(200, response.getStatus());
-		String entity = response.getEntity(String.class);
+		String entity = response.readEntity(String.class);
 		System.out.println("Result: " + entity);
 		Assert.assertEquals(str, entity);
 	}
@@ -186,14 +192,13 @@ public class TestCharset
 	@Test
 	public void testStringAcceptsUtf16() throws Exception
 	{
-		ClientRequest request = new ClientRequest(generateURL("/accepts/string/default"));
+	   Builder builder = client.target(generateURL("/accepts/string/default")).request();
+	   builder.accept(WILDCARD_UTF16_TYPE);
 		String str = "La Règle du Jeu";
 		System.out.println(str);
-		request.body(TEXT_PLAIN_UTF16_TYPE, str);
-		request.accept(WILDCARD_UTF16_TYPE);
-		ClientResponse<?> response = request.post();
+		Response response = builder.post(Entity.entity(str, TEXT_PLAIN_UTF16_TYPE));
 		Assert.assertEquals(200, response.getStatus());
-		String entity = response.getEntity(String.class);
+		String entity = response.readEntity(String.class);
 		System.out.println("Result: " + entity);
 		Assert.assertEquals(str, entity);
 	}
@@ -206,13 +211,12 @@ public class TestCharset
 	@Test
 	public void testFooDefault() throws Exception
 	{
-		ClientRequest request = new ClientRequest(generateURL("/accepts/foo/default"));
+	   Builder builder = client.target(generateURL("/accepts/foo/default")).request();
 		Foo foo = new Foo("La Règle du Jeu");
 		System.out.println(foo);
-		request.body(MediaType.TEXT_PLAIN_TYPE, foo);
-		ClientResponse<?> response = request.post();
+		Response response = builder.post(Entity.entity(foo, MediaType.TEXT_PLAIN_TYPE));
 		Assert.assertEquals(200, response.getStatus());
-		String entity = response.getEntity(String.class);
+		String entity = response.readEntity(String.class);
 		System.out.println("Result: " + entity);
 		Assert.assertEquals(foo.valueOf(), entity);
 	}
@@ -226,13 +230,12 @@ public class TestCharset
 	@Test
 	public void testFooProducesUtf16() throws Exception
 	{
-		ClientRequest request = new ClientRequest(generateURL("/produces/foo/utf16"));
+      Builder builder = client.target(generateURL("/produces/foo/utf16")).request();
 		Foo foo = new Foo("La Règle du Jeu");
 		System.out.println(foo);
-		request.body(TEXT_PLAIN_UTF16_TYPE, foo);
-		ClientResponse<?> response = request.post();
+		Response response = builder.post(Entity.entity(foo, TEXT_PLAIN_UTF16_TYPE));
 		Assert.assertEquals(200, response.getStatus());
-		String entity = response.getEntity(String.class);
+		String entity = response.readEntity(String.class);
 		System.out.println("Result: " + entity);
 		Assert.assertEquals(foo.valueOf(), entity);
 	}
@@ -246,14 +249,13 @@ public class TestCharset
 	@Test
 	public void testFooAcceptsUtf16() throws Exception
 	{
-		ClientRequest request = new ClientRequest(generateURL("/accepts/foo/default"));
+      Builder builder = client.target(generateURL("/accepts/foo/default")).request();
+      builder.accept(TEXT_PLAIN_UTF16_TYPE);
 		Foo foo = new Foo("La Règle du Jeu");
 		System.out.println(foo);
-		request.body(TEXT_PLAIN_UTF16_TYPE, foo);
-		request.accept(TEXT_PLAIN_UTF16_TYPE);
-		ClientResponse<?> response = request.post();
+		Response response = builder.post(Entity.entity(foo, TEXT_PLAIN_UTF16_TYPE));
 		Assert.assertEquals(200, response.getStatus());
-		String entity = response.getEntity(String.class);
+		String entity = response.readEntity(String.class);
 		System.out.println("Result: " + entity);
 		Assert.assertEquals(foo.valueOf(), entity);
 	}
@@ -261,10 +263,9 @@ public class TestCharset
 	@Test
 	public void testFormDefault() throws Exception
 	{
-		ClientRequest request = new ClientRequest(generateURL("/accepts/form/default"));
-		request.formParameter("title", "La Règle du Jeu");
-		ClientResponse<String> response = request.post(String.class);
-		Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-		Assert.assertEquals("title=La Règle du Jeu", response.getEntity());
+      Builder builder = client.target(generateURL("/accepts/form/default")).request();
+      Response response = builder.post(Entity.form(new Form("title", "La Règle du Jeu")));
+      Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
+		Assert.assertEquals("title=La Règle du Jeu", response.readEntity(String.class));
 	}
 }

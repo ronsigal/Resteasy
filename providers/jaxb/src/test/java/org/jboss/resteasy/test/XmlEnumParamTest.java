@@ -1,6 +1,5 @@
 package org.jboss.resteasy.test;
 
-import org.jboss.resteasy.client.ClientRequest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -9,6 +8,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 
@@ -80,9 +81,8 @@ public class XmlEnumParamTest extends BaseResourceTest
    @Test
    public void testXmlEnumParam() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/enum"));
-      request.queryParameter("loc", "north");
-      String res = request.getTarget(String.class);
+      WebTarget target = ClientBuilder.newClient().target(TestPortProvider.generateURL("/enum")).queryParam("loc", "north");
+      String res = target.request().get(String.class);
       Assert.assertEquals("NORTH", res.toUpperCase());
 
    }

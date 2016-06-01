@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.finegrain.client;
 
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.ReadFromStream;
@@ -20,7 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.jboss.resteasy.test.TestPortProvider.generateBaseUrl;
+import static org.jboss.resteasy.test.TestPortProvider.createProxy;
 
 /**
  * Simple smoke test
@@ -43,7 +41,7 @@ public class InputStreamResourceTest
       String getAsString();
 
       @GET
-      ClientResponse<InputStream> getAsInputStream();
+      Response getAsInputStream();
 
       @POST
       Response postInputStream(InputStream is);
@@ -89,13 +87,12 @@ public class InputStreamResourceTest
    @Test
    public void testClientResponse() throws Exception
    {
-      Client client = ProxyFactory.create(Client.class, generateBaseUrl());
+      Client client = createProxy(Client.class, "");
 
       Assert.assertEquals("hello", client.getAsString());
-      ClientResponse<InputStream> is = client.getAsInputStream();
-      Assert.assertEquals("hello", new String(ReadFromStream.readFromStream(
-              1024, is.getEntity())));
-      is.releaseConnection();
+      Response is = client.getAsInputStream();
+      Assert.assertEquals("hello", new String(ReadFromStream.readFromStream(1024, is.readEntity(InputStream.class))));
+      is.close();
       client.postString("new value");
       Assert.assertEquals("new value", client.getAsString());
       client.postInputStream(new ByteArrayInputStream("new value 2".getBytes()));

@@ -21,7 +21,7 @@ public class TestApplication extends Application
       HashSet<Class<?>> classes = new HashSet<Class<?>>();
       classes.add(TestResource.class);
       classes.add(TestMessageBodyWriterInterceptor.class);
-      classes.add(TestPostProcessInterceptor.class);
+      classes.add(TestPostProcessFilter.class);
       return classes;
    }
 }

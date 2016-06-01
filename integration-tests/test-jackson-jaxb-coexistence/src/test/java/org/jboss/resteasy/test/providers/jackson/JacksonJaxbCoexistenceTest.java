@@ -3,11 +3,12 @@ package org.jboss.resteasy.test.providers.jackson;
 import org.jboss.resteasy.annotations.providers.NoJackson;
 import org.jboss.resteasy.annotations.providers.jaxb.IgnoreMediaTypes;
 import org.jboss.resteasy.annotations.providers.jaxb.json.BadgerFish;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
+import org.jboss.resteasy.test.EmbeddedContainer;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.ws.rs.Consumes;
@@ -15,6 +16,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -28,6 +34,8 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
  */
 public class JacksonJaxbCoexistenceTest extends BaseResourceTest
 {
+   private static Client client;
+   
    public static class Product
    {
       protected String name;
@@ -230,6 +238,18 @@ public class JacksonJaxbCoexistenceTest extends BaseResourceTest
 
    }
 
+   @BeforeClass
+   public static void beforeClass() throws Exception
+   {
+      client = ClientBuilder.newClient();
+   }
+
+   @AfterClass
+   public static void afterClass() throws Exception
+   {
+      client.close();
+   }
+   
    @Before
    public void setUp() throws Exception
    {
@@ -241,17 +261,17 @@ public class JacksonJaxbCoexistenceTest extends BaseResourceTest
    @Test
    public void testJacksonString() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/products/333"));
-      ClientResponse<String> response = request.get(String.class);
-      System.out.println(response.getEntity());
+      Builder request = client.target(generateURL("/products/333")).request();
+      Response response = request.get();
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("{\"name\":\"Iphone\",\"id\":333}", response.getEntity());
+      Assert.assertEquals("{\"name\":\"Iphone\",\"id\":333}", response.readEntity(String.class));
 
-      request = new ClientRequest(generateURL("/products"));
-      ClientResponse<String> response2 = request.get(String.class);
-      System.out.println(response2.getEntity());
+      request = client.target(generateURL("/products")).request();
+      Response response2 = request.get();
+      String entity = response2.readEntity(String.class);
+      System.out.println(entity);
       Assert.assertEquals(200, response2.getStatus());
-      Assert.assertEquals("[{\"name\":\"Iphone\",\"id\":333},{\"name\":\"macbook\",\"id\":44}]", response2.getEntity());
+      Assert.assertEquals("[{\"name\":\"Iphone\",\"id\":333},{\"name\":\"macbook\",\"id\":44}]", entity);
 
    }
 
@@ -263,54 +283,56 @@ public class JacksonJaxbCoexistenceTest extends BaseResourceTest
    @Test
    public void testJacksonXmlString() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/jxml/products/333"));
-      ClientResponse<String> response = request.get(String.class);
-      System.out.println(response.getEntity());
+      Builder request = client.target(generateURL("/jxml/products/333")).request();
+      Response response = request.get();
+      String entity = response.readEntity(String.class);
+      System.out.println(entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("{\"name\":\"Iphone\",\"id\":333}", response.getEntity());
+      Assert.assertEquals("{\"name\":\"Iphone\",\"id\":333}", entity);
 
-      request = new ClientRequest(generateURL("/jxml/products"));
-      ClientResponse<String> response2 = request.get(String.class);
-      System.out.println(response2.getEntity());
+      request = client.target(generateURL("/jxml/products")).request();
+      Response response2 = request.get();
+      entity = response2.readEntity(String.class);
+      System.out.println(entity);
       Assert.assertEquals(200, response2.getStatus());
-      Assert.assertEquals("[{\"name\":\"Iphone\",\"id\":333},{\"name\":\"macbook\",\"id\":44}]", response2.getEntity());
+      Assert.assertEquals("[{\"name\":\"Iphone\",\"id\":333},{\"name\":\"macbook\",\"id\":44}]", entity);
 
    }
 
    @Test
    public void testXmlString() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/xml/products/333"));
-      ClientResponse<String> response = request.get(String.class);
-      System.out.println(response.getEntity());
+      Builder request = client.target(generateURL("/xml/products/333")).request();
+      Response response = request.get();
+      String entity = response.readEntity(String.class);
+      System.out.println(entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertTrue(response.getEntity().startsWith("{\"product"));
+      Assert.assertTrue(entity.startsWith("{\"product"));
 
-
-      request = new ClientRequest(generateURL("/xml/products"));
-      ClientResponse<String> response2 = request.get(String.class);
-      System.out.println(response2.getEntity());
+      request = client.target(generateURL("/xml/products")).request();
+      Response response2 = request.get();
+      entity = response2.readEntity(String.class);
+      System.out.println(entity);
       Assert.assertEquals(200, response2.getStatus());
-      Assert.assertTrue(response2.getEntity().startsWith("[{\"product"));
+      Assert.assertTrue(entity.startsWith("[{\"product"));
    }
 
    @Test
    public void testJackson() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/products/333"));
-      ClientResponse<Product> response = request.get(Product.class);
-      Product p = response.getEntity();
+      Builder request = client.target(generateURL("/products/333")).request();
+      Response response = request.get();
+      Product p = response.readEntity(Product.class);
       Assert.assertEquals(333, p.getId());
       Assert.assertEquals("Iphone", p.getName());
-      request = new ClientRequest(generateURL("/products"));
-      ClientResponse<String> response2 = request.get(String.class);
-      System.out.println(response2.getEntity());
+      request = client.target(generateURL("/products")).request();
+      Response response2 = request.get();
+      System.out.println(response2.readEntity(String.class));
       Assert.assertEquals(200, response2.getStatus());
 
-      request = new ClientRequest(generateURL("/products/333"));
-      request.body("application/foo+json", p);
-      response = request.post(Product.class);
-      p = response.getEntity();
+      request = client.target(generateURL("/products/333")).request();
+      response = request.post(Entity.entity(p, "application/foo+json"));
+      p = response.readEntity(Product.class);
       Assert.assertEquals(333, p.getId());
       Assert.assertEquals("Iphone", p.getName());
 

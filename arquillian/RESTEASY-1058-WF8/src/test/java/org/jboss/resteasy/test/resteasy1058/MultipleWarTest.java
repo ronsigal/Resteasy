@@ -2,18 +2,14 @@ package org.jboss.resteasy.test.resteasy1058;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Response;
-
-import org.junit.Assert;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
 import org.jboss.resteasy.api.validation.ResteasyViolationException;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.resteasy1058.SumConstraint;
 import org.jboss.resteasy.resteasy1058.SumValidator;
@@ -22,9 +18,8 @@ import org.jboss.resteasy.resteasy1058.TestResource;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
-import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -78,14 +73,15 @@ public class MultipleWarTest
       //      Response response = request.get();
       //      String answer = response.readEntity(String.class);
 
-      ClientRequest request1 = new ClientRequest("http://localhost:8080/RESTEASY-1058-1/test/0/0/0");
-      ClientRequest request2 = new ClientRequest("http://localhost:8080/RESTEASY-1058-2/test/0/0/0");
-      ClientResponse<?> response = null;
+      Client client = ResteasyClientBuilder.newClient();
+      Builder request1 = client.target("http://localhost:8080/RESTEASY-1058-1/test/0/0/0").request();
+      Builder request2 = client.target("http://localhost:8080/RESTEASY-1058-2/test/0/0/0").request();
+      Response response = null;
       for (int i = 1; i < 2; i++)
       {
          response = request1.get(); 
          log.info("status: " + response.getStatus());
-         String answer = response.getEntity(String.class);
+         String answer = response.readEntity(String.class);
          log.info("entity: " + answer);
          assertEquals(400, response.getStatus());
          ResteasyViolationException e = new ResteasyViolationException(String.class.cast(answer));
@@ -99,11 +95,11 @@ public class MultipleWarTest
          Assert.assertTrue(cv.getMessage().indexOf("org.jboss.resteasy.resteasy1058.SumConstraint") > 0);
          cv = e.getParameterViolations().iterator().next();
          Assert.assertTrue(cv.getMessage().equals("must be greater than or equal to 7"));
-         response.releaseConnection();;
+         response.close();
          
          response = request2.get(); 
          log.info("status: " + response.getStatus());
-         answer = response.getEntity(String.class);
+         answer = response.readEntity(String.class);
          log.info("entity: " + answer);
          assertEquals(400, response.getStatus());
          e = new ResteasyViolationException(String.class.cast(answer));
@@ -117,7 +113,7 @@ public class MultipleWarTest
          Assert.assertTrue(cv.getMessage().indexOf("org.jboss.resteasy.resteasy1058.SumConstraint") > 0);
          cv = e.getParameterViolations().iterator().next();
          Assert.assertTrue(cv.getMessage().equals("must be greater than or equal to 7"));
-         response.releaseConnection();
+         response.close();
       }
    }
 
@@ -128,13 +124,14 @@ public class MultipleWarTest
       //      Invocation.Builder request = client.target("http://localhost:8080/RESTEASY-1058-wait/wait/5/7/30").request();
       //      Response response = request.get();
 
-      ClientRequest request1 = new ClientRequest("http://localhost:8080/RESTEASY-1058-1/test/5/7/9");
-      ClientRequest request2 = new ClientRequest("http://localhost:8080/RESTEASY-1058-2/test/5/7/9");
-      ClientResponse<?> response = null;
+      Client client = ResteasyClientBuilder.newClient();
+      Builder request1 = client.target("http://localhost:8080/RESTEASY-1058-1/test/5/7/9").request();
+      Builder request2 = client.target("http://localhost:8080/RESTEASY-1058-2/test/5/7/9").request();
+      Response response = null;
       for (int i = 1; i < 2; i++)
       {
          response = request1.get();   
-         String answer = response.getEntity(String.class);
+         String answer = response.readEntity(String.class);
          log.info("status: " + response.getStatus());
          log.info("entity: " + answer);
          assertEquals(500, response.getStatus());
@@ -143,10 +140,10 @@ public class MultipleWarTest
          countViolations(e, 1, 0, 0, 0, 0, 1);
          ResteasyConstraintViolation cv = e.getReturnValueViolations().iterator().next();
          Assert.assertTrue(cv.getMessage().equals("must be less than or equal to 0"));
-         response.releaseConnection();;
+         response.close();
          
          response = request2.get();   
-         answer = response.getEntity(String.class);
+         answer = response.readEntity(String.class);
          log.info("status: " + response.getStatus());
          log.info("entity: " + answer);
          assertEquals(500, response.getStatus());
@@ -155,7 +152,7 @@ public class MultipleWarTest
          countViolations(e, 1, 0, 0, 0, 0, 1);
          cv = e.getReturnValueViolations().iterator().next();
          Assert.assertTrue(cv.getMessage().equals("must be less than or equal to 0"));
-         response.releaseConnection();;
+         response.close();;
       }
    }
 

@@ -2,14 +2,16 @@ package org.jboss.resteasy.test.resteasy1073;
 
 import java.io.File;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.resteasy1073.TestApplication;
 import org.jboss.resteasy.resteasy1073.TestResource;
 import org.jboss.resteasy.resteasy1073.TestWrapper;
@@ -70,12 +72,11 @@ public class TestExternalParameterEntity
    @Test
    public void testExternalParameterEntityExpand() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1073-expand/test");
+      WebTarget target = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1073-expand/test");
       System.out.println(text);
-      request.body(MediaType.APPLICATION_XML, text);
-      ClientResponse<?> response = request.post();
+      Response response = target.request().post(Entity.entity(text, MediaType.APPLICATION_XML));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("Result: " + entity);
       Assert.assertEquals("root:x:0:0:root:/root:/bin/bash", entity.trim());
    }
@@ -83,12 +84,11 @@ public class TestExternalParameterEntity
    @Test
    public void testExternalParameterEntityNoExpand() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1073-no-expand/test");
+      WebTarget target = ResteasyClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1073-no-expand/test");
       System.out.println(text);
-      request.body(MediaType.APPLICATION_XML, text);
-      ClientResponse<?> response = request.post();
+      Response response = target.request().post(Entity.entity(text, MediaType.APPLICATION_XML));
       Assert.assertEquals(200, response.getStatus());
-      String entity = response.getEntity(String.class);
+      String entity = response.readEntity(String.class);
       System.out.println("Result: " + entity);
       Assert.assertEquals("", entity.trim());
    }

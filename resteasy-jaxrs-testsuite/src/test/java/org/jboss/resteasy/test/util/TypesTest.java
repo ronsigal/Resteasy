@@ -1,10 +1,10 @@
 package org.jboss.resteasy.test.util;
 
-import org.jboss.resteasy.spi.StringConverter;
 import org.jboss.resteasy.util.Types;
 import org.junit.Test;
 
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyReader;
 import java.lang.reflect.Type;
 
 import static org.junit.Assert.assertEquals;
@@ -19,7 +19,7 @@ public class TypesTest
       assertEquals(1, parameters.length);
       assertEquals(NullPointerException.class, (Class<?>) parameters[0]);
 
-      parameters = Types.getActualTypeArgumentsOfAnInterface(SimpleProvider.class, StringConverter.class);
+      parameters = Types.getActualTypeArgumentsOfAnInterface(SimpleProvider.class, MessageBodyReader.class);
       assertEquals(1, parameters.length);
       assertEquals(Integer.class, (Class<?>) parameters[0]);
    }
@@ -32,7 +32,7 @@ public class TypesTest
       assertEquals(1, parameters.length);
       assertEquals(NullPointerException.class, (Class<?>) parameters[0]);
 
-      parameters = Types.getActualTypeArgumentsOfAnInterface(SimpleProviderSubclass.class, StringConverter.class);
+      parameters = Types.getActualTypeArgumentsOfAnInterface(SimpleProviderSubclass.class, MessageBodyReader.class);
       assertEquals(1, parameters.length);
       assertEquals(Integer.class, (Class<?>) parameters[0]);
    }

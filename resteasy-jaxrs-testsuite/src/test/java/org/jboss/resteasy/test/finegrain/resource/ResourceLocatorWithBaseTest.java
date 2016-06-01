@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.finegrain.resource;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.mock.MockDispatcherFactory;
 import org.jboss.resteasy.mock.MockHttpRequest;
@@ -13,23 +11,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
-
-import static org.jboss.resteasy.test.TestPortProvider.*;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -172,6 +163,7 @@ public class ResourceLocatorWithBaseTest
 
    public static class Subresource3 implements Subresource3Interface
    {
+      @SuppressWarnings("unused")
       @Override
       public String get(List<Double> params)
       {

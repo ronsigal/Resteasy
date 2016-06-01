@@ -1,12 +1,14 @@
 package org.jboss.resteasy.test;
 
-import org.jboss.resteasy.client.ClientRequest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -66,12 +68,11 @@ public class CharSetTest extends BaseResourceTest
    public void testCase2() throws Exception
    {
 
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/test/string"));
+      Builder request = ClientBuilder.newClient().target(TestPortProvider.generateURL("/test/string")).request();
       Customer cust = new Customer();
       String name = "bill\u00E9";
       cust.setName(name);
-      request.body("application/xml", cust);
-      request.post();
+      request.post(Entity.entity(cust, "application/xml"));
 
 
    }
@@ -79,15 +80,14 @@ public class CharSetTest extends BaseResourceTest
    public void testCase() throws Exception
    {
 
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/test"));
+      Builder request = ClientBuilder.newClient().target(TestPortProvider.generateURL("/test")).request();
       Customer cust = new Customer();
       String name = "bill\u00E9";
       System.out.println("client name: " + name);
 
       System.out.println("bytes string: " + new String(name.getBytes("UTF-8"), "UTF-8"));
       cust.setName(name);
-      request.body("application/xml", cust);
-      request.post();
+      request.post(Entity.entity(cust, "application/xml"));
 
 
    }

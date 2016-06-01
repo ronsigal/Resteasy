@@ -2,10 +2,11 @@ package org.jboss.resteasy.test.validation;
 
 import org.junit.Assert;
 
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.validation.JaxRsActivator;
 import org.jboss.resteasy.validation.TestResourceLazyValidator;
 import org.jboss.shrinkwrap.api.Archive;
@@ -41,9 +42,8 @@ public class TestLazyValidator
    public void testLazyValidator() throws Exception
    {
       // Valid native constraint
-      ClientRequest request = new ClientRequest("http://localhost:8080/Validation-test/rest/lazy");
-      ClientResponse<?> response = request.get();     
+      Response response = ClientBuilder.newClient().target("http://localhost:8080/Validation-test/rest/lazy").request().get();
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertTrue(response.getEntity(boolean.class));
+      Assert.assertTrue(response.readEntity(boolean.class));
    }
 }

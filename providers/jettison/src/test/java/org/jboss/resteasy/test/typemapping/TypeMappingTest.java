@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.typemapping;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.HttpHeaderNames;
@@ -11,6 +9,9 @@ import org.junit.Test;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.Map;
@@ -124,15 +125,15 @@ public class TypeMappingTest
       {
          url = url + "." + extension;
       }
-      ClientRequest request = new ClientRequest(url);
+      Builder request = ClientBuilder.newClient().target(url).request();
       if (accept != null)
       {
          request.header(HttpHeaderNames.ACCEPT, accept);
       }
-      ClientResponse<?> response = request.get();
+      Response response = request.get();
       assertEquals("Request for " + url + " returned a non-200 status", 200, response.getStatus());
       assertEquals("Request for " + url + " returned an unexpected content type",
-              expectedContentType, response.getResponseHeaders().getFirst("Content-type"));
+              expectedContentType, response.getHeaderString("Content-type"));
    }
 
    @XmlRootElement

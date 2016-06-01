@@ -1,7 +1,6 @@
 package org.jboss.resteasy.test.client;
 
 import org.junit.Assert;
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,7 +14,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Date;
 
-import static org.jboss.resteasy.test.TestPortProvider.generateBaseUrl;
+import static org.jboss.resteasy.test.TestPortProvider.createProxy;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -180,9 +179,7 @@ public class RegressionTest extends BaseResourceTest
       m.setSourceId("WXYZ6789");
       m.setVersionMajor("4");
       m.setVersionMinor("1");
-      IMessageTFMResource client = ProxyFactory.create(
-              IMessageTFMResource.class,
-              generateBaseUrl());
+      IMessageTFMResource client = createProxy(IMessageTFMResource.class, "");
       Response r = client.saveMessage(m);
       Assert.assertEquals(r.getStatus(), 201);
    }

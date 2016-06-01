@@ -1,9 +1,9 @@
 package org.jboss.resteasy.test.client;
 
-import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.test.BaseResourceTest;
+import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -90,7 +90,7 @@ public class ProxyInheritanceTest extends BaseResourceTest
       UserEntity u = new UserEntity();
       u.setUsername("user");
 
-      UserEntityWebservice serviceClient = ProxyFactory.create(UserEntityWebservice.class, generateBaseUrl());
+      UserEntityWebservice serviceClient = TestPortProvider.createProxy(UserEntityWebservice.class, "");
       UserEntity newUser = serviceClient.create(u);
 
       System.out.println("**** " + newUser.getUsername());

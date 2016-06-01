@@ -1,7 +1,6 @@
 package org.jboss.resteasy.test;
 
 import org.junit.Assert;
-import org.jboss.resteasy.client.ProxyFactory;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
@@ -76,7 +75,7 @@ public class TestAnnotationInheritance extends BaseResourceTest
 	public void testSuperclassInterfaceAnnotation()
 	{
 		addPerRequestResource(SomeOtherResource.class);
-		SomeOtherInterface proxy = ProxyFactory.create(SomeOtherInterface.class, TestPortProvider.generateURL("/somewhere"));
+		SomeOtherInterface proxy = TestPortProvider.createProxy(SomeOtherInterface.class, "/somewhere");
 		Assert.assertEquals("Foo: Fred", proxy.getSuperInt().getFoo());
 	}
 
@@ -84,7 +83,7 @@ public class TestAnnotationInheritance extends BaseResourceTest
 	public void testDetectionOfNonResource()
 	{
 		addPerRequestResource(SomeOtherResource.class);
-		SomeOtherResource proxy = ProxyFactory.create(SomeOtherResource.class, TestPortProvider.generateURL("/somewhere"));
+		SomeOtherResource proxy = TestPortProvider.createProxy(SomeOtherResource.class, "/somewhere");
 		proxy.getFailure().blah();
 	}
 

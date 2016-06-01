@@ -1,11 +1,7 @@
 package org.jboss.resteasy.test.finegrain.resource;
 
-import org.jboss.resteasy.client.ClientExecutor;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ProxyFactory;
+import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.core.Dispatcher;
-import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.HttpResponseCodes;
 import org.junit.AfterClass;
@@ -18,13 +14,16 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -32,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateBaseUrl;
-import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -41,6 +39,7 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 public class CookieTest
 {
    private static Dispatcher dispatcher;
+   private static Client client;
 
    @Path("/")
    public static class CookieResource
@@ -105,46 +104,48 @@ public class CookieTest
    {
       dispatcher = EmbeddedContainer.start().getDispatcher();
       dispatcher.getRegistry().addPerRequestResource(CookieResource.class);
+      client = ClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
    }
 
-   private void _test(ClientRequest request, UriBuilder uriBuilder, String path)
+   private void _test(WebTarget target)
    {
-      request.clear();
-      uriBuilder.replacePath(generateURL(path));
+      Response response = null;
       try
       {
-         ClientResponse<String> response = request.get(String.class);
+         response = target.request().get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         MultivaluedMap<String, String> headers = response.getResponseHeaders();
+         MultivaluedMap<String, Object> headers = response.getHeaders();
          for (Object key : headers.keySet())
          {
             System.out.println(key + ": " + headers.get(key));
          }
-         response.releaseConnection();
       } catch (Exception e)
       {
          throw new RuntimeException(e);
+      }
+      finally
+      {
+         response.close();
       }
    }
 
    @Test
    public void testIt()
    {
-      UriBuilder uriBuilder = new ResteasyUriBuilder().uriTemplate("/");
-      ClientExecutor executor = ClientRequest.getDefaultExecutor();
-      ClientRequest request = new ClientRequest(uriBuilder, executor);
-      _test(request, uriBuilder, "/set");
-      _test(request, uriBuilder, "/headers");
-      _test(request, uriBuilder, "/headers/fromField");
-      _test(request, uriBuilder, "/cookieparam");
-      _test(request, uriBuilder, "/param");
-      _test(request, uriBuilder, "/default");
+      WebTarget target = client.target(generateBaseUrl());
+      _test(target.path("/set"));
+      _test(target.path("/headers"));
+      _test(target.path("/headers/fromField"));
+      _test(target.path("/cookieparam"));
+      _test(target.path("/param"));
+      _test(target.path("/default"));
    }
 
    public static interface CookieProxy
@@ -161,12 +162,13 @@ public class CookieTest
    @Test
    public void testProxy()
    {
+      ResteasyWebTarget target = (ResteasyWebTarget) client.target(generateBaseUrl());
       {
-         CookieProxy proxy = ProxyFactory.create(CookieProxy.class, generateBaseUrl());
+         CookieProxy proxy = target.proxy(CookieProxy.class);
          proxy.param(42);
       }
       {
-         CookieProxy proxy = ProxyFactory.create(CookieProxy.class, generateBaseUrl());
+         CookieProxy proxy = target.proxy(CookieProxy.class);
          Cookie cookie = new Cookie("meaning", "42");
          proxy.param(cookie);
       }
@@ -260,6 +262,7 @@ public class CookieTest
    * Create a version 0 Cookie instance by Parsing a String
    */
    @Test
+   @SuppressWarnings("unused")
    public void testParse1() throws Exception
    {
       boolean pass = true;
@@ -279,6 +282,7 @@ public class CookieTest
    * Create a version 0 Cookie instance by Parsing a String
    */
    @Test
+   @SuppressWarnings("unused")
    public void testParse2() throws Exception
    {
       boolean pass = true;
@@ -301,6 +305,7 @@ public class CookieTest
    *                 when calling Cookie.valueOf(null)
    */
    @Test
+   @SuppressWarnings("unused")
    public void testParse3() throws Exception
    {
 
@@ -318,6 +323,7 @@ public class CookieTest
      * Create a version 0 Cookie instance by Parsing a String
      */
    @Test
+   @SuppressWarnings("unused")
    public void testNewCookie1() throws Exception
    {
       boolean pass = true;
@@ -342,6 +348,7 @@ public class CookieTest
    * Create a version 1 NewCookie instance by Parsing a String
    */
    @Test
+   @SuppressWarnings("unused")
    public void testNewCookie2() throws Exception
    {
       boolean pass = true;
@@ -368,6 +375,7 @@ public class CookieTest
    *                 Verify that IllegalArgumentException is thrown
    */
    @Test
+   @SuppressWarnings("unused")
    public void testNewCookie3() throws Exception
    {
       try
@@ -386,6 +394,7 @@ public class CookieTest
     * Create a version 0 NewCookie instance by Parsing a String
     */
    @Test
+   @SuppressWarnings("unused")
    public void testNewCookie4() throws Exception
    {
       boolean pass = true;
@@ -561,6 +570,7 @@ public class CookieTest
    *
    */
    @Test
+   @SuppressWarnings("unused")
    public void cookieTest5() throws Exception
    {
       StringBuffer sb = new StringBuffer();
@@ -658,6 +668,7 @@ public class CookieTest
    private static String newline = "\n";
    private static String indent = "\t";
 
+   @SuppressWarnings("unused")   
    private String verifyResponse(Response resp, String content, int status,
                                  HashMap<String, String> expected_map) throws Exception
    {

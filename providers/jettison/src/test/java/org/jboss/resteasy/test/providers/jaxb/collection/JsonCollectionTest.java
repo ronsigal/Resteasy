@@ -4,10 +4,9 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.annotations.providers.jaxb.json.BadgerFish;
 import org.jboss.resteasy.annotations.providers.jaxb.json.Mapped;
 import org.jboss.resteasy.annotations.providers.jaxb.json.XmlNsMap;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.messagebody.WriterUtility;
 import org.jboss.resteasy.test.BaseResourceTest;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,6 +17,11 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -33,6 +37,8 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
  */
 public class JsonCollectionTest extends BaseResourceTest
 {
+   private static Client client;
+   
    @XmlRootElement
    @XmlAccessorType(XmlAccessType.FIELD)
    public static class Foo
@@ -216,22 +222,27 @@ public class JsonCollectionTest extends BaseResourceTest
       dispatcher.getRegistry().addPerRequestResource(MyResource.class);
       dispatcher.getRegistry().addPerRequestResource(MyNamespacedResource.class);
       dispatcher.getRegistry().addPerRequestResource(MyResource2.class);
+      client = ClientBuilder.newClient();
+   }
+
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
    }
 
    @Test
    public void testArray() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/array"));
-      ClientResponse<String> response = request.get(String.class);
+      Response response = client.target(generateURL("/array")).request().get();
       Assert.assertEquals(200, response.getStatus());
-      System.out.println(response.getEntity());
-      response.releaseConnection();
+      System.out.println(response.readEntity(String.class));
+      response.close();
 
-      request = new ClientRequest(generateURL("/array"));
-      request.body("application/json", "[{\"foo\":{\"@test\":\"bill{\"}},{\"foo\":{\"@test\":\"monica\\\"}\"}}]");
-      response = request.post(String.class);
+      Builder request = client.target(generateURL("/array")).request();
+      response = request.post(Entity.entity("[{\"foo\":{\"@test\":\"bill{\"}},{\"foo\":{\"@test\":\"monica\\\"}\"}}]", "application/json"));
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
    }
 
@@ -239,17 +250,14 @@ public class JsonCollectionTest extends BaseResourceTest
    public void testList() throws Exception
    {
       System.out.println("HERE");
-      ClientRequest request = new ClientRequest(generateURL("/array"));
-      ClientResponse<String> response = request.get(String.class);
+      Response response = client.target(generateURL("/array")).request().get();
       Assert.assertEquals(200, response.getStatus());
-      System.out.println(response.getEntity());
-      String entity = response.getEntity();
+      String entity = response.readEntity(String.class);
 
       System.out.println("HERE 2");
-      request = new ClientRequest(generateURL("/list"));
-      request.body("application/json", entity);
-      response = request.post(String.class);
+      response = client.target(generateURL("/list")).request().post(Entity.entity(entity, "application/json"));
       Assert.assertEquals(200, response.getStatus());
+      response.close();
       System.out.println("There");
 
    }
@@ -258,17 +266,15 @@ public class JsonCollectionTest extends BaseResourceTest
    public void testNamespacedArray() throws Exception
    {
       System.out.println("Start");
-      ClientRequest request = new ClientRequest(generateURL("/namespaced/array"));
-      ClientResponse<String> response = request.get(String.class);
+      Response response = client.target(generateURL("/namespaced/array")).request().get();
       Assert.assertEquals(200, response.getStatus());
-      System.out.println(response.getEntity());
-      response.releaseConnection();
+      String entity = response.readEntity(String.class);
+      System.out.println(entity);
+      response.close();
 
-      request = new ClientRequest(generateURL("/namespaced/array"));
-      request.body("application/json", response.getEntity());
-      response = request.post(String.class);
+      response = client.target(generateURL("/namespaced/array")).request().post(Entity.entity(entity, "application/json"));
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
       System.out.println("done");
 
    }
@@ -276,52 +282,44 @@ public class JsonCollectionTest extends BaseResourceTest
    @Test
    public void testNamespacedList() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/namespaced/array"));
-      ClientResponse<String> response = request.get(String.class);
+      Response response = client.target(generateURL("/namespaced/array")).request().get();
       Assert.assertEquals(200, response.getStatus());
-      System.out.println(response.getEntity());
-      response.releaseConnection();
+      String entity = response.readEntity(String.class);
+      System.out.println(entity);
+      response.close();
 
-      request = new ClientRequest(generateURL("/namespaced/list"));
-      request.body("application/json", response.getEntity());
-      response = request.post(String.class);
+      response = client.target(generateURL("/namespaced/list")).request().post(Entity.entity(entity, "application/json"));
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
    }
 
    @Test
    public void testEmptyArray() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/empty/array"));
-      request.body("application/json", "[]");
-      ClientResponse<String> response = request.post(String.class);
+      Response response = client.target(generateURL("/empty/array")).request().post(Entity.entity("[]", "application/json"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("[]", response.getEntity());
-      response.releaseConnection();
+      Assert.assertEquals("[]", response.readEntity(String.class));
+      response.close();
 
    }
 
    @Test
    public void testEmptyList() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/empty/list"));
-      request.body("application/json", "[]");
-      ClientResponse<String> response = request.post(String.class);
+      Response response = client.target(generateURL("/empty/list")).request().post(Entity.entity("[]", "application/json"));
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("[]", response.getEntity());
-      response.releaseConnection();
+      Assert.assertEquals("[]", response.readEntity(String.class));
+      response.close();
 
    }
 
    @Test
    public void testBadList() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/array"));
-      request.body("application/json", "asdfasdfasdf");
-      ClientResponse response = request.post();
+      Response response = client.target(generateURL("/array")).request().post(Entity.entity("asdfasdfasdf", "application/json"));
       Assert.assertEquals(400, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
    }
 
@@ -358,8 +356,8 @@ public class JsonCollectionTest extends BaseResourceTest
 
       public void put(List<Customer> customers)
       {
-         junit.framework.Assert.assertEquals("bill", customers.get(0).getName());
-         junit.framework.Assert.assertEquals("monica", customers.get(1).getName());
+         Assert.assertEquals("bill", customers.get(0).getName());
+         Assert.assertEquals("monica", customers.get(1).getName());
       }
    }
 
@@ -383,14 +381,13 @@ public class JsonCollectionTest extends BaseResourceTest
    @Test
    public void testIntfTempalte() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/intf"));
-      ClientResponse<?> response = request.get(String.class);
+      Response response = client.target(generateURL("/intf")).request().get();
       Assert.assertEquals(200, response.getStatus());
-      String str = response.getEntity(String.class);
+      String str = response.readEntity(String.class);
       System.out.println(str);
-      request.body("application/json", str);
-      response = request.put();
-      Assert.assertEquals(204, response.getStatus());      
+      response = client.target(generateURL("/intf")).request().put(Entity.entity(str, "application/json"));
+      Assert.assertEquals(204, response.getStatus());  
+      response.close();
    }
 
 

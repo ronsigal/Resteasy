@@ -10,30 +10,31 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
 import org.junit.Assert;
 
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
-import org.jboss.resteasy.core.ResourceMethodInvoker;
-import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyDeployment;
-import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.jboss.resteasy.util.Encode;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -68,6 +69,7 @@ public class InputPartDefaultCharsetOverwriteTest
 
    protected static ResteasyDeployment deployment;
    protected static Dispatcher dispatcher;
+   protected static Client client;
 
    @Path("")
    public static class MyService
@@ -117,75 +119,85 @@ public class InputPartDefaultCharsetOverwriteTest
    }
 
    @Provider
-   @ServerInterceptor
-   public static class PreProcessorInterceptorContentTypeNoCharsetUTF8 implements PreProcessInterceptor
+   public static class PreProcessorInterceptorContentTypeNoCharsetUTF8 implements ContainerRequestFilter
    {
-      public ServerResponse preProcess(HttpRequest request, ResourceMethodInvoker method) throws Failure, WebApplicationException
+      @Override
+      public void filter(ContainerRequestContext requestContext) throws IOException
       {
+         HttpRequest request = ResteasyProviderFactory.getContextData(HttpRequest.class);
          request.setAttribute(InputPart.DEFAULT_CONTENT_TYPE_PROPERTY, TEXT_HTTP_WITH_CHARSET_UTF_8);
-         return null;
       }
    }
 
    @Provider
-   @ServerInterceptor
-   public static class PreProcessorInterceptorContentTypeNoCharsetUTF16 implements PreProcessInterceptor
+   public static class PreProcessorInterceptorContentTypeNoCharsetUTF16 implements ContainerRequestFilter
    {
-      public ServerResponse preProcess(HttpRequest request, ResourceMethodInvoker method) throws Failure, WebApplicationException
+      @Override
+      public void filter(ContainerRequestContext requestContext) throws IOException
       {
+         HttpRequest request = ResteasyProviderFactory.getContextData(HttpRequest.class);
          request.setAttribute(InputPart.DEFAULT_CONTENT_TYPE_PROPERTY, TEXT_HTTP_WITH_CHARSET_UTF_16);
-         return null;
       }
    }
 
    @Provider
-   @ServerInterceptor
-   public static class PreProcessorInterceptorNoContentTypeCharsetUTF8 implements PreProcessInterceptor
+   public static class PreProcessorInterceptorNoContentTypeCharsetUTF8 implements ContainerRequestFilter
    {
-      public ServerResponse preProcess(HttpRequest request, ResourceMethodInvoker method) throws Failure, WebApplicationException
+      @Override
+      public void filter(ContainerRequestContext requestContext) throws IOException
       {
+         HttpRequest request = ResteasyProviderFactory.getContextData(HttpRequest.class);
          request.setAttribute(InputPart.DEFAULT_CHARSET_PROPERTY, UTF_8);
-         return null;
       }
    }
 
    @Provider
-   @ServerInterceptor
-   public static class PreProcessorInterceptorNoContentTypeCharsetUTF16 implements PreProcessInterceptor
+   public static class PreProcessorInterceptorNoContentTypeCharsetUTF16 implements ContainerRequestFilter
    {
-      public ServerResponse preProcess(HttpRequest request, ResourceMethodInvoker method) throws Failure, WebApplicationException
+      @Override
+      public void filter(ContainerRequestContext requestContext) throws IOException
       {
+         HttpRequest request = ResteasyProviderFactory.getContextData(HttpRequest.class);
          request.setAttribute(InputPart.DEFAULT_CHARSET_PROPERTY, UTF_16);
-         return null;
       }
    }
 
    @Provider
-   @ServerInterceptor
-   public static class PreProcessorInterceptorContentTypeCharsetUTF8 implements PreProcessInterceptor
+   public static class PreProcessorInterceptorContentTypeCharsetUTF8 implements ContainerRequestFilter
    {
-      public ServerResponse preProcess(HttpRequest request, ResourceMethodInvoker method) throws Failure, WebApplicationException
+      @Override
+      public void filter(ContainerRequestContext requestContext) throws IOException
       {
-
+         HttpRequest request = ResteasyProviderFactory.getContextData(HttpRequest.class);
          request.setAttribute(InputPart.DEFAULT_CONTENT_TYPE_PROPERTY, TEXT_HTTP_WITH_CHARSET_US_ASCII);
          request.setAttribute(InputPart.DEFAULT_CHARSET_PROPERTY, UTF_8);
-         return null;
       }
    }
 
    @Provider
-   @ServerInterceptor
-   public static class PreProcessorInterceptorContentTypeCharsetUTF16 implements PreProcessInterceptor
+   public static class PreProcessorInterceptorContentTypeCharsetUTF16 implements ContainerRequestFilter
    {
-      public ServerResponse preProcess(HttpRequest request, ResourceMethodInvoker method) throws Failure, WebApplicationException
+      @Override
+      public void filter(ContainerRequestContext requestContext) throws IOException
       {
-
+         HttpRequest request = ResteasyProviderFactory.getContextData(HttpRequest.class);
          request.setAttribute(InputPart.DEFAULT_CONTENT_TYPE_PROPERTY, TEXT_HTTP_WITH_CHARSET_US_ASCII);
          request.setAttribute(InputPart.DEFAULT_CHARSET_PROPERTY, UTF_16);
-         return null;
       }
    }
 
+   @BeforeClass
+   public static void beforeClass()
+   {
+      client = ClientBuilder.newClient();
+   }
+   
+   @AfterClass
+   public static void afterClass()
+   {
+      client.close();
+   }
+   
    @Before
    public void before() throws Exception
    {
@@ -560,13 +572,13 @@ public class InputPartDefaultCharsetOverwriteTest
       System.arraycopy(start, 0, buf, pos0, start.length);
       System.arraycopy(body,  0, buf, pos1, body.length);
       System.arraycopy(end,   0, buf, pos2, end.length);
-      ClientRequest request = new ClientRequest(TEST_URI + "/test/");
-      request.body("multipart/form-data; boundary=boo", buf);
-      ClientResponse<String> response = request.post(String.class);
+      Builder request = client.target(TEST_URI + "/test/").request();
+      Response response = request.post(Entity.entity(buf, "multipart/form-data; boundary=boo"));
       System.out.println("status: " + response.getStatus());
-      System.out.println("client response: " + response.getEntity());
+      String entity = response.readEntity(String.class);
+      System.out.println("client response: " + entity);
       Assert.assertEquals("Status code is wrong.", 20, response.getStatus() / 10);
-      String[] answer = response.getEntity().split(":");
+      String[] answer = entity.split(":");
       Assert.assertEquals(3, answer.length);
       System.out.println("response charset: " + answer[0]);
       Assert.assertEquals(normalize(expectedContentType), normalize(answer[0]));
@@ -588,13 +600,13 @@ public class InputPartDefaultCharsetOverwriteTest
       System.arraycopy(middle, 0, buf, pos1, middle.length);
       System.arraycopy(body,   0, buf, pos2, body.length);
       System.arraycopy(end,    0, buf, pos3, end.length);
-      ClientRequest request = new ClientRequest(TEST_URI + "/test/");
-      request.body("multipart/form-data; boundary=boo", buf);
-      ClientResponse<String> response = request.post(String.class);
+      Builder request = client.target(TEST_URI + "/test/").request();
+      Response response = request.post(Entity.entity(buf, "multipart/form-data; boundary=boo"));
       System.out.println("status: " + response.getStatus());
-      System.out.println("client response: " + response.getEntity());
+      String entity = response.readEntity(String.class);
+      System.out.println("client response: " + entity);
       Assert.assertEquals("Status code is wrong.", 20, response.getStatus() / 10);
-      String[] answer = response.getEntity().split(":");
+      String[] answer = entity.split(":");
       Assert.assertEquals(3, answer.length);
       System.out.println("response charset: " + answer[0]);
       Assert.assertEquals(normalize(expectedContentType), normalize(answer[0]));
@@ -614,13 +626,13 @@ public class InputPartDefaultCharsetOverwriteTest
       System.arraycopy(start, 0, buf, pos0, start.length);
       System.arraycopy(body,  0, buf, pos1, body.length);
       System.arraycopy(end,   0, buf, pos2, end.length);
-      ClientRequest request = new ClientRequest(TEST_URI + "/query?contentType=" + Encode.encodeQueryParamAsIs(queryContentType));
-      request.body("multipart/form-data; boundary=boo", buf);
-      ClientResponse<String> response = request.post(String.class);
+      Builder request = client.target(TEST_URI + "/query?contentType=" + Encode.encodeQueryParamAsIs(queryContentType)).request();
+      Response response = request.post(Entity.entity(buf, "multipart/form-data; boundary=boo"));
       System.out.println("status: " + response.getStatus());
-      System.out.println("client response: " + response.getEntity());
+      String entity = response.readEntity(String.class);
+      System.out.println("client response: " + entity);
       Assert.assertEquals("Status code is wrong.", 20, response.getStatus() / 10);
-      String[] answer = response.getEntity().split(":");
+      String[] answer = entity.split(":");
       Assert.assertEquals(3, answer.length);
       System.out.println("response charset: " + answer[0]);
       Assert.assertEquals(normalize(expectedContentType), normalize(answer[0]));
@@ -643,13 +655,13 @@ public class InputPartDefaultCharsetOverwriteTest
       System.arraycopy(middle, 0, buf, pos1, middle.length);
       System.arraycopy(body,   0, buf, pos2, body.length);
       System.arraycopy(end,    0, buf, pos3, end.length);
-      ClientRequest request = new ClientRequest(TEST_URI + "/query?contentType=" + Encode.encodeQueryParamAsIs(queryContentType));
-      request.body("multipart/form-data; boundary=boo", buf);
-      ClientResponse<String> response = request.post(String.class);
+      Builder request = client.target(TEST_URI + "/query?contentType=" + Encode.encodeQueryParamAsIs(queryContentType)).request();
+      Response response = request.post(Entity.entity(buf, "multipart/form-data; boundary=boo"));
       System.out.println("status: " + response.getStatus());
-      System.out.println("client response: " + response.getEntity());
+      String entity = response.readEntity(String.class);
+      System.out.println("client response: " + entity);
       Assert.assertEquals("Status code is wrong.", 20, response.getStatus() / 10);
-      String[] answer = response.getEntity().split(":");
+      String[] answer = entity.split(":");
       Assert.assertEquals(3, answer.length);
       System.out.println("response charset: " + answer[0]);
       Assert.assertEquals(normalize(expectedContentType), normalize(answer[0]));
@@ -668,12 +680,11 @@ public class InputPartDefaultCharsetOverwriteTest
       System.arraycopy(start, 0, buf, pos0, start.length);
       System.arraycopy(body,  0, buf, pos1, body.length);
       System.arraycopy(end,   0, buf, pos2, end.length);
-      ClientRequest request = new ClientRequest(TEST_URI + "/bytes/");
-      request.body("multipart/form-data; boundary=boo", buf);
-      ClientResponse<byte[]> response = request.post(byte[].class);
+      Builder request = client.target(TEST_URI + "/bytes/").request();
+      Response response = request.post(Entity.entity(buf, "multipart/form-data; boundary=boo"));
       System.out.println("status: " + response.getStatus());
       Assert.assertEquals("Status code is wrong.", 20, response.getStatus() / 10);
-      byte[] b = response.getEntity();
+      byte[] b = response.readEntity(byte[].class);
       for (int i = 0; i < body.length; i++)
       {
          Assert.assertEquals(i + ": " + body[i] + " != " + b[i], body[i], b[i]);  

@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.providers.atom;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.plugins.providers.atom.BaseLink;
 import org.jboss.resteasy.plugins.providers.atom.RelativeLink;
 import org.jboss.resteasy.test.BaseResourceTest;
@@ -13,6 +11,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
@@ -50,9 +51,9 @@ public class LinkTest extends BaseResourceTest
    @Test
    public void testRelativeLink() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/products/333"));
-      ClientResponse<Product> response = request.get(Product.class);
-      Product product = response.getEntity();
+      Builder request = ClientBuilder.newClient().target(generateURL("/products/333")).request();
+      Response response = request.get();
+      Product product = response.readEntity(Product.class);
       Assert.assertEquals(product.getLinks().get(0).getHref().getPath(), "/products/333/self");
       Assert.assertEquals(product.getLinks().get(1).getHref().getPath(), "/products");
       System.out.println();
@@ -61,8 +62,8 @@ public class LinkTest extends BaseResourceTest
    @Test
    public void testRelativeLink2() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/products/333"));
-      ClientResponse<String> response = request.get(String.class);
-      System.out.println(response.getEntity());
+      Builder request = ClientBuilder.newClient().target(generateURL("/products/333")).request();
+      Response response = request.get();
+      System.out.println(response.readEntity(String.class));
    }
 }
