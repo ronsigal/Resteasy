@@ -256,5 +256,8 @@ public class ResteasyHttpServletRequestWrapper extends ServletRequestWrapper imp
       return null;
    }
    
+<<<<<<< HEAD
    
+=======
+>>>>>>> 1db4f0985798a5c81cff79b0fd20c9e15f882cf1
 }
