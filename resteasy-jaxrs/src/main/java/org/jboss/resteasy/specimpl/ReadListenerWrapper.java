@@ -24,6 +24,10 @@ public class ReadListenerWrapper implements ReadListener
    
    public ReadListenerWrapper(NioReaderHandler handler, ServletInputStream inputStream, NioCompletionHandler completionHandler, NioErrorHandler errorHandler)
    {   
+      if (handler == null)
+      {
+         throw new RuntimeException();
+      }
       this.handler = handler;
       this.inputStream = new ResteasyNioInputStream(inputStream);
       this.completionHandler = completionHandler;
@@ -39,19 +43,25 @@ public class ReadListenerWrapper implements ReadListener
    @Override
    public void onAllDataRead() throws IOException
    {
-      completionHandler.complete(inputStream);
+      if (completionHandler != null)
+      {
+         completionHandler.complete(inputStream);
+      }
    }
 
    @Override
    public void onError(Throwable t)
    {
-      try
+      if (errorHandler != null)
       {
-         errorHandler.error(t);
-      }
-      catch (Throwable e)
-      {
-         LogMessages.LOGGER.error("bummer");
+         try
+         {
+            errorHandler.error(t);
+         }
+         catch (Throwable e)
+         {
+            LogMessages.LOGGER.error("bummer");
+         }
       }
    }
 }
