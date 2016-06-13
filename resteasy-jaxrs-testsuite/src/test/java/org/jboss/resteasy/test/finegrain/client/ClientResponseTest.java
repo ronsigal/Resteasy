@@ -1,16 +1,12 @@
 package org.jboss.resteasy.test.finegrain.client;
 
 import org.jboss.resteasy.annotations.ClientResponseType;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientRequestFactory;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ClientResponseFailure;
 import org.jboss.resteasy.client.ClientURI;
-import org.jboss.resteasy.client.EntityTypeFactory;
-import org.jboss.resteasy.client.ProxyFactory;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
+import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.test.EmbeddedContainer;
-import org.jboss.resteasy.test.TestPortProvider;
 import org.jboss.resteasy.test.smoke.SimpleResource;
 import org.jboss.resteasy.util.HttpResponseCodes;
 import org.junit.AfterClass;
@@ -25,6 +21,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
@@ -42,29 +40,24 @@ import static org.jboss.resteasy.test.TestPortProvider.*;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-@SuppressWarnings("unchecked")
 public class ClientResponseTest
 {
 
    private static Dispatcher dispatcher;
-
+   private static Client client;
+   
    @Path("/")
-   public interface Client
+   public interface ClientInterface
    {
       @GET
       @Path("basic")
       @Produces("text/plain")
-      ClientResponse<String> getBasic();
+      ClientResponse getBasic();
 
       @GET
       @Path("basic")
       @ClientResponseType(entityType = String.class)
       Response getBasicResponseString();
-
-      @GET
-      @Path("basic")
-      @ClientResponseType(entityTypeFactory = StringEntityTypeFactory.class)
-      Response getBasicResponseStringFactory();
 
       @GET
       String getData(@ClientURI String uri);
@@ -95,16 +88,16 @@ public class ClientResponseTest
       @GET
       @Path("queryParam")
       @Produces("text/plain")
-      ClientResponse<String> getQueryParam(@QueryParam("param") String param);
+      ClientResponse getQueryParam(@QueryParam("param") String param);
 
       @GET
       @Path("uriParam/{param}")
       @Produces("text/plain")
-      ClientResponse<Integer> getUriParam(@PathParam("param") int param);
+      ClientResponse getUriParam(@PathParam("param") int param);
 
       @GET
       @Path("header")
-      ClientResponse<Void> getHeaderClientResponse();
+      ClientResponse getHeaderClientResponse();
 
       @GET
       @Path("header")
@@ -112,7 +105,7 @@ public class ClientResponseTest
 
       @GET
       @Path("basic")
-      ClientResponse<byte[]> getBasicBytes();
+      ClientResponse getBasicBytes();
 
       @GET
       @Path("basic")
@@ -121,18 +114,7 @@ public class ClientResponseTest
 
       @GET
       @Path("error")
-      ClientResponse<String> getError();
-   }
-
-   public static class StringEntityTypeFactory implements EntityTypeFactory
-   {
-
-      public Class getEntityType(int status,
-                                 MultivaluedMap<String, Object> metadata)
-      {
-         return String.class;
-      }
-
+      ClientResponse getError();
    }
 
    @BeforeClass
@@ -140,39 +122,21 @@ public class ClientResponseTest
    {
       dispatcher = EmbeddedContainer.start().getDispatcher();
       dispatcher.getRegistry().addPerRequestResource(SimpleResource.class);
+      client = ResteasyClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
-   }
-
-   /**
-    * RESTEASY-687
-    *
-    * @throws Exception
-    */
-   @Test
-   public void testPostTargetError() throws Exception
-   {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/nowhere"));
-      try
-      {
-         String res = request.body("text/plain", "hello world").postTarget(String.class);
-      }
-      catch (ClientResponseFailure e)
-      {
-      }
-
-
    }
 
    @Test
    public void testClientResponse() throws Exception
    {
       URI base = new URI(generateBaseUrl());
-      testClient(new ClientRequestFactory(base));
+      testClient((ResteasyWebTarget) client.target(base));
 
       // uncomment this to test urlConnection executor. This has some hiccups
       // now
@@ -180,68 +144,68 @@ public class ClientResponseTest
 //       testClient(new ClientRequestFactory(new URLConnectionClientExecutor(), base));
    }
 
-   private void testClient(ClientRequestFactory requestFactory) throws URISyntaxException, Exception
+   private void testClient(ResteasyWebTarget target) throws URISyntaxException, Exception
    {
 
-      Client client = requestFactory.createProxy(Client.class);
-      Assert.assertEquals("basic", client.getBasic().getEntity());
-      Assert.assertEquals("basic", client.getBasicResponseString().getEntity());
-      Assert.assertEquals("basic", client.getBasicResponseStringFactory().getEntity());
-      Assert.assertEquals("basic", client.getData("/basic"));
-      Assert.assertEquals("hello world", client.getQueryParam("hello world").getEntity());
+      ClientInterface client = target.proxy(ClientInterface.class);
+      Assert.assertEquals("basic", client.getBasic().readEntity(String.class));
+      Assert.assertEquals("basic", client.getBasicResponseString().readEntity(String.class));
+      Assert.assertEquals("basic", client.getData(target.getUriBuilder().path("/basic").build().toString()));
+      Assert.assertEquals("hello world", client.getQueryParam("hello world").readEntity(String.class));
       client.putBasic("hello world");
 
-      client.putData(new URI("/basic"), "hello world2");
-      Assert.assertEquals("hello world", client.getQueryParam("hello world").getEntity());
-
-      String queryResult = requestFactory.getRelative("/queryParam?param={param}", String.class, "hello world");
+      client.putData(target.getUriBuilder().path("/basic").build(), "hello world2");
+      Assert.assertEquals("hello world", client.getQueryParam("hello world").readEntity(String.class));
+      
+      String queryResult = target.path("/queryParam").queryParam("param", "hello world").request().get().readEntity(String.class);
       Assert.assertEquals("hello world", queryResult);
 
-      Assert.assertEquals(1234, client.getUriParam(1234).getEntity().intValue());
+      Assert.assertTrue(1234 == client.getUriParam(1234).readEntity(int.class));
 
-      ClientResponse<Integer> paramPathResult = requestFactory.createRequest(generateURL("/uriParam/{param}")).accept("text/plain")
-              .pathParameter("param", 1234).get(Integer.class);
-      Assert.assertEquals(1234, paramPathResult.getEntity().intValue());
+      Response paramPathResponse = target.path("uriParam/{param}").resolveTemplate("param", 1234).request().accept("text/plain").get();
+      Assert.assertTrue(1234 == paramPathResponse.readEntity(int.class));
+      paramPathResponse.close();
 
       Assert.assertEquals(Response.Status.NO_CONTENT, client.putBasicReturnCode("hello world"));
-      ClientResponse<?> putResponse = createClientRequest("/basic").body("text/plain", "hello world").put();
-      Assert.assertEquals(Response.Status.NO_CONTENT, putResponse.getResponseStatus());
-      putResponse.releaseConnection();
+      Response putResponse = target.path("/basic").request().put(Entity.entity("hello world", "text/plain"));
+      Assert.assertEquals(Response.Status.NO_CONTENT.getStatusCode(), putResponse.getStatus());
+      putResponse.close();
 
-      ClientResponse<Void> crv = client.getHeaderClientResponse();
-      Assert.assertEquals("headervalue", crv.getResponseHeaders().getFirst("header"));
-      crv.releaseConnection();
+      Response crv = client.getHeaderClientResponse();
+      Assert.assertEquals("headervalue", crv.getHeaderString("header"));
+      crv.close();
+
+      Response cr = target.path("/header").request().get();
+      Assert.assertEquals("headervalue", cr.getHeaderString("header"));
+      cr.close();
       
-      ClientResponse<?> cr = requestFactory.createRequest(generateURL("/header")).get();
-      Assert.assertEquals("headervalue", cr.getResponseHeaders().getFirst("header"));
-      cr.releaseConnection();
-      
-      cr = (ClientResponse<?>) client.getHeaderResponse();
+      cr = (ClientResponse) client.getHeaderResponse();
       Assert.assertEquals("headervalue", cr.getMetadata().getFirst("header"));
-      cr.releaseConnection();
+      cr.close();
       
-      Assert.assertTrue(Arrays.equals("basic".getBytes(), client.getBasicBytes().getEntity()));
-      Assert.assertTrue(Arrays.equals("basic".getBytes(), (byte[]) client.getBasicResponse().getEntity()));
+      Assert.assertTrue(Arrays.equals("basic".getBytes(), client.getBasicBytes().readEntity(byte[].class)));
+      Assert.assertTrue(Arrays.equals("basic".getBytes(), client.getBasicResponse().readEntity(byte[].class)));
 
-      Assert.assertTrue(Arrays.equals("basic".getBytes(), requestFactory.getRelative("/basic", byte[].class)));
+      Assert.assertTrue(Arrays.equals("basic".getBytes(), target.path("/basic").request().get().readEntity(byte[].class)));
 
-      Assert.assertEquals("basic", client.getBasic2().getEntity(String.class, null));
+      Assert.assertEquals("basic", client.getBasic2().readEntity(String.class));
 
-      ClientResponse<byte[]> basicResponse = requestFactory.createRelativeRequest("/basic").get(byte[].class);
-      Assert.assertEquals("basic", basicResponse.getEntity(String.class, null));
+      ClientResponse basicResponse = (ClientResponse) target.path("/basic").request().get();
+      Assert.assertEquals("basic", basicResponse.readEntity(String.class));
+      basicResponse.close();
    }
 
    @Test
    public void testErrorResponse() throws Exception
    {
-      Client client = null;
-      client = createProxy(Client.class, "/shite");
-      ClientResponse<String> response = client.getBasic();
+      ResteasyWebTarget target = (ResteasyWebTarget) client.target(generateURL("/shite"));
+      ClientInterface proxy = target.proxy(ClientInterface.class);
+      ClientResponse response = proxy.getBasic();
       Assert.assertEquals(HttpResponseCodes.SC_NOT_FOUND, response.getStatus());
       response.releaseConnection();
-      response = client.getError();
+      response = proxy.getError();
       Assert.assertEquals(HttpResponseCodes.SC_NOT_FOUND, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 
    @Path("/redirect")
@@ -280,8 +244,10 @@ public class ClientResponseTest
    {
       dispatcher.getRegistry().addPerRequestResource(RedirectResource.class);
       {
-         testRedirect(ProxyFactory.create(RedirectClient.class, generateBaseUrl()).get());
-         testRedirect(createClientRequest("/redirect").get());
+         ResteasyWebTarget target = (ResteasyWebTarget) client.target(generateURL(""));
+         RedirectClient proxy = target.proxy(RedirectClient.class);
+         testRedirect(proxy.get());
+         testRedirect((ClientResponse) target.path("/redirect").request().get());
       }
       System.out.println("*****");
       {
@@ -301,13 +267,14 @@ public class ClientResponseTest
 
    private void testRedirect(ClientResponse response)
    {
-      MultivaluedMap headers = response.getResponseHeaders();
+      MultivaluedMap<String, ?> headers = response.getHeaders();
       System.out.println("size: " + headers.size());
       for (Object name : headers.keySet())
       {
          System.out.println(name + ":" + headers.getFirst(name.toString()));
       }
       Assert.assertEquals((String) headers.getFirst("location"), generateURL("/redirect/data"));
+      response.close();
    }
 
 }

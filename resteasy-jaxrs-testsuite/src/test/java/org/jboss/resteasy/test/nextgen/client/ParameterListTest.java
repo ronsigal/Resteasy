@@ -1,4 +1,4 @@
-package org.jboss.resteasy.test.client.old;
+package org.jboss.resteasy.test.nextgen.client;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,11 +15,11 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ProxyFactory;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.junit.After;
@@ -240,168 +240,176 @@ public class ParameterListTest
    @Test
    public void testMatrix() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8081/matrix;m1=a/list;m1=b;p2=c");
-      request.matrixParameter("m1", "d");
+      WebTarget target = ResteasyClientBuilder.newClient().target("http://localhost:8081/matrix;m1=a/list;m1=b;p2=c");
       System.out.println("Sending request");
-      ClientResponse<String> response = request.get(String.class);
-      System.out.println("Received response: " + response.getEntity());
+      Response response = target.matrixParam("m1", "d").request().get();
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("a:b:d:", response.getEntity());
+      Assert.assertEquals("a:b:d:", entity);
    }
    
    @Test
    public void testQuery() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8081/query/list?q1=a&q2=b&q1=c");
-      request.queryParameter("q1", "d");
+      WebTarget target = ResteasyClientBuilder.newClient().target("http://localhost:8081/query/list?q1=a&q2=b&q1=c");
       System.out.println("Sending request");
-      ClientResponse<String> response = request.get(String.class);
-      System.out.println("Received response: " + response.getEntity());
+      Response response = target.queryParam("q1", "d").request().get();
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("a:c:d:", response.getEntity());
+      Assert.assertEquals("a:c:d:", entity);
    }
    
-   @SuppressWarnings("unchecked")
    @Test
    public void testMatrixProxyList() throws Exception
    {  
-      TestInterface client = ProxyFactory.create(TestInterface.class, "http://localhost:8081");
+      ResteasyWebTarget target = (ResteasyWebTarget) ResteasyClientBuilder.newClient().target("http://localhost:8081");
+      TestInterface client = target.proxy(TestInterface.class);
       ArrayList<String> list = new ArrayList<String>();
       list.add("a");
       list.add("b");
       list.add("c");
-      ClientResponse<String> response = ClientResponse.class.cast(client.matrixList(list));
+      Response response = client.matrixList(list);
       System.out.println("Sending request");
       System.out.println("status: " + response.getStatus());
-      System.out.println("Received response: " + response.getEntity(String.class));
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("a:b:c:", response.getEntity(String.class));
+      Assert.assertEquals("a:b:c:", entity);
    }
    
-   @SuppressWarnings("unchecked")
    @Test
    public void testMatrixProxySet() throws Exception
-   {  
-      TestInterface client = ProxyFactory.create(TestInterface.class, "http://localhost:8081");
+   {
+      ResteasyWebTarget target = (ResteasyWebTarget) ResteasyClientBuilder.newClient().target("http://localhost:8081");
+      TestInterface client = target.proxy(TestInterface.class);
       HashSet<String> set = new HashSet<String>();
       set.add("a");
       set.add("b");
       set.add("c");
-      ClientResponse<String> response = ClientResponse.class.cast(client.matrixSet(set));
+      Response response = client.matrixSet(set);
       System.out.println("Sending request");
       System.out.println("status: " + response.getStatus());
-      System.out.println("Received response: " + response.getEntity(String.class));
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("a:b:c:", response.getEntity(String.class));
+      Assert.assertEquals("a:b:c:", entity);
    }
-   
-   @SuppressWarnings("unchecked")
+
    @Test
    public void testMatrixProxySortedSet() throws Exception
-   {  
-      TestInterface client = ProxyFactory.create(TestInterface.class, "http://localhost:8081");
+   {
+      ResteasyWebTarget target = (ResteasyWebTarget) ResteasyClientBuilder.newClient().target("http://localhost:8081");
+      TestInterface client = target.proxy(TestInterface.class);
       TreeSet<String> set = new TreeSet<String>();
       set.add("a");
       set.add("b");
       set.add("c");
-      ClientResponse<String> response = ClientResponse.class.cast(client.matrixSortedSet(set));
+      Response response = client.matrixSortedSet(set);
       System.out.println("Sending request");
       System.out.println("status: " + response.getStatus());
-      System.out.println("Received response: " + response.getEntity(String.class));
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("a:b:c:", response.getEntity(String.class));
+      Assert.assertEquals("a:b:c:", entity);
    }
-   
-   @SuppressWarnings("unchecked")
+
    @Test
    public void testMatrixWithEntityProxy() throws Exception
    {  
-      TestInterface client = ProxyFactory.create(TestInterface.class, "http://localhost:8081");
+      ResteasyWebTarget target = (ResteasyWebTarget) ResteasyClientBuilder.newClient().target("http://localhost:8081");
+      TestInterface client = target.proxy(TestInterface.class);
       ArrayList<String> list = new ArrayList<String>();
       list.add("a");
       list.add("b");
       list.add("c");
-      ClientResponse<String> response = ClientResponse.class.cast(client.matrixWithEntity(list, "entity"));
+      Response response = client.matrixWithEntity(list, "entity");
       System.out.println("Sending request");
       System.out.println("status: " + response.getStatus());
-      System.out.println("Received response: " + response.getEntity(String.class));
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("entity:a:b:c:", response.getEntity(String.class));
+      Assert.assertEquals("entity:a:b:c:", entity);
    }
-   
-   @SuppressWarnings("unchecked")
+
    @Test
    public void testQueryProxyList() throws Exception
    {  
-      TestInterface client = ProxyFactory.create(TestInterface.class, "http://localhost:8081");
+      ResteasyWebTarget target = (ResteasyWebTarget) ResteasyClientBuilder.newClient().target("http://localhost:8081");
+      TestInterface client = target.proxy(TestInterface.class);
       ArrayList<String> list = new ArrayList<String>();
       list.add("a");
       list.add("b");
       list.add("c");
-      ClientResponse<String> response = ClientResponse.class.cast(client.queryList(list));
+      Response response = client.queryList(list);
       System.out.println("Sending request");
       System.out.println("status: " + response.getStatus());
-      System.out.println("Received response: " + response.getEntity(String.class));
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("a:b:c:", response.getEntity(String.class));
+      Assert.assertEquals("a:b:c:", entity);
    }
    
-   @SuppressWarnings("unchecked")
    @Test
    public void testQueryProxySet() throws Exception
    {  
-      TestInterface client = ProxyFactory.create(TestInterface.class, "http://localhost:8081");
+      ResteasyWebTarget target = (ResteasyWebTarget) ResteasyClientBuilder.newClient().target("http://localhost:8081");
+      TestInterface client = target.proxy(TestInterface.class);
       HashSet<String> set = new HashSet<String>();
       set.add("a");
       set.add("b");
       set.add("c");
-      ClientResponse<String> response = ClientResponse.class.cast(client.querySet(set));
+      Response response = client.querySet(set);
       System.out.println("Sending request");
       System.out.println("status: " + response.getStatus());
-      System.out.println("Received response: " + response.getEntity(String.class));
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("a:b:c:", response.getEntity(String.class));
+      Assert.assertEquals("a:b:c:", entity);
    }
-   
-   @SuppressWarnings("unchecked")
+
    @Test
    public void testQueryProxySortedSet() throws Exception
    {  
-      TestInterface client = ProxyFactory.create(TestInterface.class, "http://localhost:8081");
+      ResteasyWebTarget target = (ResteasyWebTarget) ResteasyClientBuilder.newClient().target("http://localhost:8081");
+      TestInterface client = target.proxy(TestInterface.class);
       TreeSet<String> set = new TreeSet<String>();
       set.add("a");
       set.add("b");
       set.add("c");
-      ClientResponse<String> response = ClientResponse.class.cast(client.querySortedSet(set));
+      Response response = client.querySortedSet(set);
       System.out.println("Sending request");
       System.out.println("status: " + response.getStatus());
-      System.out.println("Received response: " + response.getEntity(String.class));
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("a:b:c:", response.getEntity(String.class));
+      Assert.assertEquals("a:b:c:", entity);
    }
-   
-   @SuppressWarnings("unchecked")
+
    @Test
    public void testQueryWithEntityProxy() throws Exception
    {  
-      TestInterface client = ProxyFactory.create(TestInterface.class, "http://localhost:8081");
+      ResteasyWebTarget target = (ResteasyWebTarget) ResteasyClientBuilder.newClient().target("http://localhost:8081");
+      TestInterface client = target.proxy(TestInterface.class);
       ArrayList<String> list = new ArrayList<String>();
       list.add("a");
       list.add("b");
       list.add("c");
-      ClientResponse<String> response = ClientResponse.class.cast(client.queryWithEntity(list, "entity"));
+      Response response = client.queryWithEntity(list, "entity");
       System.out.println("Sending request");
       System.out.println("status: " + response.getStatus());
-      System.out.println("Received response: " + response.getEntity(String.class));
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("entity:a:b:c:", response.getEntity(String.class));
+      Assert.assertEquals("entity:a:b:c:", entity);
    }
    
-   @SuppressWarnings("unchecked")
    @Test
    public void testMatrixQueryWithEntityProxy() throws Exception
    {  
-      TestInterface client = ProxyFactory.create(TestInterface.class, "http://localhost:8081");
+      ResteasyWebTarget target = (ResteasyWebTarget) ResteasyClientBuilder.newClient().target("http://localhost:8081");
+      TestInterface client = target.proxy(TestInterface.class);
       ArrayList<String> matrixParams = new ArrayList<String>();
       matrixParams.add("a");
       matrixParams.add("b");
@@ -410,11 +418,12 @@ public class ParameterListTest
       queryParams.add("x");
       queryParams.add("y");
       queryParams.add("z");
-      ClientResponse<String> response = ClientResponse.class.cast(client.matrixQueryWithEntity(matrixParams, queryParams, "entity"));
+      Response response = client.matrixQueryWithEntity(matrixParams, queryParams, "entity");
       System.out.println("Sending request");
       System.out.println("status: " + response.getStatus());
-      System.out.println("Received response: " + response.getEntity(String.class));
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("entity:a:b:c:x:y:z:", response.getEntity(String.class));
+      Assert.assertEquals("entity:a:b:c:x:y:z:", entity);
    }
 }

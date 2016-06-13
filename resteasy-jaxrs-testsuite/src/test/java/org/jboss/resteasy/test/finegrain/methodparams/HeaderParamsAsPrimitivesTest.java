@@ -1,9 +1,7 @@
 package org.jboss.resteasy.test.finegrain.methodparams;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ProxyFactory;
-import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.HttpHeaderNames;
@@ -18,6 +16,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +41,7 @@ public class HeaderParamsAsPrimitivesTest
    private static final double ASSERT_DOUBLE_THRESHOLD = 0.000000000000001d;
 
    private static Dispatcher dispatcher;
+   private static Client client;
 
    private static IResourceHeaderPrimitives resourceHeaderPrimitives;
 
@@ -94,35 +97,25 @@ public class HeaderParamsAsPrimitivesTest
       dispatcher.getRegistry().addPerRequestResource(ResourceHeaderPrimitiveArrayDefault.class);
       dispatcher.getRegistry().addPerRequestResource(ResourceHeaderPrimitiveArrayDefaultNull.class);
       dispatcher.getRegistry().addPerRequestResource(ResourceHeaderPrimitiveArrayDefaultOverride.class);
-      resourceHeaderPrimitives = ProxyFactory.create(IResourceHeaderPrimitives.class, generateBaseUrl());
-      resourceHeaderPrimitivesDefault = ProxyFactory.create(IResourceHeaderPrimitivesDefault.class,
-              generateBaseUrl());
-      resourceHeaderPrimitivesDefaultOverride = ProxyFactory.create(IResourceHeaderPrimitivesDefaultOverride.class,
-              generateBaseUrl());
-      resourceHeaderPrimitivesDefaultNull = ProxyFactory.create(IResourceHeaderPrimitivesDefaultNull.class,
-              generateBaseUrl());
-      resourceHeaderPrimitiveWrappers = ProxyFactory.create(IResourceHeaderPrimitiveWrappers.class,
-              generateBaseUrl());
-      resourceHeaderPrimitiveWrappersDefault = ProxyFactory.create(IResourceHeaderPrimitiveWrappersDefault.class,
-              generateBaseUrl());
-      resourceHeaderPrimitiveWrappersDefaultOverride = ProxyFactory.create(
-              IResourceHeaderPrimitiveWrappersDefaultOverride.class, generateBaseUrl());
-      resourceHeaderPrimitiveWrappersDefaultNull = ProxyFactory.create(
-              IResourceHeaderPrimitiveWrappersDefaultNull.class, generateBaseUrl());
-      resourceHeaderPrimitiveList = ProxyFactory.create(IResourceHeaderPrimitiveList.class, generateBaseUrl());
-      resourceHeaderPrimitiveListDefault = ProxyFactory.create(IResourceHeaderPrimitiveListDefault.class,
-              generateBaseUrl());
-      resourceHeaderPrimitiveListDefaultOverride = ProxyFactory.create(
-              IResourceHeaderPrimitiveListDefaultOverride.class, generateBaseUrl());
-      resourceHeaderPrimitiveListDefaultNull = ProxyFactory.create(IResourceHeaderPrimitiveListDefaultNull.class,
-              generateBaseUrl());
-      resourceHeaderPrimitiveArray = ProxyFactory.create(IResourceHeaderPrimitiveArray.class, generateBaseUrl());
-      resourceHeaderPrimitiveArrayDefault = ProxyFactory.create(IResourceHeaderPrimitiveArrayDefault.class,
-              generateBaseUrl());
-      resourceHeaderPrimitiveArrayDefaultOverride = ProxyFactory.create(
-              IResourceHeaderPrimitiveArrayDefaultOverride.class, generateBaseUrl());
-      resourceHeaderPrimitiveArrayDefaultNull = ProxyFactory.create(IResourceHeaderPrimitiveArrayDefaultNull.class,
-              generateBaseUrl());
+      
+      client = ResteasyClientBuilder.newClient();
+      ResteasyWebTarget target = (ResteasyWebTarget) client.target(generateBaseUrl());
+      resourceHeaderPrimitives = target.proxy(IResourceHeaderPrimitives.class);
+      resourceHeaderPrimitivesDefault = target.proxy(IResourceHeaderPrimitivesDefault.class);
+      resourceHeaderPrimitivesDefaultOverride = target.proxy(IResourceHeaderPrimitivesDefaultOverride.class);
+      resourceHeaderPrimitivesDefaultNull = target.proxy(IResourceHeaderPrimitivesDefaultNull.class);
+      resourceHeaderPrimitiveWrappers = target.proxy(IResourceHeaderPrimitiveWrappers.class);
+      resourceHeaderPrimitiveWrappersDefault = target.proxy(IResourceHeaderPrimitiveWrappersDefault.class);
+      resourceHeaderPrimitiveWrappersDefaultOverride = target.proxy(IResourceHeaderPrimitiveWrappersDefaultOverride.class);
+      resourceHeaderPrimitiveWrappersDefaultNull = target.proxy(IResourceHeaderPrimitiveWrappersDefaultNull.class);
+      resourceHeaderPrimitiveList = target.proxy(IResourceHeaderPrimitiveList.class);
+      resourceHeaderPrimitiveListDefault = target.proxy(IResourceHeaderPrimitiveListDefault.class);
+      resourceHeaderPrimitiveListDefaultOverride = target.proxy(IResourceHeaderPrimitiveListDefaultOverride.class);
+      resourceHeaderPrimitiveListDefaultNull = target.proxy(IResourceHeaderPrimitiveListDefaultNull.class);
+      resourceHeaderPrimitiveArray = target.proxy(IResourceHeaderPrimitiveArray.class);
+      resourceHeaderPrimitiveArrayDefault = target.proxy(IResourceHeaderPrimitiveArrayDefault.class);
+      resourceHeaderPrimitiveArrayDefaultOverride = target.proxy(IResourceHeaderPrimitiveArrayDefaultOverride.class);
+      resourceHeaderPrimitiveArrayDefaultNull = target.proxy(IResourceHeaderPrimitiveArrayDefaultNull.class);
 
    }
 
@@ -1006,126 +999,120 @@ public class HeaderParamsAsPrimitivesTest
 
    public void _test(String type, String value)
    {
+      Response response = null;
       {
-         ClientRequest request = new ClientRequest(generateURL("/"));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         request.header(type, value);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
+         builder.header(type, value);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-           //response.releaseConnection();
-            ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-            executor.getHttpClient().getConnectionManager().shutdown();
-//            request.getExecutor().close();
          }
          catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/wrappers"));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         request.header(type, value);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/wrappers")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
+         builder.header(type, value);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-           //response.releaseConnection();
-            ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-            executor.getHttpClient().getConnectionManager().shutdown();
-//            request.getExecutor().close();
          }
          catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }
      
       {
-         ClientRequest request = new ClientRequest(generateURL("/list"));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         request.header(type, value);
-         request.header(type, value);
-         request.header(type, value);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/list")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
+         builder.header(type, value).header(type, value).header(type, value);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-           //response.releaseConnection();
-            ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-            executor.getHttpClient().getConnectionManager().shutdown();
-//            request.getExecutor().close();
          }
          catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }
    }
 
    public void _testDefault(String base, String type, String value)
    {
+      Response response = null;
       {
-         ClientRequest request = new ClientRequest(generateURL("" + base + "default/null"));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("" + base + "default/null")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-           //response.releaseConnection();
-            ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-            executor.getHttpClient().getConnectionManager().shutdown();
-//            request.getExecutor().close();
          }
          catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("" + base + "default"));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("" + base + "default")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-           //response.releaseConnection();
-            ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-            executor.getHttpClient().getConnectionManager().shutdown();
-//            request.getExecutor().close();
          }
          catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("" + base + "default/override"));
-         request.header(HttpHeaderNames.ACCEPT, "application/" + type);
-         request.header(type, value);
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("" + base + "default/override")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/" + type);
+         builder.header(type, value);
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-           //response.releaseConnection();
-            ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-            executor.getHttpClient().getConnectionManager().shutdown();
-//            request.getExecutor().close();
          }
          catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }
    }
@@ -1148,29 +1135,26 @@ public class HeaderParamsAsPrimitivesTest
    @Test
    public void testSet()
    {
+      Response response = null;
       {
-         ClientRequest request = new ClientRequest(generateURL("/set"));
-         request.header(HttpHeaderNames.ACCEPT, "application/boolean");
-         request.header("header", "one");
-         request.header("header", "one");
-         request.header("header", "one");
-         request.header("header", "two");
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/set")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/boolean");
+         builder.header("header", "one").header("header", "one").header("header", "one").header("header", "two");
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-           //response.releaseConnection();
-            ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-            executor.getHttpClient().getConnectionManager().shutdown();
-//            request.getExecutor().close();
          }
          catch (Exception e)
          {
             throw new RuntimeException(e);
          }
-         IResourceHeaderPrimitiveSet setClient = ProxyFactory.create(IResourceHeaderPrimitiveSet.class,
-               generateBaseUrl());
+         finally
+         {
+            response.close();
+         }
+         ResteasyWebTarget target = (ResteasyWebTarget) client.target(generateBaseUrl());
+         IResourceHeaderPrimitiveSet setClient = target.proxy(IResourceHeaderPrimitiveSet.class);
          HashSet<String> set = new HashSet<String>();
          set.add("one");
          set.add("two");
@@ -1178,28 +1162,24 @@ public class HeaderParamsAsPrimitivesTest
       }
 
       {
-         ClientRequest request = new ClientRequest(generateURL("/sortedset"));
-         request.header(HttpHeaderNames.ACCEPT, "application/boolean");
-         request.header("header", "one");
-         request.header("header", "one");
-         request.header("header", "one");
-         request.header("header", "two");
-         ClientResponse<?> response;
+         Builder builder = client.target(generateURL("/sortedset")).request();
+         builder.header(HttpHeaderNames.ACCEPT, "application/boolean");
+         builder.header("header", "one").header("header", "one").header("header", "one").header("header", "two");
          try
          {
-            response = request.get();
+            response = builder.get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-           //response.releaseConnection();
-            ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-            executor.getHttpClient().getConnectionManager().shutdown();
-//            request.getExecutor().close();
          }
          catch (Exception e)
          {
             throw new RuntimeException(e);
-         };
-         IResourceHeaderPrimitiveSortedSet setClient = ProxyFactory.create(IResourceHeaderPrimitiveSortedSet.class,
-               generateBaseUrl());
+         }
+         finally
+         {
+            response.close();
+         }
+         ResteasyWebTarget target = (ResteasyWebTarget) client.target(generateBaseUrl());
+         IResourceHeaderPrimitiveSortedSet setClient = target.proxy(IResourceHeaderPrimitiveSortedSet.class);
          TreeSet<String> set = new TreeSet<String>();
          set.add("one");
          set.add("two");
@@ -1444,68 +1424,68 @@ public class HeaderParamsAsPrimitivesTest
    @Test
    public void testBadPrimitiveValue()
    {
-      ClientRequest request = new ClientRequest(generateURL("/"));
-      request.header(HttpHeaderNames.ACCEPT, "application/int");
-      request.header("int", "abcdef");
-      ClientResponse<?> response;
+      Response response = null;
+      Builder builder = client.target(generateURL("/")).request();
+      builder.header(HttpHeaderNames.ACCEPT, "application/int");
+      builder.header("int", "abcdef");
       try
       {
-         response = request.get();
+         response = builder.get();
          Assert.assertEquals(400, response.getStatus());
-        //response.releaseConnection();
-         ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-         executor.getHttpClient().getConnectionManager().shutdown();
-//         request.getExecutor().close();
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
+      }
+      finally
+      {
+         response.close();
       }
    }
 
    @Test
    public void testBadPrimitiveWrapperValue()
    {
-      ClientRequest request = new ClientRequest(generateURL("/wrappers"));
-      request.header(HttpHeaderNames.ACCEPT, "application/int");
-      request.header("int", "abcdef");
-      ClientResponse<?> response;
+      Builder builder = client.target(generateURL("/wrappers")).request();
+      builder.header(HttpHeaderNames.ACCEPT, "application/int");
+      builder.header("int", "abcdef");
+      Response response = null;
       try
       {
-         response = request.get();
+         response = builder.get();
          Assert.assertEquals(400, response.getStatus());
-        //response.releaseConnection();
-         ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-         executor.getHttpClient().getConnectionManager().shutdown();
-//         request.getExecutor().close();
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
       }  
+      finally
+      {
+         response.close();
+      }
    }
 
    @Test
    public void testBadPrimitiveListValue()
    {
-      ClientRequest request = new ClientRequest(generateURL("/list"));
-      request.header(HttpHeaderNames.ACCEPT, "application/int");
-      request.header("int", "abcdef");
-      request.header("int", "abcdef");
-      request.header("int", "abcdef");
-      ClientResponse<?> response;
+      Builder builder = client.target(generateURL("/list")).request();
+      builder.header(HttpHeaderNames.ACCEPT, "application/int");
+      builder.header("int", "abcdef");
+      builder.header("int", "abcdef");
+      builder.header("int", "abcdef");
+      Response response = null;
       try
       {
-         response = request.get();
+         response = builder.get();
          Assert.assertEquals(400, response.getStatus());
-        //response.releaseConnection();
-         ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-         executor.getHttpClient().getConnectionManager().shutdown();
-//         request.getExecutor().close();
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
+      }
+      finally
+      {
+         response.close();
       }
    }
 

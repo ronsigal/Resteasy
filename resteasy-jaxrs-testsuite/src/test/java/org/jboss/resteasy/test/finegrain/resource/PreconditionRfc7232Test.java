@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.finegrain.resource;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -15,6 +13,9 @@ import org.junit.Test;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.Request;
@@ -32,6 +33,7 @@ public class PreconditionRfc7232Test
 {
 
    private static Dispatcher dispatcher;
+   private static Client client;
 
    @BeforeClass
    public static void before() throws Exception
@@ -41,11 +43,13 @@ public class PreconditionRfc7232Test
 
       dispatcher = EmbeddedContainer.start(initParams).getDispatcher();
       dispatcher.getRegistry().addPerRequestResource(PrecedenceResource.class);
+      client = ClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
    }
 
@@ -67,142 +71,157 @@ public class PreconditionRfc7232Test
    @Test
    public void testPrecedence_AllMatch()
    {
-      ClientRequest request = new ClientRequest(generateURL("/precedence"));
-      request.header(HttpHeaderNames.IF_MATCH, "1");  // true
-      request.header(HttpHeaderNames.IF_UNMODIFIED_SINCE, "Mon, 1 Jan 2007 00:00:00 GMT");  // true
-      request.header(HttpHeaderNames.IF_NONE_MATCH, "2");  // true
-      request.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Sat, 30 Dec 2006 00:00:00 GMT"); // true
+      Builder builder = client.target(generateURL("/precedence")).request();
+      builder.header(HttpHeaderNames.IF_MATCH, "1");  // true
+      builder.header(HttpHeaderNames.IF_UNMODIFIED_SINCE, "Mon, 1 Jan 2007 00:00:00 GMT");  // true
+      builder.header(HttpHeaderNames.IF_NONE_MATCH, "2");  // true
+      builder.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Sat, 30 Dec 2006 00:00:00 GMT"); // true
+      Response response = null;
       try
       {
-         ClientResponse<?> response = request.get();
+         response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         shutdownConnections(request);
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
+      }
+      finally
+      {
+         response.close();
       }
    }
 
    @Test
    public void testPrecedence_IfMatchWithNonMatchingEtag()
    {
-      ClientRequest request = new ClientRequest(generateURL("/precedence"));
-      request.header(HttpHeaderNames.IF_MATCH, "2");  // false
-      request.header(HttpHeaderNames.IF_UNMODIFIED_SINCE, "Mon, 1 Jan 2007 00:00:00 GMT");  // true
-      request.header(HttpHeaderNames.IF_NONE_MATCH, "2");  // true
-      request.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Sat, 30 Dec 2006 00:00:00 GMT"); // true
+      Builder builder = client.target(generateURL("/precedence")).request();
+      builder.header(HttpHeaderNames.IF_MATCH, "2");  // false
+      builder.header(HttpHeaderNames.IF_UNMODIFIED_SINCE, "Mon, 1 Jan 2007 00:00:00 GMT");  // true
+      builder.header(HttpHeaderNames.IF_NONE_MATCH, "2");  // true
+      builder.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Sat, 30 Dec 2006 00:00:00 GMT"); // true
+      Response response = null;
       try
       {
-         ClientResponse<?> response = request.get();
+         response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_PRECONDITION_FAILED, response.getStatus());
-         shutdownConnections(request);
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
+      }
+      finally
+      {
+         response.close();
       }
    }
 
    @Test
    public void testPrecedence_IfMatchNotPresentUnmodifiedSinceBeforeLastModified()
    {
-      ClientRequest request = new ClientRequest(generateURL("/precedence"));
-      request.header(HttpHeaderNames.IF_UNMODIFIED_SINCE, "Sat, 30 Dec 2006 00:00:00 GMT"); //false
-      request.header(HttpHeaderNames.IF_NONE_MATCH, "2");  // true
-      request.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Sat, 30 Dec 2006 00:00:00 GMT"); // true
+      Builder builder = client.target(generateURL("/precedence")).request();
+      builder.header(HttpHeaderNames.IF_UNMODIFIED_SINCE, "Sat, 30 Dec 2006 00:00:00 GMT"); //false
+      builder.header(HttpHeaderNames.IF_NONE_MATCH, "2");  // true
+      builder.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Sat, 30 Dec 2006 00:00:00 GMT"); // true
+      Response response = null;
       try
       {
-         ClientResponse<?> response = request.get();
+         response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_PRECONDITION_FAILED, response.getStatus());
-         shutdownConnections(request);
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
+      }
+      finally
+      {
+         response.close();
       }
    }
 
    @Test
    public void testPrecedence_IfNoneMatchWithMatchingEtag()
    {
-      ClientRequest request = new ClientRequest(generateURL("/precedence"));
-      request.header(HttpHeaderNames.IF_NONE_MATCH, "1");  // true
-      request.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Mon, 1 Jan 2007 00:00:00 GMT");  // true
+      Builder builder = client.target(generateURL("/precedence")).request();
+      builder.header(HttpHeaderNames.IF_NONE_MATCH, "1");  // true
+      builder.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Mon, 1 Jan 2007 00:00:00 GMT");  // true
+      Response response = null;
       try
       {
-         ClientResponse<?> response = request.get();
+         response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_NOT_MODIFIED, response.getStatus());
-         shutdownConnections(request);
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
+      }
+      finally
+      {
+         response.close();
       }
    }
 
    @Test
    public void testPrecedence_IfNoneMatchWithNonMatchingEtag()
    {
-      ClientRequest request = new ClientRequest(generateURL("/precedence"));
-      request.header(HttpHeaderNames.IF_NONE_MATCH, "2");  // false
-      request.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Mon, 1 Jan 2007 00:00:00 GMT");  // true
+      Builder builder = client.target(generateURL("/precedence")).request();
+      builder.header(HttpHeaderNames.IF_NONE_MATCH, "2");  // false
+      builder.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Mon, 1 Jan 2007 00:00:00 GMT");  // true
+      Response response = null;
       try
       {
-         ClientResponse<?> response = request.get();
+         response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         shutdownConnections(request);
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
+      }
+      finally
+      {
+         response.close();
       }
    }
 
    @Test
    public void testPrecedence_IfNoneMatchNotPresent_IfModifiedSinceBeforeLastModified()
    {
-      ClientRequest request = new ClientRequest(generateURL("/precedence"));
-      request.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Sat, 30 Dec 2006 00:00:00 GMT"); // false
+      Builder builder = client.target(generateURL("/precedence")).request();
+      builder.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Sat, 30 Dec 2006 00:00:00 GMT"); // false
+      Response response = null;
       try
       {
-         ClientResponse<?> response = request.get();
+         response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         shutdownConnections(request);
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
+      }
+      finally
+      {
+         response.close();
       }
    }
 
    @Test
    public void testPrecedence_IfNoneMatchNotPresent_IfModifiedSinceAfterLastModified()
    {
-      ClientRequest request = new ClientRequest(generateURL("/precedence"));
-      request.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Tue, 2 Jan 2007 00:00:00 GMT");  // true
+      Builder builder = client.target(generateURL("/precedence")).request();
+      builder.header(HttpHeaderNames.IF_MODIFIED_SINCE, "Tue, 2 Jan 2007 00:00:00 GMT");  // true
+      Response response = null;
       try
       {
-         ClientResponse<?> response = request.get();
+         response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_NOT_MODIFIED, response.getStatus());
-         shutdownConnections(request);
       }
       catch (Exception e)
       {
          throw new RuntimeException(e);
       }
-   }
-
-   private void shutdownConnections(ClientRequest request)
-   {
-      ApacheHttpClient4Executor executor = (ApacheHttpClient4Executor) request.getExecutor();
-      executor.getHttpClient().getConnectionManager().shutdown();
-//      try
-//      {
-//         request.getExecutor().close();
-//      } catch (Exception e)
-//      {
-//         throw new RuntimeException(e);
-//      }
+      finally
+      {
+         response.close();
+      }
    }
 }

@@ -1,7 +1,6 @@
 package org.jboss.resteasy.test.finegrain.application;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.HttpResponseCodes;
@@ -14,10 +13,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
@@ -33,6 +35,8 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
  */
 public class ApplicationConfigTest
 {
+   private static Client client;
+   
    @Path("/myinterface")
    public static interface MyInterface
    {
@@ -130,25 +134,32 @@ public class ApplicationConfigTest
       ResteasyDeployment deployment = new ResteasyDeployment();
       deployment.setApplicationClass("org.jboss.resteasy.test.finegrain.application.MyApplicationConfig");
       EmbeddedContainer.start(deployment);
+      client = ResteasyClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
    }
 
    private void _test(String uri, String body)
    {
       {
-         ClientRequest request = new ClientRequest(uri);
+         WebTarget target = client.target(uri);
+         Response response = null;
          try
          {
-            ClientResponse<String> response = request.get(String.class);
+            response = target.request().get();
             Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
          } catch (Exception e)
          {
             throw new RuntimeException(e);
+         }
+         finally
+         {
+            response.close();
          }
       }
    }

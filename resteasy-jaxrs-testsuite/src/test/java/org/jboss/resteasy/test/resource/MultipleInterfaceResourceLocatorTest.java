@@ -3,9 +3,10 @@ package org.jboss.resteasy.test.resource;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.junit.After;
@@ -79,16 +80,17 @@ public class MultipleInterfaceResourceLocatorTest
    @Test
    public void test() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/test/hello1/"));
-      ClientResponse<String> response = request.get(String.class);
-      System.out.println("Received first response: " + response.getEntity());
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/test"));
+      Response response = target.path("/hello1/").request().get();
+      String entity = response.readEntity(String.class);
+      System.out.println("Received first response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("resourceMethod1", response.getEntity());
+      Assert.assertEquals("resourceMethod1", entity);
 
-      request = new ClientRequest("http://localhost:8081/test/hello2/");
-      response = request.get(String.class);
-      System.out.println("Received second response: " + response.getEntity());
+      response = target.path("/hello2/").request().get();
+      entity = response.readEntity(String.class);
+      System.out.println("Received second response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("resourceMethod2", response.getEntity());
+      Assert.assertEquals("resourceMethod2", entity);
    }
 }

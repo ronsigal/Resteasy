@@ -1,7 +1,6 @@
 package com.restfully.shop.test;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -10,6 +9,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 
 /**
@@ -26,7 +31,8 @@ public class CustomerResourceTest
    @Test
    public void testMethodNotFound() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:9095/customers");
+      Client client = ResteasyClientBuilder.newClient();
+      WebTarget target = client.target("http://localhost:9095/customers");
 
       String newCustomer = "<customer>"
               + "<first-name>Bill</first-name>"
@@ -37,8 +43,7 @@ public class CustomerResourceTest
               + "<zip>02115</zip>"
               + "<country>USA</country>"
               + "</customer>";
-      request.body("application/xml", newCustomer);
-      ClientResponse response = request.put();
+      Response response = target.request().put(Entity.entity(newCustomer, MediaType.APPLICATION_XML));
       Assert.assertEquals(405, response.getStatus());
 
    }
@@ -46,10 +51,11 @@ public class CustomerResourceTest
    @Test
    public void testStaticResource() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:9095/foo.html");
-      String target = request.getTarget(String.class);
-      Assert.assertNotNull(target);
-      Assert.assertTrue(target.indexOf("hello world") > -1);
+      Client client = ResteasyClientBuilder.newClient();
+      WebTarget target = client.target("http://localhost:9095/foo.html");
+      String response = target.request().get(String.class);
+      Assert.assertNotNull(response);
+      Assert.assertTrue(response.indexOf("hello world") > -1);
 
    }
 

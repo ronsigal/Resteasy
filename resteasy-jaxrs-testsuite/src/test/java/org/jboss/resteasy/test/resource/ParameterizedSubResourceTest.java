@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.resource;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.HttpResponseCodes;
@@ -17,6 +15,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -29,6 +32,7 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 public class ParameterizedSubResourceTest
 {
    private static Dispatcher dispatcher;
+   private static Client client;
 
    @BeforeClass
    public static void before() throws Exception
@@ -36,11 +40,13 @@ public class ParameterizedSubResourceTest
       dispatcher = EmbeddedContainer.start().getDispatcher();
       dispatcher.getRegistry().addPerRequestResource(RootImpl.class);
       dispatcher.getRegistry().addPerRequestResource(GenericSub.class);
+      client = ClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
    }
 
@@ -148,13 +154,12 @@ public class ParameterizedSubResourceTest
    @Test
    public void test()
    {
-      ClientRequest request = new ClientRequest(generateURL("/path/sub/fred"));
-      ClientResponse<String> response = null;
       try
       {
-         response = request.get(String.class);
+         Builder builder = client.target(generateURL("/path/sub/fred")).request();
+         Response response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         Assert.assertEquals("Boo! - fred", response.getEntity());
+         Assert.assertEquals("Boo! - fred", response.readEntity(String.class));
       }
 
       catch (Exception e)
@@ -167,13 +172,12 @@ public class ParameterizedSubResourceTest
    @Test
    public void test2()
    {
-      ClientRequest request = new ClientRequest(generateURL("/generic/sub"));
-      ClientResponse<String> response = null;
       try
       {
-         response = request.queryParameter("foo", "42.0").get(String.class);
+         WebTarget target = client.target(generateURL("/generic/sub"));
+         Response response = target.queryParam("foo", "42.0").request().get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         Assert.assertEquals("42.0", response.getEntity());
+         Assert.assertEquals("42.0", response.readEntity(String.class));
       }
 
       catch (Exception e)

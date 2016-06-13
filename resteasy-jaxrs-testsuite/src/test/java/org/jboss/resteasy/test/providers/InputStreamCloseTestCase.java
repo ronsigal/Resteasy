@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.providers;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.junit.After;
@@ -12,6 +10,8 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -91,19 +91,21 @@ public class InputStreamCloseTestCase
    @Test
    public void test() throws Exception
    {
+      Client client = ClientBuilder.newClient();
+      
       // Resource creates and returns InputStream.
-      ClientRequest request = new ClientRequest("http://localhost:8081/create/");
       System.out.println("Sending create request");
-      ClientResponse<?> response = request.get(String.class);
-      System.out.println("Received response: " + response.getEntity());
+      Response response = client.target("http://localhost:8081/create/").request().get();
+      String entity = response.readEntity(String.class);
+      System.out.println("Received response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals("hello", response.getEntity());
+      Assert.assertEquals("hello", entity);
       
       // Verify previously created InputStream has been closed.
-      request = new ClientRequest("http://localhost:8081/test/");
       System.out.println("Sending test request");
-      response = request.get();
+      response = client.target("http://localhost:8081/test/").request().get();
       System.out.println("Test status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
+      response.close();
    }
 }

@@ -1,6 +1,5 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.ResourceFactory;
@@ -13,6 +12,8 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
@@ -111,13 +112,11 @@ public class LazyInitUriInfoInjectionTest extends BaseResourceTest
    @Test
    public void testDup() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/test"));
-      request.queryParameter("h", "world");
-      String val = request.getTarget(String.class);
+      WebTarget target = ClientBuilder.newClient().target(generateURL("/test"));
+      String val = target.queryParam("h", "world").request().get(String.class);
       Assert.assertEquals(val, "world");
 
-      request = new ClientRequest(generateURL("/test"));
-      val = request.getTarget(String.class);
+      val = target.request().get(String.class);
       Assert.assertEquals(val, "");
 
 

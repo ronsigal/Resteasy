@@ -1,22 +1,19 @@
 package org.jboss.resteasy.test.interceptors;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.core.ResourceMethodInvoker;
-import org.jboss.resteasy.core.ServerResponse;
-import org.jboss.resteasy.spi.Failure;
-import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -31,10 +28,12 @@ public class PreProcessorExceptionMapperTest extends BaseResourceTest
 {
    public static class CandlepinException extends RuntimeException
    {
+      private static final long serialVersionUID = 1L;
    }
 
    public static class CandlepinUnauthorizedException extends CandlepinException
    {
+      private static final long serialVersionUID = 1L;
    }
 
 
@@ -48,9 +47,10 @@ public class PreProcessorExceptionMapperTest extends BaseResourceTest
    }
 
    @Provider
-   public static class PreProcessSecurityInterceptor implements PreProcessInterceptor
+   public static class PreProcessSecurityFilter implements ContainerRequestFilter
    {
-      public ServerResponse preProcess(HttpRequest request, ResourceMethodInvoker method) throws Failure, WebApplicationException
+      @Override
+      public void filter(ContainerRequestContext requestContext) throws IOException
       {
          throw new CandlepinUnauthorizedException();
       }
@@ -70,7 +70,7 @@ public class PreProcessorExceptionMapperTest extends BaseResourceTest
    @Before
    public void setUp() throws Exception
    {
-      deployment.getProviderFactory().registerProvider(PreProcessSecurityInterceptor.class);
+      deployment.getProviderFactory().registerProvider(PreProcessSecurityFilter.class);
       deployment.getProviderFactory().registerProvider(RuntimeExceptionMapper.class);
       addPerRequestResource(MyResource.class);
    }
@@ -78,9 +78,9 @@ public class PreProcessorExceptionMapperTest extends BaseResourceTest
    @Test
    public void testMapper() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/interception"));
-      ClientResponse res = request.get();
+      Response res = ClientBuilder.newClient().target(TestPortProvider.generateURL("/interception")).request().get();
       Assert.assertEquals(412, res.getStatus());
+      res.close();
 
    }
 

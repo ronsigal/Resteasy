@@ -1,6 +1,6 @@
 package org.jboss.resteasy.test.finegrain.methodparams;
 
-import org.jboss.resteasy.client.ClientRequest;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
@@ -11,6 +11,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
+
 import java.util.List;
 
 /**
@@ -44,8 +47,8 @@ public class CollectionDefaultValueTest extends BaseResourceTest
    @Test
    public void testEmpty() throws Exception
    {
-      ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/collection"));
-      Assert.assertEquals(200, request.get().getStatus());
+      Builder builder = ResteasyClientBuilder.newClient().target(TestPortProvider.generateURL("/collection")).request();
+      Assert.assertEquals(200, builder.get().getStatus());
    }
 
 }

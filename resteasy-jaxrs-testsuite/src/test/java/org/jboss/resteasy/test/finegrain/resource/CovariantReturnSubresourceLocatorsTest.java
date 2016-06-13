@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.finegrain.resource;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.HttpResponseCodes;
@@ -14,6 +12,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
@@ -75,13 +76,12 @@ public class CovariantReturnSubresourceLocatorsTest
 
 	private void _test(String path, String body)
 	{
-	   ClientRequest request = new ClientRequest(generateURL(path));
-	   ClientResponse<String> response = null;
+	   Builder builder = ClientBuilder.newClient().target(generateURL(path)).request();
 	   try
 	   {
-	      response = request.get(String.class);
+	      Response response = builder.get();
 	      Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-	      Assert.assertEquals(body, response.getEntity());
+	      Assert.assertEquals(body, response.readEntity(String.class));
 	   }
 	   catch (Exception e)
        {

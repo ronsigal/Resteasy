@@ -3,8 +3,6 @@
  */
 package org.jboss.resteasy.test.providers.iioimage;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.LocateTestData;
 import org.junit.Assert;
@@ -12,6 +10,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -60,20 +62,18 @@ public class TestIIOImageProvider extends BaseResourceTest
    @Test
    public void testPostJPEGIMage() throws Exception
    {
-      ClientRequest request = new ClientRequest(TEST_URI);
       //File file = new File(SRC_ROOT + "harper.jpg");
       File file = LocateTestData.getTestData("harper.png");
       Assert.assertTrue(file.exists());
-      request.body("image/png", file);
-      ClientResponse<InputStream> response = request.post(InputStream.class);
+      Response response = ClientBuilder.newClient().target(TEST_URI).request().post(Entity.entity(file, "image/png"));
       Assert.assertEquals(HttpServletResponse.SC_OK, response.getStatus()); 
-      String contentType = response.getResponseHeaders().getFirst("content-type");
+      String contentType = response.getHeaderString("content-type");
       Assert.assertEquals("image/png", contentType);
       
-      BufferedInputStream in = new BufferedInputStream(response.getEntity()); 
+      BufferedInputStream in = new BufferedInputStream(response.readEntity(InputStream.class));
       ByteArrayOutputStream fromServer = new ByteArrayOutputStream();
       writeTo(in, fromServer);
-      response.releaseConnection();
+      response.close();
       File savedPng = LocateTestData.getTestData("harper.png");
       FileInputStream fis = new FileInputStream(savedPng);
       ByteArrayOutputStream fromTestData = new ByteArrayOutputStream();
@@ -98,14 +98,12 @@ public class TestIIOImageProvider extends BaseResourceTest
    @Test
    public void testPostUnsupportedImage() throws Exception
    {
-      ClientRequest request = new ClientRequest(TEST_URI);
       //File file = new File("image/png");
       File file = LocateTestData.getTestData("harper.wdp");
       Assert.assertTrue(file.exists());
-      request.body("image/vnd.ms-photo", file);
-      ClientResponse<?> response = request.post();
+      Response response = ClientBuilder.newClient().target(TEST_URI).request().post(Entity.entity(file, "image/vnd.ms-photo"));
       Assert.assertEquals(HttpServletResponse.SC_NOT_ACCEPTABLE, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 
    public void writeTo(final InputStream in, final OutputStream out) throws IOException

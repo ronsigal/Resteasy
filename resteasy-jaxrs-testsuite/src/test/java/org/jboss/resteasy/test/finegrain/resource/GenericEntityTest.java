@@ -1,7 +1,5 @@
 package org.jboss.resteasy.test.finegrain.resource;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.test.EmbeddedContainer;
@@ -15,6 +13,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -38,6 +39,7 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 public class GenericEntityTest
 {
    private static Dispatcher dispatcher;
+   private static Client client;
 
    @Path("/")
    public static class GenericResource
@@ -149,23 +151,25 @@ public class GenericEntityTest
       dispatcher.getRegistry().addPerRequestResource(GenericResource.class);
       ResteasyProviderFactory.getInstance().registerProvider(DoubleWriter.class);
       ResteasyProviderFactory.getInstance().registerProvider(FloatWriter.class);
+      client = ClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
       EmbeddedContainer.stop();
    }
 
    @Test
    public void testDoubles()
    {
-      ClientRequest request = new ClientRequest(generateURL("/doubles"));
+      Builder builder = client.target(generateURL("/doubles")).request();
       try
       {
-         ClientResponse<String> response = request.get(String.class);
+         Response response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         String body = response.getEntity();
+         String body = response.readEntity(String.class);
          Assert.assertEquals("45.0D 50.0D ", body);
          System.out.println(body);
       }
@@ -178,12 +182,12 @@ public class GenericEntityTest
    @Test
    public void testFloats()
    {
-      ClientRequest request = new ClientRequest(generateURL("/floats"));
+      Builder builder = client.target(generateURL("/floats")).request();
       try
       {
-         ClientResponse<String> response = request.get(String.class);
+         Response response = builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         String body = response.getEntity();
+         String body = response.readEntity(String.class);
          Assert.assertEquals("45.0F 50.0F ", body);
          System.out.println(body);
       }

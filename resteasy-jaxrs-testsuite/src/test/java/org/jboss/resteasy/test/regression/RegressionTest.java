@@ -1,8 +1,7 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ProxyFactory;
+import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
+import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.plugins.providers.DefaultTextPlain;
 import org.jboss.resteasy.plugins.providers.ProviderHelper;
@@ -23,6 +22,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -46,15 +48,18 @@ import static org.jboss.resteasy.test.TestPortProvider.*;
 public class RegressionTest
 {
    private static Dispatcher dispatcher;
+   private static Client client;
 
    @BeforeClass
    public static void before() throws Exception
    {
+      client = ClientBuilder.newClient();
    }
 
    @AfterClass
    public static void after() throws Exception
    {
+      client.close();
    }
 
    public static class Customer
@@ -135,11 +140,11 @@ public class RegressionTest
    {
       @Path("/implicit")
       @DELETE
-      ClientResponse<String> deleteCustomer();
+      ClientResponse deleteCustomer();
 
       @Path("/complex")
       @DELETE
-      ClientResponse<String> deleteComplex();
+      ClientResponse deleteComplex();
    }
 
    @Provider
@@ -177,21 +182,22 @@ public class RegressionTest
       dispatcher = EmbeddedContainer.start().getDispatcher();
       dispatcher.getProviderFactory().registerProvider(CustomerWriter.class);
       dispatcher.getRegistry().addPerRequestResource(SimpleResource.class);
-      ClientResponse<?> response = null;
+      ClientResponse response = null;
       try
       {
-         ClientRequest request = new ClientRequest(generateURL("/implicit"));
-         response = request.get();
+         Builder builder = client.target(generateURL("/implicit")).request();
+         response = (ClientResponse) builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         Assert.assertEquals("application/xml", response.getResponseHeaders().getFirst("content-type"));
-         String s = new String(response.getEntity(byte[].class), "US-ASCII");
+         Assert.assertEquals("application/xml", response.getHeaderString("content-type"));
+         String s = new String(response.readEntity(byte[].class), "US-ASCII");
          Assert.assertEquals("<customer><name>bill</name></customer>", s);
 
-         response = request.delete();
+         response = (ClientResponse) builder.delete();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
          response.releaseConnection();
-
-         SimpleClient proxy = ProxyFactory.create(SimpleClient.class, generateBaseUrl());
+         
+         ResteasyWebTarget target = (ResteasyWebTarget) client.target(generateBaseUrl());
+         SimpleClient proxy = target.proxy(SimpleClient.class);
          response = proxy.deleteCustomer();
          response.releaseConnection();
 
@@ -217,11 +223,10 @@ public class RegressionTest
       dispatcher.getRegistry().addPerRequestResource(SimpleResource.class);
       try
       {
-         ClientRequest request = new ClientRequest(generateURL("/simple"));
-         ClientResponse<byte[]> response = request.get(byte[].class);
+         ClientResponse response = (ClientResponse) client.target(generateURL("/simple")).request().get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         Assert.assertEquals("text/plain", response.getResponseHeaders().getFirst("content-type"));
-         String s = new String(response.getEntity(), "US-ASCII");
+         Assert.assertEquals("text/plain", response.getHeaderString("content-type"));
+         String s = new String(response.readEntity(String.class).getBytes(), "US-ASCII");
          Assert.assertEquals("hello world", s);
          EmbeddedContainer.stop();
       }
@@ -255,11 +260,11 @@ public class RegressionTest
 
       try
       {
-         ClientRequest request = new ClientRequest(generateURL("/string"));
-         ClientResponse<String> response = request.get(String.class);
+         Builder builder = client.target(generateURL("/string")).request();
+         ClientResponse response = (ClientResponse) builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
-         Assert.assertEquals("text/plain", response.getResponseHeaders().getFirst("content-type"));
-         Assert.assertEquals("hello world", response.getEntity());
+         Assert.assertEquals("text/plain", response.getHeaderString("content-type"));
+         Assert.assertEquals("hello world", response.readEntity(String.class));
          Assert.assertTrue(TestReaderWriter.used);
       }
       finally
@@ -335,11 +340,11 @@ public class RegressionTest
       dispatcher.getRegistry().addPerRequestResource(SimpleResource.class);
       try
       {
-         ClientRequest request = new ClientRequest(generateURL("/complex"));
-         ClientResponse<byte[]> response = request.get(byte[].class);
+         Builder builder = client.target(generateURL("/complex")).request();
+         ClientResponse response = (ClientResponse) builder.get();
          Assert.assertEquals(HttpResponseCodes.SC_FOUND, response.getStatus());
-         Assert.assertEquals(response.getResponseHeaders().getFirst("content-type"), "text/plain");
-         byte[] responseBody = response.getEntity();
+         Assert.assertEquals(response.getHeaderString("content-type"), "text/plain");
+         byte[] responseBody = response.readEntity(byte[].class);
          String responseString = new String(responseBody, "US-ASCII");
          Assert.assertEquals("hello world", responseString);
       }
@@ -355,7 +360,7 @@ public class RegressionTest
    {
       @GET
       @Produces("text/plain")
-      public ClientResponse<String> read();
+      public ClientResponse read();
    }
 
    /**
@@ -367,7 +372,8 @@ public class RegressionTest
       dispatcher = EmbeddedContainer.start().getDispatcher();
       try
       {
-         NowhereClient client = ProxyFactory.create(NowhereClient.class, generateBaseUrl());
+         ResteasyWebTarget target = (ResteasyWebTarget) client.target(generateBaseUrl());
+         NowhereClient client = target.proxy(NowhereClient.class);
          client.read();
       }
       finally
@@ -409,8 +415,8 @@ public class RegressionTest
       dispatcher.getRegistry().addPerRequestResource(Spaces.class);
       try
       {
-         ClientRequest request = new ClientRequest(generateURL("/spaces/with%20spaces/without"));
-         ClientResponse<?> response = request.get();
+         Builder builder = client.target(generateURL("/spaces/with%20spaces/without")).request();
+         ClientResponse response = (ClientResponse) builder.get();
          Assert.assertEquals(200, response.getStatus());
          response.releaseConnection();
       }
@@ -443,8 +449,8 @@ public class RegressionTest
       dispatcher.getRegistry().addPerRequestResource(CurlyBraces.class);
       try
       {
-         ClientRequest request = new ClientRequest(generateURL("/curly/abcd"));
-         ClientResponse<?> response = request.get();
+         Builder builder = client.target(generateURL("/curly/abcd")).request();
+         ClientResponse response = (ClientResponse) builder.get();
          Assert.assertEquals(200, response.getStatus());
          response.releaseConnection();
       }

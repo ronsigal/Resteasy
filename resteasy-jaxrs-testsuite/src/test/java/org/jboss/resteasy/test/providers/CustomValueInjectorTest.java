@@ -1,22 +1,26 @@
 package org.jboss.resteasy.test.providers;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.core.executors.InMemoryClientExecutor;
+import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.core.InjectorFactoryImpl;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.core.ValueInjector;
 import org.jboss.resteasy.plugins.providers.StringTextStar;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
+import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.metadata.Parameter;
+import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.util.FindAnnotation;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -25,9 +29,27 @@ import java.lang.annotation.Target;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Type;
 
-@SuppressWarnings("unchecked")
 public class CustomValueInjectorTest
 {
+   protected static ResteasyDeployment deployment;
+   protected static Dispatcher dispatcher;
+
+   @BeforeClass
+   public static void before() throws Exception
+   {
+      deployment = EmbeddedContainer.start();
+      dispatcher = deployment.getDispatcher();
+      dispatcher.getProviderFactory().registerProvider(MyInjectorFactoryImpl.class);
+      dispatcher.getRegistry().addPerRequestResource(HelloResource.class);
+   }
+
+   @AfterClass
+   public static void after() throws Exception
+   {
+      EmbeddedContainer.stop();
+      dispatcher = null;
+      deployment = null;
+   }
 
    @Target(ElementType.PARAMETER)
    @Retention(RetentionPolicy.RUNTIME)
@@ -50,10 +72,7 @@ public class CustomValueInjectorTest
    @Test
    public void testCustomInjectorFactory() throws Exception
    {
-      InMemoryClientExecutor executor = new InMemoryClientExecutor(initializeDispatcher());
-      executor.getRegistry().addPerRequestResource(HelloResource.class);
-
-      Object result = new ClientRequest("/", executor).get().getEntity(String.class);
+      Object result = ClientBuilder.newClient().target("http://localhost:8081").request().get().readEntity(String.class);
       Assert.assertEquals("world", result);
    }
 

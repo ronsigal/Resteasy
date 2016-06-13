@@ -1,6 +1,7 @@
 package org.jboss.resteasy.test.finegrain;
 
 import org.jboss.resteasy.client.ClientRequest;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -9,8 +10,11 @@ import org.junit.Test;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -53,9 +57,9 @@ public class AcceptLanguagesTest extends BaseResourceTest
    @Test
    public void testMe() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateURL("/lang"));
-      request.header("Accept-Language", "en-US;q=0,en;q=0.8,de-AT,de;q=0.9");
-      Assert.assertEquals(request.get().getStatus(), 200);
+      WebTarget target = ResteasyClientBuilder.newClient().target(generateURL("/lang"));
+      Response response = target.request().acceptLanguage("en-US;q=0,en;q=0.8,de-AT,de;q=0.9").get();
+      Assert.assertEquals(response.getStatus(), 200);
 
    }
 

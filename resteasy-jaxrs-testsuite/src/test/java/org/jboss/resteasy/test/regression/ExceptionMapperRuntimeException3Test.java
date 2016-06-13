@@ -1,8 +1,5 @@
 package org.jboss.resteasy.test.regression;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -12,6 +9,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
@@ -63,10 +61,10 @@ public class ExceptionMapperRuntimeException3Test extends BaseResourceTest
    @Test
    public void testWebAPplicationException() throws Exception
    {
-      ClientRequest request = new ClientRequest(generateBaseUrl() + "/test");
-      ClientResponse response = request.get();
+      Response response = ClientBuilder.newClient().target(generateBaseUrl() + "/test").request().get();
       Assert.assertEquals(Response.Status.PRECONDITION_FAILED.getStatusCode(), response.getStatus());
-      Assert.assertEquals(response.getResponseHeaders().getFirst("custom"), "header");
+      Assert.assertEquals(response.getHeaderString("custom"), "header");
+      response.close();
    }
 
 }
