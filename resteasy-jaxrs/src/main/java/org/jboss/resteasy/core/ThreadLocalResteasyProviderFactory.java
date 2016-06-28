@@ -1,6 +1,5 @@
 package org.jboss.resteasy.core;
 
-import org.jboss.resteasy.client.exception.mapper.ClientExceptionMapper;
 import org.jboss.resteasy.core.interception.ClientResponseFilterRegistry;
 import org.jboss.resteasy.core.interception.ContainerRequestFilterRegistry;
 import org.jboss.resteasy.core.interception.ContainerResponseFilterRegistry;
@@ -135,12 +134,6 @@ public class ThreadLocalResteasyProviderFactory extends ResteasyProviderFactory 
    }
 
    @Override
-   public <T extends Throwable> ClientExceptionMapper<T> getClientExceptionMapper(Class<T> type)
-   {
-      return getDelegate().getClientExceptionMapper(type);
-   }
-
-   @Override
    public Set<Class<?>> getFeatureClasses()
    {
       return getDelegate().getFeatureClasses();
@@ -162,12 +155,6 @@ public class ThreadLocalResteasyProviderFactory extends ResteasyProviderFactory 
    public Set<DynamicFeature> getClientDynamicFeatures()
    {
       return getDelegate().getClientDynamicFeatures();
-   }
-
-   @Override
-   public void addClientExceptionMapper(Class<? extends ClientExceptionMapper<?>> providerClass)
-   {
-      getDelegate().addClientExceptionMapper(providerClass);
    }
 
    @Override
@@ -193,13 +180,7 @@ public class ThreadLocalResteasyProviderFactory extends ResteasyProviderFactory 
    {
       getDelegate().registerProviderInstance(provider);
    }
-
-   @Override
-   public void addClientExceptionMapper(ClientExceptionMapper<?> provider, Type exceptionType)
-   {
-      getDelegate().addClientExceptionMapper(provider, exceptionType);
-   }
-
+   
    @Override
    public <T> StringParameterUnmarshaller<T> createStringParameterUnmarshaller(Class<T> clazz)
    {
@@ -210,12 +191,6 @@ public class ThreadLocalResteasyProviderFactory extends ResteasyProviderFactory 
    public Set<Object> getFeatureInstances()
    {
       return getDelegate().getFeatureInstances();
-   }
-
-   @Override
-   public void addClientExceptionMapper(ClientExceptionMapper<?> provider)
-   {
-      getDelegate().addClientExceptionMapper(provider);
    }
 
    @Override
@@ -312,12 +287,6 @@ public class ThreadLocalResteasyProviderFactory extends ResteasyProviderFactory 
    public Collection<String> getPropertyNames()
    {
       return getDelegate().getPropertyNames();
-   }
-
-   @Override
-   public void addClientExceptionMapper(ClientExceptionMapper<?> provider, Class<?> providerClass)
-   {
-      getDelegate().addClientExceptionMapper(provider, providerClass);
    }
 
    @Override

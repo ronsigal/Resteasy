@@ -1,6 +1,5 @@
 package org.jboss.resteasy.spi;
 
-import org.jboss.resteasy.client.exception.mapper.ClientExceptionMapper;
 import org.jboss.resteasy.core.InjectorFactoryImpl;
 import org.jboss.resteasy.core.MediaTypeMap;
 import org.jboss.resteasy.core.interception.ClientResponseFilterRegistry;
@@ -143,7 +142,6 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
    protected MediaTypeMap<SortedKey<MessageBodyReader>> clientMessageBodyReaders;
    protected MediaTypeMap<SortedKey<MessageBodyWriter>> clientMessageBodyWriters;
    protected Map<Class<?>, ExceptionMapper> exceptionMappers;
-   protected Map<Class<?>, ClientExceptionMapper> clientExceptionMappers;
    protected Map<Class<?>, MediaTypeMap<SortedKey<ContextResolver>>> contextResolvers;
    protected List<ParamConverterProvider> paramConverterProviders;
    protected Map<Class<?>, Class<? extends StringParameterUnmarshaller>> stringParameterUnmarshallers;
@@ -242,7 +240,6 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
       clientMessageBodyReaders = new MediaTypeMap<SortedKey<MessageBodyReader>>();
       clientMessageBodyWriters = new MediaTypeMap<SortedKey<MessageBodyWriter>>();
       exceptionMappers = new ConcurrentHashMap<Class<?>, ExceptionMapper>();
-      clientExceptionMappers = new ConcurrentHashMap<Class<?>, ClientExceptionMapper>();
       contextResolvers = new ConcurrentHashMap<Class<?>, MediaTypeMap<SortedKey<ContextResolver>>>();
       paramConverterProviders = new CopyOnWriteArrayList<ParamConverterProvider>();
       stringParameterUnmarshallers = new ConcurrentHashMap<Class<?>, Class<? extends StringParameterUnmarshaller>>();
@@ -318,12 +315,6 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
    {
       if (exceptionMappers == null && parent != null) return parent.getExceptionMappers();
       return exceptionMappers;
-   }
-
-   protected Map<Class<?>, ClientExceptionMapper> getClientExceptionMappers()
-   {
-      if (clientExceptionMappers == null && parent != null) return parent.getClientExceptionMappers();
-      return clientExceptionMappers;
    }
 
    protected Map<Class<?>, MediaTypeMap<SortedKey<ContextResolver>>> getContextResolvers()
@@ -939,41 +930,6 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
       exceptionMappers.put(exceptionClass, provider);
    }
 
-
-   public void addClientExceptionMapper(Class<? extends ClientExceptionMapper<?>> providerClass)
-   {
-      ClientExceptionMapper<?> provider = createProviderInstance(providerClass);
-      addClientExceptionMapper(provider, providerClass);
-   }
-
-   public void addClientExceptionMapper(ClientExceptionMapper<?> provider)
-   {
-      addClientExceptionMapper(provider, provider.getClass());
-   }
-
-   public void addClientExceptionMapper(ClientExceptionMapper<?> provider, Class<?> providerClass)
-   {
-      Type exceptionType = Types.getActualTypeArgumentsOfAnInterface(providerClass, ClientExceptionMapper.class)[0];
-      addClientExceptionMapper(provider, exceptionType);
-   }
-
-   public void addClientExceptionMapper(ClientExceptionMapper<?> provider, Type exceptionType)
-   {
-      injectProperties(provider.getClass());
-
-      Class<?> exceptionClass = Types.getRawType(exceptionType);
-      if (!Throwable.class.isAssignableFrom(exceptionClass))
-      {
-         throw new RuntimeException(Messages.MESSAGES.incorrectTypeParameterClientExceptionMapper());
-      }
-      if (clientExceptionMappers == null)
-      {
-         clientExceptionMappers = new ConcurrentHashMap<Class<?>, ClientExceptionMapper>();
-         clientExceptionMappers.putAll(parent.getClientExceptionMappers());
-      }
-      clientExceptionMappers.put(exceptionClass, provider);
-   }
-
    protected void addContextResolver(Class<? extends ContextResolver> resolver, boolean builtin)
    {
       ContextResolver writer = createProviderInstance(resolver);
@@ -1256,18 +1212,6 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
             throw new RuntimeException(Messages.MESSAGES.unableToInstantiateExceptionMapper(), e);
          }
       }
-      if (isA(provider, ClientExceptionMapper.class, contracts))
-      {
-         try
-         {
-            addClientExceptionMapper(provider);
-            newContracts.put(ClientExceptionMapper.class, getPriority(priorityOverride, contracts, ClientExceptionMapper.class, provider));
-         }
-         catch (Exception e)
-         {
-            throw new RuntimeException(Messages.MESSAGES.unableToInstantiateClientExceptionMapper(), e);
-         }
-      }
       if (isA(provider, ClientRequestFilter.class, contracts))
       {
          if (clientRequestFilters == null)
@@ -1536,18 +1480,6 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
             throw new RuntimeException(Messages.MESSAGES.unableToInstantiateExceptionMapper(), e);
          }
       }
-      if (isA(provider, ClientExceptionMapper.class, contracts))
-      {
-         try
-         {
-            addClientExceptionMapper((ClientExceptionMapper) provider);
-            newContracts.put(ClientExceptionMapper.class, 0);
-         }
-         catch (Exception e)
-         {
-            throw new RuntimeException(Messages.MESSAGES.unableToInstantiateExceptionMapper(), e);
-         }
-      }
       if (isA(provider, ContextResolver.class, contracts))
       {
          try
@@ -1741,11 +1673,6 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
          if (mapper == null) exceptionType = exceptionType.getSuperclass();
       }
       return mapper;
-   }
-
-   public <T extends Throwable> ClientExceptionMapper<T> getClientExceptionMapper(Class<T> type)
-   {
-      return getClientExceptionMappers().get(type);
    }
 
    public MediaType getConcreteMediaTypeFromMessageBodyWriters(Class type, Type genericType, Annotation[] annotations, MediaType mediaType)
