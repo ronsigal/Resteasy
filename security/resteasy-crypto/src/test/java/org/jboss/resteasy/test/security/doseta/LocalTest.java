@@ -1,6 +1,5 @@
 package org.jboss.resteasy.test.security.doseta;
 
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.security.doseta.DKIMSignature;
 import org.jboss.resteasy.security.doseta.DosetaKeyRepository;
 import org.jboss.resteasy.security.doseta.Verification;
@@ -31,7 +30,6 @@ public class LocalTest
    @BeforeClass
    public static void setup() throws Exception
    {
-      Logger.setLoggerType(Logger.LoggerType.JUL);
       repository = new DosetaKeyRepository();
       repository.setKeyStorePath("test.jks");
       repository.setKeyStorePassword("password");

@@ -1,7 +1,7 @@
 package org.jboss.resteasy.test.providers.jaxb;
 
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.plugins.providers.jaxb.XmlNamespacePrefixMapper;
+import org.jboss.resteasy.plugins.providers.jaxb.i18n.LogMessages;
 import org.jboss.resteasy.test.providers.jaxb.generated.po.Item;
 import org.jboss.resteasy.test.providers.jaxb.generated.po.Items;
 import org.jboss.resteasy.test.providers.jaxb.generated.po.ObjectFactory;
@@ -22,9 +22,7 @@ import java.math.BigDecimal;
  */
 public class TestJAXBNamespacePrefix
 {
-
-   private static final Logger logger = Logger.getLogger(TestJAXBNamespacePrefix.class);
-
+   
    @Test
    public void testNamespacePrefix() throws Exception
    {
@@ -48,7 +46,7 @@ public class TestJAXBNamespacePrefix
       }
       catch (PropertyException e)
       {
-         logger.warn(e.getMessage(), e);
+         LogMessages.LOGGER.warn(e.getMessage(), e);
       }
       marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
       ObjectFactory factory = new ObjectFactory();

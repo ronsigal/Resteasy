@@ -2,7 +2,6 @@ package org.jboss.resteasy.test.form;
 
 import org.jboss.resteasy.annotations.Form;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.AfterClass;
@@ -58,9 +57,6 @@ public class TestFormResource extends BaseResourceTest
    private static final String TEST_URI = generateURL("/form/42?query=42");
    
    private static Client client;
-
-   @SuppressWarnings("unused")
-   private static final Logger logger = Logger.getLogger(TestFormResource.class);
 
    @Path("/form/{id}")
    public interface FormClientProxy

@@ -3,7 +3,6 @@ package org.jboss.resteasy.test.nextgen.beanparam;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
@@ -53,9 +52,6 @@ public class TestFormResource extends BaseResourceTest
    private static final String BOOLEAN_VALUE_FIELD = "booleanValue";
 
    private static final String TEST_URI = generateURL("/form/42?query=42");
-
-   @SuppressWarnings("unused")
-   private static final Logger logger = Logger.getLogger(TestFormResource.class);
 
    @Path("/form/{id}")
    public interface FormClientProxy

@@ -7,7 +7,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
-import org.jboss.resteasy.logging.Logger;
+import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,8 +28,6 @@ import static org.junit.Assert.fail;
  */
 public class ClientExecutorShutdownTest extends BaseResourceTest
 {
-   private static Logger log = Logger.getLogger(ClientExecutorShutdownTest.class);
-   
    @Path("/test")
    public interface TestService
    {  
@@ -75,7 +73,7 @@ public class ClientExecutorShutdownTest extends BaseResourceTest
       }
       catch (IllegalStateException e)
       {
-         log.info("Got expected IllegalStateException");
+         LogMessages.LOGGER.info("Got expected IllegalStateException");
       }
    }
    
@@ -101,7 +99,7 @@ public class ClientExecutorShutdownTest extends BaseResourceTest
       }
       catch (IllegalStateException e)
       {
-         log.info("Got expected IllegalStateException");
+         LogMessages.LOGGER.info("Got expected IllegalStateException");
       }
    }
    

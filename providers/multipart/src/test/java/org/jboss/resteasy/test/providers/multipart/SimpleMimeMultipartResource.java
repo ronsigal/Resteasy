@@ -6,12 +6,12 @@ package org.jboss.resteasy.test.providers.multipart;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
 import org.jboss.resteasy.annotations.providers.multipart.XopWithMultipartRelated;
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartConstants;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartRelatedInput;
+import org.jboss.resteasy.plugins.providers.multipart.i18n.LogMessages;
 import org.junit.Assert;
 
 import javax.activation.DataHandler;
@@ -133,9 +133,6 @@ public class SimpleMimeMultipartResource
       public byte[] file;
    }
 
-   private static final Logger logger = Logger
-           .getLogger(SimpleMimeMultipartResource.class);
-
    @POST
    @Path("file/test")
    @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -164,10 +161,8 @@ public class SimpleMimeMultipartResource
          {
             try
             {
-               logger.debug(multipart.getBodyPart(i).getContent()
-                       .toString());
-               logger.debug("bytes available {0}", multipart.getBodyPart(i)
-                       .getInputStream().available());
+               LogMessages.LOGGER.debug(multipart.getBodyPart(i).getContent().toString());
+               LogMessages.LOGGER.debug("bytes available " + multipart.getBodyPart(i).getInputStream().available());
             }
             catch (IOException e)
             {

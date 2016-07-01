@@ -1,6 +1,5 @@
 package org.jboss.resteasy.security.doseta;
 
-import org.jboss.resteasy.annotations.interception.DecoderPrecedence;
 import org.jboss.resteasy.security.doseta.i18n.Messages;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -34,7 +33,6 @@ import java.util.List;
  * @version $Revision: 1 $
  */
 @Provider
-@DecoderPrecedence
 @Priority(Priorities.ENTITY_CODER)
 public class DigitalSigningInterceptor implements WriterInterceptor, ContainerResponseFilter, ClientRequestFilter
 {

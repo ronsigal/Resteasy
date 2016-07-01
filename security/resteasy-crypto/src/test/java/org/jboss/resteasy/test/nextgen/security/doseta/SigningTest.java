@@ -6,7 +6,6 @@ import org.jboss.resteasy.annotations.security.doseta.Verify;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.security.doseta.DKIMSignature;
 import org.jboss.resteasy.security.doseta.DosetaKeyRepository;
 import org.jboss.resteasy.security.doseta.KeyRepository;
@@ -71,7 +70,6 @@ public class SigningTest extends BaseResourceTest
    @BeforeClass
    public static void setup() throws Exception
    {
-      Logger.setLoggerType(Logger.LoggerType.JUL);
       repository = new DosetaKeyRepository();
       repository.setKeyStorePath("test.jks");
       repository.setKeyStorePassword("password");

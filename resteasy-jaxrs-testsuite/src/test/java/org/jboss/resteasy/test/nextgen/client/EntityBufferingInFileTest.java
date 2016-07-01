@@ -7,7 +7,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
-import org.jboss.resteasy.logging.Logger;
+import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.junit.After;
@@ -32,7 +32,6 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
  */
 public class EntityBufferingInFileTest
 {
-   private static final Logger log = Logger.getLogger(EntityBufferingInFileTest.class);
 
    protected ResteasyDeployment deployment;
 
@@ -142,7 +141,7 @@ public class EntityBufferingInFileTest
       catch (OutOfMemoryError e)
       {
          // Ok, skip it.
-         log.info("OutOfMemoryError on " + memoryUnit + " test.");
+         LogMessages.LOGGER.info("OutOfMemoryError on " + memoryUnit + " test.");
 
       }
    }

@@ -6,11 +6,11 @@ package org.jboss.resteasy.test.providers.multipart;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
 import org.jboss.resteasy.annotations.providers.multipart.XopWithMultipartRelated;
-import org.jboss.resteasy.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartConstants;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartOutput;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartRelatedOutput;
+import org.jboss.resteasy.plugins.providers.multipart.i18n.LogMessages;
 import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.LocateTestData;
 import org.junit.AfterClass;
@@ -52,9 +52,6 @@ import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 public class TestMimeMultipartProvider extends BaseResourceTest
 {
 
-   private static final Logger logger = Logger
-           .getLogger(TestMimeMultipartProvider.class);
-
    private static final String TEST_URI = generateURL("/mime");
    private static Client client;
 
@@ -76,7 +73,7 @@ public class TestMimeMultipartProvider extends BaseResourceTest
    @Before
    public void setUp() throws Exception
    {
-      logger.debug("Starting up...");
+      LogMessages.LOGGER.debug("Starting up...");
       dispatcher.getRegistry().addPerRequestResource(
               SimpleMimeMultipartResource.class);
    }
