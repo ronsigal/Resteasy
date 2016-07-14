@@ -55,7 +55,7 @@ public class EventResource
          log.info(eventList.get(i).toString());
       }
       boolean status = true;
-      if (!(eventList.size() == 20))
+      if (!(eventList.size() == 16))
       {
          status = false;
          log.info("should have 20 events, not " + eventList.size());
@@ -139,26 +139,6 @@ public class EventResource
       {
          status = false;
          log.info("missing writeEvent");
-      }
-      if (!"readInterceptEvent".equals(eventList.get(16)))  // BookReader.process() or BookReader.readIntercept()
-      {
-         status = false;
-         log.info("missing readInterceptEvent");
-      }
-      if (!"readInterceptEvent".equals(eventList.get(17)))  // BookReader.process() or BookReader.readIntercept()
-      {
-         status = false;
-         log.info("missing readInterceptEvent");
-      }
-      if (!"readEvent".equals(eventList.get(18)))           // BookReader.process() or BookReader.read()
-      {
-         status = false;
-         log.info("missing readEvent");
-      }
-      if (!"readEvent".equals(eventList.get(19)))           // BookReader.process() or BookReader.read()
-      {
-         status = false;
-         log.info("missing readEvent");
       }
       
       log.info("leaving EventResource.test()");

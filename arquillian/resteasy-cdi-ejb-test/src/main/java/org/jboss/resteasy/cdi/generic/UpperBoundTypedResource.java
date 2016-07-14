@@ -25,7 +25,7 @@ public class UpperBoundTypedResource<T extends HierarchyHolder<? extends Primate
    @Inject
    private Logger log;
    
-   @Inject
+   //@Inject
    @HolderBinding
    private UpperBoundHierarchyHolder<T> typeParameterUpperBound;
    

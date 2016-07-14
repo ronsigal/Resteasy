@@ -5,7 +5,6 @@ import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.client.jaxrs.cache.BrowserCacheFeature;
 import org.jboss.resteasy.client.jaxrs.cache.LightweightBrowserCache;
 import org.jboss.resteasy.test.BaseResourceTest;
-import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -23,6 +22,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import static org.jboss.resteasy.test.TestPortProvider.generateBaseUrl;
+import static org.jboss.resteasy.test.TestPortProvider.generateURL;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -247,6 +247,41 @@ public class ClientCacheTest extends BaseResourceTest
       Assert.assertEquals(2, count);
 
       rtn = proxy.getCacheit("1");
+      Assert.assertEquals("cachecache" + 3, rtn);
+      Assert.assertEquals(3, count);
+
+
+   }
+   
+   @Test
+   public void testMaxSizeNoProxy() throws Exception
+   {
+      ResteasyWebTarget target = (ResteasyWebTarget) ClientBuilder.newClient().target(generateURL("/cache/cacheit/{id}"));
+      LightweightBrowserCache cache = new LightweightBrowserCache();
+      cache.setMaxBytes(20);
+      BrowserCacheFeature cacheFeature = new BrowserCacheFeature();
+      cacheFeature.setCache(cache);
+      target.register(cacheFeature);
+
+      count = 0;
+
+      String rtn = target.resolveTemplate("id", "1").request().get(String.class);
+      Assert.assertEquals("cachecache" + 1, rtn);
+      Assert.assertEquals(1, count);
+
+      rtn = target.resolveTemplate("id", "1").request().get(String.class);
+      Assert.assertEquals("cachecache" + 1, rtn);
+      Assert.assertEquals(1, count);
+
+      rtn = target.resolveTemplate("id", "2").request().get(String.class);
+      Assert.assertEquals("cachecache" + 2, rtn);
+      Assert.assertEquals(2, count);
+
+      rtn = target.resolveTemplate("id", "2").request().get(String.class);
+      Assert.assertEquals("cachecache" + 2, rtn);
+      Assert.assertEquals(2, count);
+
+      rtn = target.resolveTemplate("id", "1").request().get(String.class);
       Assert.assertEquals("cachecache" + 3, rtn);
       Assert.assertEquals(3, count);
 

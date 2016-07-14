@@ -6,6 +6,9 @@ import java.util.logging.Logger;
 
 import javax.enterprise.inject.spi.Extension;
 import javax.inject.Inject;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -19,8 +22,6 @@ import org.jboss.resteasy.cdi.extension.bean.TestResource;
 import org.jboss.resteasy.cdi.injection.JaxRsActivator;
 import org.jboss.resteasy.cdi.util.UtilityProducer;
 import org.jboss.resteasy.cdi.util.Utilities;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -63,10 +64,10 @@ public class BeanExtensionTest
    public void testBostonBeans() throws Exception
    {
       log.info("starting testBostonBeans()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-extension-test/rest/extension/boston/");
-      ClientResponse<?> response = request.post();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-extension-test/rest/extension/boston/").request();
+      Response response = request.post(null);
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 }

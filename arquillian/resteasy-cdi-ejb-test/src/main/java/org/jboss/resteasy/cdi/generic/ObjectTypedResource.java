@@ -23,7 +23,7 @@ public class ObjectTypedResource<T extends Object> implements ObjectTypedResourc
    @Inject
    private Logger log;
    
-   @Inject
+   //@Inject
    @HolderBinding
    ObjectHolder<T> typeParameterObject;
 

@@ -2,15 +2,19 @@ package org.jboss.resteasy.test.cdi.injection;
 
 import static org.junit.Assert.assertEquals;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 
@@ -37,10 +41,9 @@ import org.jboss.resteasy.cdi.util.Constants;
 import org.jboss.resteasy.cdi.util.Counter;
 import org.jboss.resteasy.cdi.util.PersistenceUnitProducer;
 import org.jboss.resteasy.cdi.util.UtilityProducer;
-import org.jboss.resteasy.client.ClientExecutor;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
+import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -66,25 +69,8 @@ public class InjectionTest
    @Inject Logger log;
    
    private static int invocationCounter;
-
-   static ParameterizedType BookCollectionType = new ParameterizedType()
-   {
-      @Override
-      public Type[] getActualTypeArguments()
-      {
-         return new Type[]{Book.class};
-      }
-      @Override
-      public Type getRawType()
-      {
-         return Collection.class;
-      }
-      @Override
-      public Type getOwnerType()
-      {
-         return null;
-      }
-   };
+   
+   static GenericType<Collection<Book>> BookCollectionType = new GenericType<Collection<Book>>() {};
 
    @Deployment
    public static Archive<?> createTestArchive()
@@ -108,10 +94,10 @@ public class InjectionTest
    public void preparePersistenceTest() throws Exception
    {
       System.out.println("Dumping old records...");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/empty/");
-      ClientResponse<?> response = request.post();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-cdi-ejb-test/rest/empty/").request();
+      Response response = request.post(null);
       invocationCounter++;
-      response.releaseConnection();
+      response.close();
    }
 
    /**
@@ -130,17 +116,17 @@ public class InjectionTest
    public void testVerifyScopes() throws Exception
    {
       log.info("starting testVerifyScopes()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/verifyScopes/");
-      ClientResponse<?> response = request.get();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-cdi-ejb-test/rest/verifyScopes/").request();
+      Response response = request.get();
       invocationCounter++;
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
       response = request.get();
       invocationCounter++;
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 
    /**
@@ -151,61 +137,59 @@ public class InjectionTest
    public void testEJBs() throws Exception
    {
       log.info("starting testEJBs()");
-
+      Client client = ClientBuilder.newClient();
+      
       // Create book.
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/create/");
+      Builder request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/create/").request();
       Book book1 = new Book("RESTEasy: the Sequel");
-      request.body("application/test+xml", book1);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(book1, "application/test+xml"));
       invocationCounter++;
       assertEquals(200, response.getStatus());
       log.info("Status: " + response.getStatus());
-      int id1 = response.getEntity(int.class);
+      int id1 = response.readEntity(int.class);
       log.info("id: " + id1);
       Assert.assertEquals(Counter.INITIAL_VALUE, id1);
 
       // Create another book.
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/create/");
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/create/").request();
       Book book2 = new Book("RESTEasy: It's Alive");
-      request.body("application/test+xml", book2);
-      response = request.post();
+      response = request.post(Entity.entity(book2, "application/test+xml"));
       invocationCounter++;
       assertEquals(200, response.getStatus());
       log.info("Status: " + response.getStatus());
-      int id2 = response.getEntity(int.class);
+      int id2 = response.readEntity(int.class);
       log.info("id: " + id2);
       Assert.assertEquals(Counter.INITIAL_VALUE + 1, id2);
 
       // Retrieve first book.
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/book/" + id1);
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/book/" + id1).request();
       request.accept("application/test+xml");
       response = request.get();
       invocationCounter++;
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      Book result = response.getEntity(Book.class);
+      Book result = response.readEntity(Book.class);
       log.info("book: " + book1);
       Assert.assertEquals(book1, result);
 
       // Retrieve second book.
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/book/" + id2);
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/book/" + id2).request();
       request.accept("application/test+xml");
       response = request.get();
       invocationCounter++;
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      result = response.getEntity(Book.class);
+      result = response.readEntity(Book.class);
       log.info("book: " + book2);
       Assert.assertEquals(book2, result);
 
       // Retrieve all books.
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/books/");
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/books/").request();
       request.accept(MediaType.APPLICATION_XML);
       response = request.get();
       invocationCounter++;
       log.info("Status: " + response.getStatus());
-      @SuppressWarnings("unchecked")
-      Collection<Book> books  = response.getEntity(Collection.class, BookCollectionType);
+      Collection<Book> books  = response.readEntity(BookCollectionType);
       log.info("Collection: " + books);
       Assert.assertEquals(2, books.size());
       Iterator<Book> it = books.iterator();
@@ -216,12 +200,12 @@ public class InjectionTest
       Assert.assertTrue(book1.equals(b1) && book2.equals(b2) || book1.equals(b2) && book2.equals(b1));
 
       // Test EntityManager injected in BookResource
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/entityManager");
-      response = request.post();
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/entityManager").request();
+      response = request.post(null);
       invocationCounter++;
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 
    /**
@@ -236,37 +220,36 @@ public class InjectionTest
 
       // Need to supply each ClientRequest with a single ClientExecutor to maintain a single
       // cookie cache, which keeps the session alive.
-      ClientExecutor executor = new ApacheHttpClient4Executor();
+      ClientHttpEngine engine = new ApacheHttpClient4Engine();
+      Client client = new ResteasyClientBuilder().httpEngine(engine).build();
 
       // Create a book, which gets stored in the session scoped BookBag.
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/session/add/", executor);
+      Builder request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/session/add/").request();
       Book book1 = new Book(13, "Dead Man Napping");
-      request.body(Constants.MEDIA_TYPE_TEST_XML, book1);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(book1, Constants.MEDIA_TYPE_TEST_XML));
       invocationCounter++;
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Create another book, which should get stored in the same BookBag.
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/session/add/", executor);
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/session/add/").request();
       Book book2 = new Book(Counter.INITIAL_VALUE, "Dead Man Dozing");
-      request.body(Constants.MEDIA_TYPE_TEST_XML, book2);
-      response = request.post();
+      response = request.post(Entity.entity(book2, Constants.MEDIA_TYPE_TEST_XML));
       invocationCounter++;
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
 
       // Get the current contents of the BookBag, and verify that it holds both of the books sent in the
       // previous two invocations.  When this method is called, the session is terminated.
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/session/get/", executor);
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/session/get/").request();
       response = request.get();
       invocationCounter++;
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
       @SuppressWarnings("unchecked")
-      Collection<Book> books = response.getEntity(Collection.class, BookCollectionType);
+      Collection<Book> books = response.readEntity(BookCollectionType);
       log.info("Collection: " + books);
       Assert.assertEquals(2, books.size());
       Iterator<Book> it = books.iterator();
@@ -277,12 +260,12 @@ public class InjectionTest
       Assert.assertTrue(book1.equals(b1) && book2.equals(b2) || book1.equals(b2) && book2.equals(b1));
 
       // Verify that the BookBag has been replaced by a new, empty one for the new session.
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/session/test/");
-      response = request.post();
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/session/test/").request();
+      response = request.post(null);
       invocationCounter++;
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 
    /**
@@ -292,26 +275,26 @@ public class InjectionTest
    public void testJMS() throws Exception
    {
       log.info("starting testJMS()");
+      Client client = ClientBuilder.newClient();
       
       // Send a book title.
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/produceMessage/");
+      Builder request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/produceMessage/").request();
       String title = "Dead Man Lounging";
       Book book = new Book(23, title);
-      request.body(Constants.MEDIA_TYPE_TEST_XML, book);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(book, Constants.MEDIA_TYPE_TEST_XML));
       invocationCounter++;
       log.info("status: " + response.getStatus());
-      log.info(response.getEntity(String.class));
+      log.info(response.readEntity(String.class));
       Assert.assertEquals(200, response.getStatus());
       
       // Verify that the received book title is the one that was sent.
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/queue/consumeMessage/");
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/queue/consumeMessage/").request();
       log.info("consuming book");
       response = request.get();
       invocationCounter++;
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(title, response.getEntity(String.class));
+      Assert.assertEquals(title, response.readEntity(String.class));
    }
    
    /**
@@ -324,10 +307,10 @@ public class InjectionTest
       
       // Send a book title.
       log.info("invocationCounter: " + invocationCounter);
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/getCounters/");
-      ClientResponse<?> response = request.get();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-cdi-ejb-test/rest/getCounters/").request();
+      Response response = request.get();
       log.info("status: " + response.getStatus());
-      String result = response.getEntity(String.class);
+      String result = response.readEntity(String.class);
       log.info(result);
       Assert.assertEquals(200, response.getStatus());
       String[] counters = result.split(":");
@@ -342,10 +325,10 @@ public class InjectionTest
    public void testDisposer() throws Exception
    {
       log.info("starting testDisposer()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/disposer/");
-      ClientResponse<?> response = request.get();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-cdi-ejb-test/rest/disposer/").request();
+      Response response = request.get();
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 }

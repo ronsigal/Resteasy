@@ -9,127 +9,37 @@
   </parent>
   <artifactId>resteasy-cdi-ejb-test</artifactId>
   <packaging>jar</packaging>
-  <name>RESTEasy AS7/CDI/EJB Integration Testsuite</name>
+  <name>RESTEasy Wildfly/CDI/EJB Integration Testsuite</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!--as-version>7.1.1.Final</as-version-->
-    <as-version>7.1.1.Final.cdi-ejb</as-version>
-    <weld-version>1.2.0.Beta1</weld-version>
-    <!--weld-api-version>1.2-SNAPSHOT</weld-api-version>
-    <weld-spi-version>1.2-SNAPSHOT</weld-spi-version-->
+    <wildfly-version>10.0.0.Final</wildfly-version>
   </properties>
-  
-  <dependencyManagement>
-    <dependencies>
-        <dependency>
-            <groupId>org.jboss.arquillian</groupId>
-            <artifactId>arquillian-bom</artifactId>
-            <version>${dep.arquillian-bom.version}</version>
-            <scope>import</scope>
-            <type>pom</type>
-        </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <build>
     <plugins>
       <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
-          <execution>
-            <id>unpack AS7</id>
-            <phase>process-test-classes</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.jboss.resteasy.test</groupId>
-                  <artifactId>as7-dist-cdi-ejb-7.1.1.Final</artifactId>
-                  <version>1.0</version>
-                  <type>jar</type>
-                  <!--groupId>org.jboss.as</groupId>
-                  <artifactId>jboss-as-dist</artifactId>
-                  <version>${as-version}</version>
-                  <type>zip</type-->
-                  <overWrite>false</overWrite>
-                  <outputDirectory>target</outputDirectory>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-          <!--execution>
-            <id>update weld-core</id>
-            <phase>process-test-classes</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.jboss.weld</groupId>
-                  <artifactId>weld-core</artifactId>
-                  <version>${weld-version}</version>
-                  <outputDirectory>target/jboss-as-${as-version}/modules/org/jboss/weld/core/main/</outputDirectory>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-          <execution>
-            <id>update weld-api</id>
-            <phase>process-test-classes</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.jboss.weld</groupId>
-                  <artifactId>weld-api</artifactId>
-                  <version>${weld-version}</version>
-                  <outputDirectory>target/jboss-as-${as-version}/modules/org/jboss/weld/api/main/</outputDirectory>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-          <execution>
-            <id>update weld-spi</id>
-            <phase>process-test-classes</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.jboss.weld</groupId>
-                  <artifactId>weld-spi</artifactId>
-                  <version>${weld-version}</version>
-                  <outputDirectory>target/jboss-as-${as-version}/modules/org/jboss/weld/spi/main/</outputDirectory>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution-->
-        
-          <!--execution>
-            <id>unpack Resteasy</id>
-            <phase>process-test-classes</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.jboss.resteasy</groupId>
-                  <artifactId>resteasy-jboss-modules</artifactId>
-                  <version>${version}</version>
-                  <type>pom</type>
-                  <outputDirectory>${project.build.directory}/jboss-as-7.1.1.Final.cdi-ejb/modules</outputDirectory>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution-->
+            <execution>
+                <id>unpack</id>
+                <phase>process-test-classes</phase>
+                <goals>
+                    <goal>unpack</goal>
+                </goals>
+                <configuration>
+                    <artifactItems>
+                        <artifactItem>
+                            <groupId>org.wildfly</groupId>
+                            <artifactId>wildfly-dist</artifactId>
+                            <version>${wildfly-version}</version>
+                            <type>zip</type>
+                            <overWrite>false</overWrite>
+                            <outputDirectory>target</outputDirectory>
+                        </artifactItem>
+                    </artifactItems>
+                </configuration>
+            </execution>
         </executions>
       </plugin>
       
@@ -143,8 +53,8 @@
             <phase>process-test-classes</phase>
             <configuration>
               <target>
-                <unzip src="../../jboss-modules/target/resteasy-jboss-modules-${version}.zip"
-                       dest="${project.build.directory}/jboss-as-${as-version}/modules"
+                <unzip src="../../jboss-modules/target/resteasy-jboss-modules-wf8-${project.version}.zip"
+                       dest="${project.build.directory}/wildfly-${wildfly-version}/modules/system/layers/base"
                        overwrite="false" />
               </target>
             </configuration>
@@ -153,12 +63,12 @@
             </goals>
           </execution>
           <execution>
-            <id>update AS7 application-roles.properties</id>
+            <id>update wildfly application-roles.properties</id>
             <phase>process-test-classes</phase>
             <configuration>
               <target>
                 <copy file="${basedir}/src/test/resources/application-roles.properties"
-                      todir="${project.build.directory}/jboss-as-${as-version}/standalone/configuration" />
+                      todir="${project.build.directory}/wildfly-${wildfly-version}/standalone/configuration" />
               </target>
             </configuration>
             <goals>
@@ -166,25 +76,12 @@
             </goals>
           </execution>
           <execution>
-            <id>update AS7 application-users.properties</id>
+            <id>update wildfly application-users.properties</id>
             <phase>process-test-classes</phase>
             <configuration>
               <target>
                 <copy file="${basedir}/src/test/resources/application-users.properties"
-                      todir="${project.build.directory}/jboss-as-${as-version}/standalone/configuration/" />
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-          <!--execution>
-            <id>update weld core module.xml</id>
-            <phase>process-test-classes</phase>
-            <configuration>
-              <target>
-                <copy file="${basedir}/src/test/resources/weld-core-module.xml"
-                      tofile="${project.build.directory}/jboss-as-${as-version}/modules/org/jboss/weld/core/main/module.xml" />
+                      todir="${project.build.directory}/wildfly-${wildfly-version}/standalone/configuration/" />
               </target>
             </configuration>
             <goals>
@@ -192,31 +89,18 @@
             </goals>
           </execution>
           <execution>
-            <id>update weld api module.xml</id>
+            <id>create jms queue</id>
             <phase>process-test-classes</phase>
             <configuration>
               <target>
-                <copy file="${basedir}/src/test/resources/weld-api-module.xml"
-                      tofile="${project.build.directory}/jboss-as-${as-version}/modules/org/jboss/weld/api/main/module.xml" />
+                <copy file="${basedir}/src/test/resources/standalone-full.xml"
+                      todir="${project.build.directory}/wildfly-${wildfly-version}/standalone/configuration/" />
               </target>
             </configuration>
             <goals>
               <goal>run</goal>
             </goals>
           </execution>
-          <execution>
-            <id>update weld spi module.xml</id>
-            <phase>process-test-classes</phase>
-            <configuration>
-              <target>
-                <copy file="${basedir}/src/test/resources/weld-spi-module.xml"
-                      tofile="${project.build.directory}/jboss-as-${as-version}/modules/org/jboss/weld/spi/main/module.xml" />
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution-->
         </executions>
       </plugin>
     </plugins>
@@ -227,105 +111,124 @@
     </testResources>
   </build>
 
-  <dependencies>
-  <dependency>
-	<groupId>org.hornetq</groupId>
-	<artifactId>hornetq-jms-client</artifactId>
-	<version>2.2.13.Final</version>
-  </dependency>
-    <dependency>
-        <groupId>org.jboss.weld</groupId>
-        <artifactId>weld-core</artifactId>
-        <!--version>1.1.5.AS71.Final</version-->
-        <version>1.2.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.spec</groupId>
-        <artifactId>jboss-javaee-6.0</artifactId>
-        <version>1.0.0.Final</version>
-        <type>pom</type>
-        <scope>provided</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.spec.javax.ejb</groupId>
-        <artifactId>jboss-ejb-api_3.1_spec</artifactId>
-        <version>1.0.1.Final</version>
-        <scope>provided</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-arquillian-container-managed</artifactId>
-        <version>7.1.1.Final</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.arquillian.protocol</groupId>
-        <artifactId>arquillian-protocol-servlet</artifactId>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.spec.javax.ws.rs</groupId>
-      <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.resteasy</groupId>
-        <artifactId>resteasy-jaxrs</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.resteasy</groupId>
-        <artifactId>resteasy-hibernatevalidator-provider</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.resteasy</groupId>
-        <artifactId>resteasy-jaxb-provider</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.8.1</version>
-      <!--scope>test</scope-->
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.arquillian.junit</groupId>
-      <artifactId>arquillian-junit-container</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <!--dependency>
-      <groupId>org.jboss.arquillian.container</groupId>
-      <artifactId>arquillian-weld-ee-embedded-1.1</artifactId>
-      <version>1.0.0.CR3</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.weld</groupId>
-      <artifactId>weld-core</artifactId>
-      <version>1.1.5.Final</version>
-      <scope>test</scope>
-    </dependency-->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>1.6.4</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-	   <groupId>org.jboss.resteasy</groupId>
-	   <artifactId>resteasy-cdi</artifactId>
-	   <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-validator</artifactId>
-      <version>4.3.1.Final</version>
-    </dependency>
-    
-    <dependency>
-  <groupId>org.jboss.as</groupId>
-  <artifactId>jboss-as-weld</artifactId>
-  <version>7.1.1.Final</version>
-</dependency>
-  </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.jboss.arquillian</groupId>
+                <artifactId>arquillian-bom</artifactId>
+                <version>${dep.arquillian-bom.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jboss.spec</groupId>
+            <artifactId>jboss-javaee-6.0</artifactId>
+            <version>1.0.0.Final</version>
+            <type>pom</type>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jboss.resteasy</groupId>
+                    <artifactId>jaxrs-api</artifactId>
+                </exclusion>
+            </exclusions> 
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.arquillian.junit</groupId>
+            <artifactId>arquillian-junit-container</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-arquillian-container-managed</artifactId>
+            <version>${dep.arquillian-wildfly.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.arquillian.protocol</groupId>
+            <artifactId>arquillian-protocol-servlet</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.spec.javax.ws.rs</groupId>
+            <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-validator-provider-11</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>1.1.0.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>5.0.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator-cdi</artifactId>
+            <version>5.0.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>javax.el-api</artifactId>
+            <version>2.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>javax.el</artifactId>
+            <version>2.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.spec.javax.xml.bind</groupId>
+            <artifactId>jboss-jaxb-api_2.2_spec</artifactId>
+            <version>1.0.4.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-multipart-provider</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxb-provider</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-client</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

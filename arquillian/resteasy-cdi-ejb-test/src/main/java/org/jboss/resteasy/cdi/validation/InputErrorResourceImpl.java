@@ -10,8 +10,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
-import org.jboss.resteasy.plugins.validation.hibernate.ValidateRequest;
-
 /**
  * 
  * @author <a href="ron.sigal@jboss.com">Ron Sigal</a>
@@ -21,7 +19,6 @@ import org.jboss.resteasy.plugins.validation.hibernate.ValidateRequest;
  */
 @Path("incorrect")
 @Stateless
-@ValidateRequest
 public class InputErrorResourceImpl implements InputErrorResource
 {
    @Inject

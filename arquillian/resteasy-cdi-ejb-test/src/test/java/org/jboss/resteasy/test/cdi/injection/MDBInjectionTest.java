@@ -4,6 +4,11 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 
@@ -31,8 +36,6 @@ import org.jboss.resteasy.cdi.util.Constants;
 import org.jboss.resteasy.cdi.util.Counter;
 import org.jboss.resteasy.cdi.util.PersistenceUnitProducer;
 import org.jboss.resteasy.cdi.util.UtilityProducer;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -69,7 +72,6 @@ public class MDBInjectionTest
             .addClasses(StereotypedApplicationScope.class, StereotypedDependentScope.class)
             .addClasses(Resource.class, ResourceProducer.class, PersistenceUnitProducer.class)
             .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
-            .setManifest("reverseInjection/hornetq_manifest.mf")
             .addAsResource("injection/persistence.xml", "META-INF/persistence.xml");
       System.out.println(war.toString(true));
       return war;
@@ -79,9 +81,9 @@ public class MDBInjectionTest
    public void preparePersistenceTest() throws Exception
    {
       System.out.println("Dumping old records...");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/empty/");
-      ClientResponse<?> response = request.post();
-      response.releaseConnection();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-cdi-ejb-test/rest/empty/").request();
+      Response response = request.post(null);
+      response.close();
    }
    
    /**
@@ -91,22 +93,22 @@ public class MDBInjectionTest
    public void testMDB() throws Exception
    {
       log.info("starting testJMS()");
+      Client client = ClientBuilder.newClient();
       
       // Send a book title.
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/produceMessage/");
+      Builder request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/produceMessage/").request();
       String title = "Dead Man Lounging";
       Book book = new Book(23, title);
-      request.body(Constants.MEDIA_TYPE_TEST_XML, book);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(book, Constants.MEDIA_TYPE_TEST_XML));
       log.info("status: " + response.getStatus());
-      log.info(response.getEntity(String.class));
+      log.info(response.readEntity(String.class));
       Assert.assertEquals(200, response.getStatus());
       
-      // Verify that the received book title is the one that was sent.
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/mdb/consumeMessage/");     
+      // Verify that the received book title is the one that was sent.    
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/mdb/consumeMessage/").request();
       response = request.get();
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(title, response.getEntity(String.class));
+      Assert.assertEquals(title, response.readEntity(String.class));
    }
 }

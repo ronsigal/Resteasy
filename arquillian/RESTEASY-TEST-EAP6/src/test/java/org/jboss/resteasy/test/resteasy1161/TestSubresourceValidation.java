@@ -4,14 +4,15 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Iterator;
 
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+
 import org.junit.Assert;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
 import org.jboss.resteasy.api.validation.ViolationReport;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.resteasy1161.StdQueryBeanParam;
 import org.jboss.resteasy.resteasy1161.TestApplication;
 import org.jboss.resteasy.resteasy1161.TestResource;
@@ -34,8 +35,6 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class TestSubresourceValidation
 {
-//   private static final Logger log = LoggerFactory.getLogger(TestSubresourceValidation.class);
-   
    @Deployment
    public static Archive<?> createTestArchive()
    {
@@ -49,13 +48,11 @@ public class TestSubresourceValidation
       return war;
    }
    
-   @SuppressWarnings("deprecation")
    @Test
    public void testSubresource() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1161/sub/17?limit=abcdef");
-      ClientResponse<?> response = request.get();
-      String answer = response.getEntity(String.class);
+      Response response = ClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1161/sub/17?limit=abcdef").request().get();
+      String answer = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(answer);
       for(Iterator<ResteasyConstraintViolation> it = r.getParameterViolations().iterator(); it.hasNext(); )
       {
@@ -65,13 +62,11 @@ public class TestSubresourceValidation
       assertEquals(400, response.getStatus());
    }
    
-   @SuppressWarnings("deprecation")
    @Test
    public void testReturnValue() throws Exception
    {
-      ClientRequest request = new ClientRequest("http://localhost:8080/RESTEASY-1161/sub/return/abcd");
-      ClientResponse<?> response = request.get();
-      String answer = response.getEntity(String.class);
+      Response response = ClientBuilder.newClient().target("http://localhost:8080/RESTEASY-1161/sub/return/abcd").request().get();
+      String answer = response.readEntity(String.class);
       ViolationReport r = new ViolationReport(answer);
       for(Iterator<ResteasyConstraintViolation> it = r.getParameterViolations().iterator(); it.hasNext(); )
       {

@@ -23,7 +23,7 @@ public class HierarchyTypedResource<T extends Animal> implements HierarchyTypedR
    @Inject
    private Logger log;
    
-   @Inject
+   //@Inject
    @HolderBinding
    HierarchyHolder<T> typeParameterHierarchy;
 

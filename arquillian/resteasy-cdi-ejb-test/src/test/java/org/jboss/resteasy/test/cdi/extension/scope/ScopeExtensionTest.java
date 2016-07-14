@@ -6,6 +6,10 @@ import java.util.logging.Logger;
 
 import javax.enterprise.inject.spi.Extension;
 import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -19,8 +23,6 @@ import org.jboss.resteasy.cdi.extension.scope.PlannedObsolescenceScope;
 import org.jboss.resteasy.cdi.injection.JaxRsActivator;
 import org.jboss.resteasy.cdi.util.UtilityProducer;
 import org.jboss.resteasy.cdi.util.Utilities;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -60,17 +62,21 @@ public class ScopeExtensionTest
    public void testObsolescentScope() throws Exception
    {
       log.info("starting testScope()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-extension-test/rest/extension/setup/");
-      ClientResponse<?> response = request.post();
+      Client client = ClientBuilder.newClient();
+      Builder request = client.target("http://localhost:8080/resteasy-extension-test/rest/extension/setup/").request();
+      Response response = request.post(null);
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      request = new ClientRequest("http://localhost:8080/resteasy-extension-test/rest/extension/test1/");
-      response = request.post();
+      response.close();
+      request = client.target("http://localhost:8080/resteasy-extension-test/rest/extension/test1/").request();
+      response = request.post(null);
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      request = new ClientRequest("http://localhost:8080/resteasy-extension-test/rest/extension/test2/");
-      response = request.post();
+      response.close();
+      request = client.target("http://localhost:8080/resteasy-extension-test/rest/extension/test2/").request();
+      response = request.post(null);
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
+      response.close();
    }
 }

@@ -2,8 +2,6 @@ package org.jboss.resteasy.test.cdi.injection.reverse;
 
 import static org.jboss.resteasy.cdi.injection.reverse.ReverseInjectionResource.NON_CONTEXTUAL;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -19,6 +17,10 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 
@@ -59,8 +61,6 @@ import org.jboss.resteasy.cdi.util.Counter;
 import org.jboss.resteasy.cdi.util.PersistenceUnitProducer;
 import org.jboss.resteasy.cdi.util.Utilities;
 import org.jboss.resteasy.cdi.util.UtilityProducer;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -91,24 +91,7 @@ public class ReverseInjectionTest
 {
    @Inject Logger log;
 
-   static ParameterizedType BookCollectionType = new ParameterizedType()
-   {
-      @Override
-      public Type[] getActualTypeArguments()
-      {
-         return new Type[]{Book.class};
-      }
-      @Override
-      public Type getRawType()
-      {
-         return Collection.class;
-      }
-      @Override
-      public Type getOwnerType()
-      {
-         return null;
-      }
-   };
+   static GenericType<Collection<Book>> BookCollectionType = new GenericType<Collection<Book>>() {};
 
    @Deployment
    public static Archive<?> createTestArchive()
@@ -130,7 +113,6 @@ public class ReverseInjectionTest
       .addClasses(ReverseInjectionResource.class)
       .addClasses(NewBean.class, StereotypedApplicationScope.class, StereotypedDependentScope.class)
       .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
-      .setManifest("reverseInjection/hornetq_manifest.mf")
       .addAsResource("injection/persistence.xml", "META-INF/persistence.xml");
       System.out.println(war.toString(true));
       return war;
@@ -151,7 +133,9 @@ public class ReverseInjectionTest
       final Hashtable<String,String> jndiProperties = new Hashtable<String,String>();
       jndiProperties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
       final Context context = new InitialContext(jndiProperties);
-      String name = "ejb:/resteasy-reverse-injection-test/StatelessEJBwithJaxRsComponents!" + StatelessEJBwithJaxRsComponentsInterface.class.getName();
+//    String name = "ejb:/resteasy-reverse-injection-test/StatelessEJBwithJaxRsComponents!" + StatelessEJBwithJaxRsComponentsInterface.class.getSimpleName();
+      String name = "java:global/resteasy-reverse-injection-test/StatelessEJBwithJaxRsComponents!org.jboss.resteasy.cdi.injection.reverse.StatelessEJBwithJaxRsComponentsInterface";
+      System.out.println("testSLSB(): getting: " + name);
       StatelessEJBwithJaxRsComponentsInterface remote = StatelessEJBwithJaxRsComponentsInterface.class.cast(context.lookup(name));
       log.info("remote: " + remote);
       remote.setUp(NON_CONTEXTUAL);
@@ -209,7 +193,8 @@ public class ReverseInjectionTest
       final Context context = new InitialContext(jndiProperties);
       String className = "Stateful" + scope + "ScopedEJBwithJaxRsComponents";
       Class<?> viewName = Class.forName("org.jboss.resteasy.cdi.injection.reverse." + className + "Interface");
-      String lookup = "ejb:/resteasy-reverse-injection-test/" + className + "!" + viewName.getName() + "?stateful";
+//    String lookup = "ejb:/resteasy-reverse-injection-test/" + className + "!" + viewName.getName() + "?stateful";
+      String lookup = "java:global/resteasy-reverse-injection-test/" + className + "!" + viewName.getName();
       log.info("lookup: " + lookup);
       EJBInterface remote = EJBInterface.class.cast(context.lookup(lookup));
       log.info("remote: " + remote);
@@ -224,27 +209,27 @@ public class ReverseInjectionTest
    public void testEJBHolderInResourceScopes() throws Exception
    {
       log.info("starting testEJBHolderInResourceScopes()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-reverse-injection-test/rest/reverse/testScopes/");
-      ClientResponse<?> response = request.post();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-reverse-injection-test/rest/reverse/testScopes/").request();
+      Response response = request.post(null);
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
    
    @Test
    public void testEJBHolderInResource() throws Exception
    {
       log.info("starting testEJBHolderInResource()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-reverse-injection-test/rest/reverse/setup/");
-      ClientResponse<?> response = request.post();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-reverse-injection-test/rest/reverse/setup/").request();
+      Response response = request.post(null);
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
-      request = new ClientRequest("http://localhost:8080/resteasy-reverse-injection-test/rest/reverse/test/");
-      response = request.post();
+      response.close();
+      request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-reverse-injection-test/rest/reverse/test/").request();
+      response = request.post(null);
       log.info("status: " + response.getStatus());
       Assert.assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
    
    /**
@@ -275,12 +260,11 @@ public class ReverseInjectionTest
          message = session.createTextMessage(book2.getName());
          producer.send(message);
          log.info("Message sent to to the JMS Provider: " + book2.getName());
-         ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-reverse-injection-test/rest/mdb/books");
-         ClientResponse<?> response = request.get();
+         Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-reverse-injection-test/rest/mdb/books").request();
+         Response response = request.get();
          log.info("status: " + response.getStatus());
          Assert.assertEquals(200, response.getStatus());
-         @SuppressWarnings("unchecked")
-         Collection<Book> books = response.getEntity(Collection.class, BookCollectionType);
+         Collection<Book> books = response.readEntity(BookCollectionType);
          log.info("Collection: " + books);
          Assert.assertEquals(2, books.size());
          Iterator<Book> it = books.iterator();

@@ -4,6 +4,9 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 
@@ -27,8 +30,6 @@ import org.jboss.resteasy.cdi.validation.ReturnValueErrorResourceImpl;
 import org.jboss.resteasy.cdi.validation.SumConstraint;
 import org.jboss.resteasy.cdi.validation.SumValidator;
 import org.jboss.resteasy.cdi.validation.TestInterceptor;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -70,23 +71,24 @@ public class ValidationTest
    public void testCorrectValues() throws Exception
    {
       log.info("starting testCorrectValues()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/correct/test/7");
-      ClientResponse<?> response = request.get();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-cdi-ejb-test/rest/correct/test/7").request();
+      Response response = request.get();
       log.info("status: " + response.getStatus());
-      log.info("response: " + response.getEntity(Integer.class));
+      Integer entity = response.readEntity(Integer.class);
+      log.info("response: " + entity);
       Assert.assertEquals(200, response.getStatus());
-      Assert.assertTrue(8 == response.getEntity(Integer.class));
-      response.releaseConnection();
+      Assert.assertTrue(8 == entity);
+      response.close();
    }
    
    @Test
    public void testIncorrectInputValues() throws Exception
    {
       log.info("starting testIncorrectInputValues()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/incorrect/test/17");
-      ClientResponse<?> response = request.get();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-cdi-ejb-test/rest/incorrect/test/17").request();
+      Response response = request.get();
       log.info("status: " + response.getStatus());
-      Object entity = response.getEntity(String.class);
+      Object entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       Assert.assertEquals(400, response.getStatus());
       ResteasyViolationException e = new ResteasyViolationException(String.class.cast(entity));
@@ -101,18 +103,19 @@ public class ValidationTest
       cv1 = e.getClassViolations().iterator().next();
       Assert.assertTrue(cv1.getMessage().indexOf("SumConstraint") > -1);
       cv1 = e.getParameterViolations().iterator().next();
+      System.out.println("cv1: " + cv1);
       log.info("path: " + cv1.getPath());
-      Assert.assertTrue(cv1.getPath().indexOf("InputErrorResource") > -1);
+      Assert.assertTrue(cv1.getMessage().indexOf("must be less than or equal to 10") > -1);
    }
    
    @Test
    public void testIncorrectReturnValue() throws Exception
    {
       log.info("starting testIncorrectReturnValue()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/return/test");
-      ClientResponse<?> response = request.get();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-cdi-ejb-test/rest/return/test").request();
+      Response response = request.get();
       log.info("status: " + response.getStatus());
-      Object entity = response.getEntity(String.class);
+      Object entity = response.readEntity(String.class);
       System.out.println("entity: " + entity);
       ResteasyViolationException e = new ResteasyViolationException(String.class.cast(entity));
       log.info("result: " + e.toString());

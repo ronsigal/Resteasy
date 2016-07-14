@@ -126,14 +126,6 @@ public class TestResource implements TestResourceIntf
       expectedList.add(VisitList.WRITER_INTERCEPTOR_LEAVE);
       expectedList.add(VisitList.WRITER_INTERCEPTOR_DECORATOR_LEAVE);
       
-      // Call to test()
-      expectedList.add(VisitList.READER_INTERCEPTOR_DECORATOR_ENTER);
-      expectedList.add(VisitList.READER_INTERCEPTOR_ENTER);
-      expectedList.add(VisitList.READER_DECORATOR_ENTER);
-      expectedList.add(VisitList.READER_DECORATOR_LEAVE);
-      expectedList.add(VisitList.READER_INTERCEPTOR_LEAVE);
-      expectedList.add(VisitList.READER_INTERCEPTOR_DECORATOR_LEAVE);
-      
       ArrayList<String> visitList = VisitList.getList();
       boolean status = expectedList.size() == visitList.size();
       if (!status)

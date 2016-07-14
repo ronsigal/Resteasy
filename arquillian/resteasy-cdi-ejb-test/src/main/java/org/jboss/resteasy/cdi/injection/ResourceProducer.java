@@ -72,11 +72,19 @@ public class ResourceProducer
    }
    
    @PreDestroy
-   public void preDestroy() throws JMSException
+   public void preDestroy()
    {
       if (connection != null)
       {
-         connection.close();
+         try
+         {
+            connection.close();
+         }
+         catch (JMSException e)
+         {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+         }
          log.info("ResourceProducer.preDestory(): closed connection");
       }
    }

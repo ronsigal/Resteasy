@@ -22,7 +22,7 @@ import org.jboss.resteasy.cdi.util.Counter;
  */
 @MessageDriven(name = "BookMDB",
                activationConfig = {@ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue"),
-                                   @ActivationConfigProperty(propertyName = "destination", propertyValue = "queue/test")}
+                                   @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/queue/test")}
 )
 public class BookMDB implements MessageListener
 {

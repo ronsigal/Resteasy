@@ -8,6 +8,11 @@ import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 
@@ -26,8 +31,6 @@ import org.jboss.resteasy.cdi.util.Constants;
 import org.jboss.resteasy.cdi.util.Counter;
 import org.jboss.resteasy.cdi.util.UtilityProducer;
 import org.jboss.resteasy.cdi.util.Utilities;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -73,12 +76,13 @@ public class EJBTest
    public void testVerifyScopesJaxRs() throws Exception
    {
       log.info("starting testVerifyScopesJaxRs()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-ejb-test/verifyScopes/");
-      ClientResponse<?> response = request.get();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-ejb-test/verifyScopes/").request();
+      Response response = request.get();
       log.info("status: " + response.getStatus());
-      log.info("result: " + response.getEntity(Integer.class));
+      Integer result = response.readEntity(Integer.class);
+      log.info("result: " + result);
       assertEquals(200, response.getStatus());
-      assertEquals(200, response.getEntity(Integer.class).intValue());
+      assertEquals(200, result.intValue());
    }
    
    /**
@@ -125,11 +129,12 @@ public class EJBTest
    public void testVerifyInjectionJaxRs() throws Exception
    {
       log.info("starting testVerifyInjectionJaxRs()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-ejb-test/verifyInjection/");
-      ClientResponse<?> response = request.get();
-      log.info("result: " + response.getEntity(Integer.class));
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-ejb-test/verifyInjection/").request();
+      Response response = request.get();
+      Integer result = response.readEntity(Integer.class);
+      log.info("result: " + result);
       assertEquals(200, response.getStatus());
-      assertEquals(200, response.getEntity(Integer.class).intValue());
+      assertEquals(200, result.intValue());
    }
    
    /**
@@ -175,62 +180,61 @@ public class EJBTest
    public void testAsJaxRSResource() throws Exception
    {
       log.info("entering testAsJaxRSResource()");
+      Client client = ClientBuilder.newClient();
 
       // Create book.
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-ejb-test/create/");
+      Builder request = client.target("http://localhost:8080/resteasy-ejb-test/create/").request();
       Book book1 = new Book("RESTEasy: the Sequel");
-      request.body(Constants.MEDIA_TYPE_TEST_XML, book1);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(book1, Constants.MEDIA_TYPE_TEST_XML));
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      int id1 = response.getEntity(int.class);
+      int id1 = response.readEntity(int.class);
       log.info("id: " + id1);
       Assert.assertEquals(Counter.INITIAL_VALUE, id1);
       
       // Create another book.
-      request = new ClientRequest("http://localhost:8080/resteasy-ejb-test/create/");
+      request = client.target("http://localhost:8080/resteasy-ejb-test/create/").request();
       Book book2 = new Book("RESTEasy: It's Alive");
-      request.body(Constants.MEDIA_TYPE_TEST_XML, book2);
-      response = request.post();
+      response = request.post(Entity.entity(book2, Constants.MEDIA_TYPE_TEST_XML));
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      int id2 = response.getEntity(int.class);
+      int id2 = response.readEntity(int.class);
       log.info("id: " + id2);
       Assert.assertEquals(Counter.INITIAL_VALUE + 1, id2);
       
       // Retrieve first book.
-      request = new ClientRequest("http://localhost:8080/resteasy-ejb-test/book/" + id1);
+      request = client.target("http://localhost:8080/resteasy-ejb-test/book/" + id1).request();
       request.accept(Constants.MEDIA_TYPE_TEST_XML);
       response = request.get();
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      Book result = response.getEntity(Book.class);
+      Book result = response.readEntity(Book.class);
       log.info("book: " + book1);
       Assert.assertEquals(book1, result);
 
       // Retrieve second book.
-      request = new ClientRequest("http://localhost:8080/resteasy-ejb-test/book/" + id2);
+      request = client.target("http://localhost:8080/resteasy-ejb-test/book/" + id2).request();
       request.accept(Constants.MEDIA_TYPE_TEST_XML);
       response = request.get();
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      result = response.getEntity(Book.class);
+      result = response.readEntity(Book.class);
       log.info("book: " + book2);
       Assert.assertEquals(book2, result);
       
       // Verify that EJBBookReader and EJBBookWriter have been used, twice on each side.
-      request = new ClientRequest("http://localhost:8080/resteasy-ejb-test/uses/4");
+      request = client.target("http://localhost:8080/resteasy-ejb-test/uses/4").request();
       response = request.get();
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
       
       // Reset counter.
-      request = new ClientRequest("http://localhost:8080/resteasy-ejb-test/reset");
+      request = client.target("http://localhost:8080/resteasy-ejb-test/reset").request();
       response = request.get();
       log.info("Status: " + response.getStatus());
       assertEquals(204, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
    
    /**

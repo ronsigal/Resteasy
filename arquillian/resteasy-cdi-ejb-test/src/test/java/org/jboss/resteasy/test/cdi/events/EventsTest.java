@@ -2,11 +2,15 @@ package org.jboss.resteasy.test.cdi.events;
 
 import static org.junit.Assert.assertEquals;
 
-import java.lang.reflect.Type;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
 import javax.swing.text.Utilities;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 
@@ -26,9 +30,6 @@ import org.jboss.resteasy.cdi.events.BookWriterInterceptor;
 import org.jboss.resteasy.cdi.events.JaxRsActivator;
 import org.jboss.resteasy.cdi.util.Constants;
 import org.jboss.resteasy.cdi.util.UtilityProducer;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.util.GenericType;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -71,33 +72,32 @@ public class EventsTest
    public void testEvents() throws Exception
    {
       log.info("starting testEvents()");
+      Client client = ClientBuilder.newClient();
 
       // Create book.
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/create/");
+      Builder request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/create/").request();
       Book book = new Book("RESTEasy: the Sequel");
-      Type genericType = (new GenericType<Book>() {}).getGenericType();
-      request.body(Constants.MEDIA_TYPE_TEST_XML_TYPE, book, genericType);
-      ClientResponse<?> response = request.post();
+      Response response = request.post(Entity.entity(book, Constants.MEDIA_TYPE_TEST_XML_TYPE));
       assertEquals(200, response.getStatus());
       log.info("Status: " + response.getStatus());
-      int id = response.getEntity(int.class);
+      int id = response.readEntity(int.class);
       log.info("id: " + id);
       Assert.assertEquals(0, id);
 
       // Retrieve book.
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/book/" + id);
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/book/" + id).request();
       request.accept(Constants.MEDIA_TYPE_TEST_XML);
       response = request.get();
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      Book result = response.getEntity(Book.class);
+      Book result = response.readEntity(Book.class);
       log.info("book: " + book);
       Assert.assertEquals(book, result);
 
-      request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/test/");
-      response = request.post();
+      request = client.target("http://localhost:8080/resteasy-cdi-ejb-test/rest/test/").request();
+      response = request.post(null);
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 }

@@ -10,8 +10,6 @@ import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-
 /**
  * 
  * @author <a href="ron.sigal@jboss.com">Ron Sigal</a>
@@ -20,7 +18,6 @@ import org.jboss.resteasy.annotations.interception.ServerInterceptor;
  * Copyright Jul 23, 2012
  */
 @Provider
-@ServerInterceptor
 public class BookReaderInterceptor implements ReaderInterceptor
 {
    @Inject @ReadIntercept Event<String> readInterceptEvent;

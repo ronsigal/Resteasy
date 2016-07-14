@@ -24,7 +24,7 @@ public class LowerBoundTypedResource<T extends HierarchyHolder<? super Primate>>
    @Inject
    private Logger log;
 
-   @Inject
+   //@Inject
    @HolderBinding
    LowerBoundHierarchyHolder<T> typeParameterLowerBound;
 

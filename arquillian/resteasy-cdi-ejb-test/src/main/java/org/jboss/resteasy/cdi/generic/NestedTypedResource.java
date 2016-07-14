@@ -23,7 +23,7 @@ public class NestedTypedResource<T extends HierarchyHolder<? extends Primate>> i
    @Inject
    private Logger log;
    
-   @Inject
+   //@Inject
    @HolderBinding
    NestedHierarchyHolder<T> typeParameterNested;
 

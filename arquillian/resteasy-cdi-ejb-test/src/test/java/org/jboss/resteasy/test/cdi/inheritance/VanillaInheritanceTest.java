@@ -5,6 +5,9 @@ import static org.junit.Assert.assertEquals;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.Response;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -13,8 +16,6 @@ import org.jboss.resteasy.cdi.inheritence.InheritanceResource;
 import org.jboss.resteasy.cdi.inheritence.JaxRsActivator;
 import org.jboss.resteasy.cdi.inheritence.SelectBook;
 import org.jboss.resteasy.cdi.util.UtilityProducer;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
@@ -49,10 +50,10 @@ public class VanillaInheritanceTest
    public void testVanilla() throws Exception
    {
       log.info("starting testVanilla()");
-      ClientRequest request = new ClientRequest("http://localhost:8080/resteasy-cdi-ejb-test/rest/vanilla/");
-      ClientResponse<?> response = request.get();
+      Builder request = ClientBuilder.newClient().target("http://localhost:8080/resteasy-cdi-ejb-test/rest/vanilla/").request();
+      Response response = request.get();
       log.info("Status: " + response.getStatus());
       assertEquals(200, response.getStatus());
-      response.releaseConnection();
+      response.close();
    }
 }

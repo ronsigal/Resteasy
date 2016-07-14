@@ -24,99 +24,99 @@ public class ConcreteResource implements ConcreteResourceIntf
    private Logger log;
    
    @SuppressWarnings("rawtypes")
-   @Inject
+   //@Inject
    @HolderBinding
    ObjectHolder rawObject;
    
-   @Inject
+   //@Inject
    @HolderBinding
    ObjectHolder<?> wildcardObject;
    
-   @Inject
+   //@Inject
    @HolderBinding
    ObjectHolder<Object> objectObject;
    
    @SuppressWarnings("rawtypes")
-   @Inject
+   //@Inject
    @HolderBinding
    HierarchyHolder rawHierarchy;
    
-   @Inject
+   //@Inject
    @HolderBinding
    HierarchyHolder<?> wildcardHierarchy;
    
-   @Inject
+   //@Inject
    @HolderBinding
    HierarchyHolder<Primate> primateHierarchy;
    
-   @Inject
+   //@Inject
    @HolderBinding
    HierarchyHolder<? super Australopithecus> lowerBoundHierarchy;
    
-   @Inject
+   //@Inject
    @HolderBinding
    HierarchyHolder<? extends Animal> upperBoundHierarchy;
 
    @SuppressWarnings("rawtypes")
-   @Inject
+   //@Inject
    @HolderBinding
    NestedHierarchyHolder rawNested;
    
-   @Inject
+   //@Inject
    @HolderBinding
    NestedHierarchyHolder<?> wildcardNested;
    
-   @Inject
+   //@Inject
    @HolderBinding
    NestedHierarchyHolder<HierarchyHolder<Primate>> primateNested;
    
-   @Inject
+   //@Inject
    @HolderBinding
    NestedHierarchyHolder<HierarchyHolder<? super Australopithecus>> lowerBoundNested;
    
-   @Inject
+   //@Inject
    @HolderBinding
    NestedHierarchyHolder<HierarchyHolder<? extends Animal>> upperBoundNested;
    
    @SuppressWarnings("rawtypes")
-   @Inject
+   //@Inject
    @HolderBinding
    UpperBoundHierarchyHolder rawUpperBound;
    
-   @Inject
+   //@Inject
    @HolderBinding
    UpperBoundHierarchyHolder<?> wildcardUpperBound;
    
-   @Inject
+   //@Inject
    @HolderBinding
    UpperBoundHierarchyHolder<HierarchyHolder<Primate>> primateUpperBound;
    
-   @Inject
+   //@Inject
    @HolderBinding
    UpperBoundHierarchyHolder<? extends HierarchyHolder<? extends Animal>> upperBoundUpperBound;
    
-   @Inject
+   //@Inject
    @HolderBinding
    UpperBoundHierarchyHolder<? extends HierarchyHolder<? super Australopithecus>> lowerBoundUpperBound;
    
    @SuppressWarnings("rawtypes")
-   @Inject
+   //@Inject
    @HolderBinding
    LowerBoundHierarchyHolder rawLowerBound;
    
-   @Inject
+   //@Inject
    @HolderBinding
    LowerBoundHierarchyHolder<?> wildcardLowerBound;
    
-   @Inject
+   //@Inject
    @HolderBinding
    LowerBoundHierarchyHolder<HierarchyHolder<Primate>> primateLowerBound;
    
-   @Inject
+   //@Inject
    @HolderBinding
    LowerBoundHierarchyHolder<? extends HierarchyHolder<? extends Animal>> upperBoundLowerBound;
    
-   @Inject
+   //@Inject
    @HolderBinding
    LowerBoundHierarchyHolder<? extends HierarchyHolder<? super Australopithecus>> lowerBoundLowerBound;
    
