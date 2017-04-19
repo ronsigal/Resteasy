@@ -1,12 +1,17 @@
 package org.jboss.resteasy.plugins.validation;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.CDI;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.validation.BootstrapConfiguration;
 import javax.validation.Configuration;
+import javax.validation.ConstraintValidatorFactory;
 import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.ValidatorFactory;
@@ -55,9 +60,26 @@ public class AbstractValidatorContextResolver
                }
                catch (NamingException e)
                {
-                  LogMessages.LOGGER.info(Messages.MESSAGES.usingValidatorFactoryDoesNotSupportCDI());
                   HibernateValidatorConfiguration config = Validation.byProvider(HibernateValidator.class).configure();
-                  validatorFactory = tmpValidatorFactory = config.buildValidatorFactory();
+                  ConstraintValidatorFactory cvf = null;
+                  try
+                  {
+                     Class<?> cvfClass = config.getClass().getClassLoader().loadClass("org.hibernate.validator.internal.cdi.InjectingConstraintValidatorFactory");  
+                     if (cvfClass != null)
+                     {
+                        BeanManager beanManager = CDI.current().getBeanManager();
+                        Constructor<?> constructor = cvfClass.getConstructor(BeanManager.class);
+                        cvf = (ConstraintValidatorFactory) constructor.newInstance(beanManager);
+                        validatorFactory = tmpValidatorFactory = config.constraintValidatorFactory(cvf).buildValidatorFactory();
+                     }
+                  }
+                  catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                        | IllegalArgumentException | NoSuchMethodException | InvocationTargetException 
+                        | IllegalStateException e1)
+                  {
+                     LogMessages.LOGGER.info(Messages.MESSAGES.usingValidatorFactoryDoesNotSupportCDI());
+                     validatorFactory = tmpValidatorFactory = config.buildValidatorFactory();
+                  }
                }
             }
          }
