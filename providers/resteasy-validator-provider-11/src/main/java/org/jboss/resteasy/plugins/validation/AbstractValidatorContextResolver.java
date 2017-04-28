@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 
+import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.CDI;
 import javax.naming.Context;
@@ -64,18 +65,24 @@ public class AbstractValidatorContextResolver
                   ConstraintValidatorFactory cvf = null;
                   try
                   {
-                     Class<?> cvfClass = config.getClass().getClassLoader().loadClass("org.hibernate.validator.internal.cdi.InjectingConstraintValidatorFactory");  
-                     if (cvfClass != null)
-                     {
-                        BeanManager beanManager = CDI.current().getBeanManager();
-                        Constructor<?> constructor = cvfClass.getConstructor(BeanManager.class);
-                        cvf = (ConstraintValidatorFactory) constructor.newInstance(beanManager);
-                        validatorFactory = tmpValidatorFactory = config.constraintValidatorFactory(cvf).buildValidatorFactory();
-                     }
+                       // The following works, but depends on the class name.
+//                     Class<?> cvfClass = config.getClass().getClassLoader().loadClass("org.hibernate.validator.internal.cdi.InjectingConstraintValidatorFactory");  
+//                     if (cvfClass != null)
+//                     {
+//                        
+//                        BeanManager beanManager = CDI.current().getBeanManager();
+//                        Constructor<?> constructor = cvfClass.getConstructor(BeanManager.class);
+//                        cvf = (ConstraintValidatorFactory) constructor.newInstance(beanManager);
+//                        validatorFactory = tmpValidatorFactory = config.constraintValidatorFactory(cvf).buildValidatorFactory();
+//                     }
+                     // The following doesn't work.
+                     Instance<ValidatorFactory> instance = CDI.current().select(ValidatorFactory.class);
+                     validatorFactory = tmpValidatorFactory = instance.get();
                   }
-                  catch (ClassNotFoundException | InstantiationException | IllegalAccessException
-                        | IllegalArgumentException | NoSuchMethodException | InvocationTargetException 
-                        | IllegalStateException e1)
+//                  catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+//                        | IllegalArgumentException | NoSuchMethodException | InvocationTargetException 
+//                        | IllegalStateException e1)
+                  catch (Exception e1)
                   {
                      LogMessages.LOGGER.info(Messages.MESSAGES.usingValidatorFactoryDoesNotSupportCDI());
                      validatorFactory = tmpValidatorFactory = config.buildValidatorFactory();
