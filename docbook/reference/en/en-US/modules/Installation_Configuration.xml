@@ -704,6 +704,18 @@ public class MyApplication extends Application
                                 independent of the setting of this parameter.
                             </entry>
                         </row>
+                        <row>
+                            <entry>
+                                resteasy.use.object.message.body.writers
+                            </entry>
+                            <entry>
+                                true
+                            </entry>
+                            <entry>
+                                Take into account <classname>MessageBodyWriter</classname>s with parameterized
+                                type <classname>Object</classname>.
+                            </entry>
+                        </row>
                     </tbody>
                 </tgroup>
             </table>

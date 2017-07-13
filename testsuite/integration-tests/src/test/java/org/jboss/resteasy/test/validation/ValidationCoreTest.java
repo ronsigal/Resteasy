@@ -77,7 +77,7 @@ public class ValidationCoreTest {
     public void testReturnValues() throws Exception {
         ValidationCoreFoo foo = new ValidationCoreFoo("a");
         Assert.assertNotNull(client);
-        Response response = client.target(generateURL("/return/native")).request().post(Entity.entity(foo, "application/foo"));
+        Response response = client.target(generateURL("/return/native")).request().accept("application/foo").post(Entity.entity(foo, "application/foo"));
         // Valid native constraint
         Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
         Assert.assertEquals(RESPONSE_ERROR_MSG, foo, response.readEntity(ValidationCoreFoo.class));
@@ -85,21 +85,21 @@ public class ValidationCoreTest {
 
         // Valid imposed constraint
         foo = new ValidationCoreFoo("abcde");
-        response = client.target(generateURL("/return/imposed")).request().post(Entity.entity(foo, "application/foo"));
+        response = client.target(generateURL("/return/imposed")).request().accept("application/foo").post(Entity.entity(foo, "application/foo"));
         Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
         Assert.assertEquals(RESPONSE_ERROR_MSG, foo, response.readEntity(ValidationCoreFoo.class));
         response.close();
 
         // Valid native and imposed constraints.
         foo = new ValidationCoreFoo("abc");
-        response = client.target(generateURL("/return/nativeAndImposed")).request().post(Entity.entity(foo, "application/foo"));
+        response = client.target(generateURL("/return/nativeAndImposed")).request().accept("application/foo").post(Entity.entity(foo, "application/foo"));
         Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
         Assert.assertEquals(RESPONSE_ERROR_MSG, foo, response.readEntity(ValidationCoreFoo.class));
         response.close();
 
         {
             // Invalid native constraint
-            response = client.target(generateURL("/return/native")).request().post(Entity.entity(new ValidationCoreFoo("abcdef"), "application/foo"));
+            response = client.target(generateURL("/return/native")).request().accept("application/foo").post(Entity.entity(new ValidationCoreFoo("abcdef"), "application/foo"));
             String entity = response.readEntity(String.class);
             Assert.assertEquals(HttpResponseCodes.SC_INTERNAL_SERVER_ERROR, response.getStatus());
             String header = response.getHeaderString(Validation.VALIDATION_HEADER);
@@ -114,7 +114,7 @@ public class ValidationCoreTest {
 
         {
             // Invalid imposed constraint
-            response = client.target(generateURL("/return/imposed")).request().post(Entity.entity(new ValidationCoreFoo("abcdef"), "application/foo"));
+            response = client.target(generateURL("/return/imposed")).request().accept("application/foo").post(Entity.entity(new ValidationCoreFoo("abcdef"), "application/foo"));
             Assert.assertEquals(HttpResponseCodes.SC_INTERNAL_SERVER_ERROR, response.getStatus());
             String header = response.getHeaderString(Validation.VALIDATION_HEADER);
             Assert.assertNotNull("Validation header is missing", header);
@@ -130,7 +130,7 @@ public class ValidationCoreTest {
 
         {
             // Invalid native and imposed constraints
-            response = client.target(generateURL("/return/nativeAndImposed")).request().post(Entity.entity(new ValidationCoreFoo("abcdef"), "application/foo"));
+            response = client.target(generateURL("/return/nativeAndImposed")).request().accept("application/foo").post(Entity.entity(new ValidationCoreFoo("abcdef"), "application/foo"));
             Assert.assertEquals(HttpResponseCodes.SC_INTERNAL_SERVER_ERROR, response.getStatus());
             String header = response.getHeaderString(Validation.VALIDATION_HEADER);
             Assert.assertNotNull("Validation header is missing", header);
@@ -161,7 +161,7 @@ public class ValidationCoreTest {
     public void testViolationsBeforeReturnValue() throws Exception {
         // Valid
         ValidationCoreFoo foo = new ValidationCoreFoo("pqrs");
-        Response response = client.target(generateURL("/all/abc/wxyz")).request().post(Entity.entity(foo, "application/foo"));
+        Response response = client.target(generateURL("/all/abc/wxyz")).request().accept("application/foo").post(Entity.entity(foo, "application/foo"));
         Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
         Assert.assertEquals(RESPONSE_ERROR_MSG, foo, response.readEntity(ValidationCoreFoo.class));
         response.close();
@@ -169,7 +169,7 @@ public class ValidationCoreTest {
         // Invalid: Should have 1 each of field, property, class, and parameter violations,
         //          and no return value violations.
         foo = new ValidationCoreFoo("p");
-        response = client.target(generateURL("/all/a/z")).request().post(Entity.entity(foo, "application/foo"));
+        response = client.target(generateURL("/all/a/z")).request().accept("application/foo").post(Entity.entity(foo, "application/foo"));
         Assert.assertEquals(HttpResponseCodes.SC_BAD_REQUEST, response.getStatus());
         String header = response.getHeaderString(Validation.VALIDATION_HEADER);
         Assert.assertNotNull("Validation header is missing", header);

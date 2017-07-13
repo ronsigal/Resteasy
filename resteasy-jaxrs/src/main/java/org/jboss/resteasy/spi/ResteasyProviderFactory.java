@@ -19,6 +19,7 @@ import org.jboss.resteasy.plugins.delegates.MediaTypeHeaderDelegate;
 import org.jboss.resteasy.plugins.delegates.NewCookieHeaderDelegate;
 import org.jboss.resteasy.plugins.delegates.UriHeaderDelegate;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
+import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.specimpl.LinkBuilderImpl;
@@ -32,6 +33,7 @@ import org.jboss.resteasy.util.Types;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.*;
 
 import javax.annotation.Priority;
+import javax.servlet.ServletContext;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Priorities;
@@ -1892,13 +1894,31 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
       List<MessageBodyWriter<?>> list = new ArrayList<MessageBodyWriter<?>>();
       MediaType mediaType = MediaType.WILDCARD_TYPE;
       List<SortedKey<MessageBodyWriter>> writers = getServerMessageBodyWriters().getPossible(mediaType, type);
+      boolean useObjectMessageBodyWriters = true;
+      ServletContext context = getContextData(ServletContext.class);
+      if (context != null)
+      {
+         String s = context.getInitParameter(ResteasyContextParameters.RESTEASY_USE_OBJECT_MESSAGE_BODY_WRITERS);
+         if (s != null)
+         {
+            useObjectMessageBodyWriters = Boolean.parseBoolean(s);
+         }
+      }
+      
       for (SortedKey<MessageBodyWriter> writer : writers)
       {
          if (writer.obj.isWriteable(type, genericType, annotations, mediaType))
          {
             MessageBodyWriter mbw = writer.obj;
             Class writerType = Types.getTemplateParameterOfInterface(mbw.getClass(), MessageBodyWriter.class);
-            if (writerType == null || writerType.equals(Object.class) || !writerType.isAssignableFrom(type)) continue;
+            if (useObjectMessageBodyWriters)
+            {
+               if (writerType == null || !writerType.isAssignableFrom(type)) continue;
+            }
+            else
+            {
+               if (writerType == null || writerType.equals(Object.class) || !writerType.isAssignableFrom(type)) continue;  
+            }
             Produces produces = mbw.getClass().getAnnotation(Produces.class);
             if (produces == null) continue;
             for (String produce : produces.value())

@@ -202,4 +202,61 @@ URI uri = uriInfo.getBaseUriBuilder().path("test").build();
     </itemizedlist>
 </sect1>
 
+<sect1>
+<title>Migrating to 3.1.4</title>
+
+<para>
+Changes relevant to version 3.1.4:
+</para>
+
+   <itemizedlist>
+      <listitem>
+      <ulink url="https://issues.jboss.org/browse/RESTEASY-1686">RESTEASY-1686: Media type negotiation unexpected behavior</ulink>
+      <para>
+      Earlier versions of Resteasy had a bug which prevented <classname>MessageBodyWriter</classname>s with parameter type
+      <classname>Object</classname>, i.e., defined something like
+      </para>
+      <programlisting>
+@Provider
+@Produces("abc/xyz")
+public class TestProvider implements MessageBodyWriter&lt;Object&gt; { ...
+      </programlisting>
+      
+      <para>
+      from being considered in a certain case. In particular, if 1) a <classname>Response</classname> doesn't have an
+      explicit media type, and 2) the resource method and class don't have @Produces annotations, then any
+      <classname>MessageBodyWriter</classname>s that can process the return entity are examined for @Produces 
+      annotations. However, those with paramter type <classname>Object</classname> were ignored.
+      </para>
+      
+      <para>
+      That bug has now been fixed, but it is worth noting that such a <classname>MessageBodyWriter</classname>
+      can contribute unexpected media types such as "abc/xyz" in the example above, which can lead to unexpected
+      problems. The appropriate way to solve these problems is to give an explict Accept request header:
+      </para>
+      
+      <programlisting>
+Response response = client.target("http://localhost:8080/test").request().accept("text/plain").get();
+      </programlisting>
+      
+      <para>
+      An alternative is to configure Resteasy to adopt the older behavior by setting the "resteasy.use.object.message.body.writers"
+      context parameter to "false":
+      </para>
+      
+      <programlisting>
+   &lt;context-param&gt;
+      &lt;param-name&gt;resteasy.use.object.message.body.writers&lt;/param-name&gt;
+      &lt;param-value&gt;false&lt;/param-value&gt;
+   &lt;/context-param&gt;
+      </programlisting>
+      
+      <para>
+      See Chapter <link linkend='response_entity_media_type'>Response entity media type</link> for more information.
+      </para>
+      
+      </listitem>
+      </itemizedlist>
+</sect1>
+
 </chapter>

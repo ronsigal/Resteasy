@@ -466,4 +466,66 @@ with an appropriate charset value.
    </para>
    </sect1>
    
+   <sect1 id="response_entity_media_type">
+   <title>Response entity media type</title>
+   
+   <para>
+   Based on the JAX-RS Specification
+   (<ulink url="http://download.oracle.com/otndocs/jcp/jaxrs-2_0-fr-eval-spec/">http://download.oracle.com/otndocs/jcp/jaxrs-2_0-fr-eval-spec/</ulink>),
+   Resteasy uses a number of sources to determine the media type of a
+   response entity. The simplest case is when a resource method returns a <classname>Response</classname>
+   in which the media type is set, as in, for example,
+   </para>
+   
+   <programlisting>
+Response.ok("x", MediaType.TEXT_PLAIN_TYPE).build();
+   </programlisting>
+   
+   <para>
+   In that case, Resteasy will attempt to marshal the entity with media type "text/plain".
+   </para>
+   
+   <para>If the media type is
+   not set explicitly, Resteasy attempts to derive a media type from a combination of an Accept request header,
+   if any, and @Produces annotations, if any, on the resource method or class. For example, if there is an Accept header
+   </para>
+   
+   <programlisting>
+Accept: application/xml, text/*
+   </programlisting>
+   
+   <para>
+   and the resource method is decorated with @Produces("text/plain"), then Resteasy will attempt to marshal the
+   entity with media type "text/plain". 
+   </para>
+
+   <para>
+   If neither the resource method nor the resource class has a @Produces annotation, Resteasy will look for a
+   @Produces annotation on a <classname>MessageBodyWriter</classname> capable of marshaling the response entity.
+   If it finds any, it will look for the best match against the Accept request header, if any.
+   </para>
+   
+   <para>
+   For the details see the algorithm in Section 3.8 "Determining the MediaType of Responses" of the JAX-RS
+   specification.
+   </para>
+   
+   <para>
+   <emphasis role="bold">Note.</emphasis> Earlier versions of Resteasy had a bug in which <classname>MessageBodyWriter</classname>s
+   defined like
+   </para>
+   
+   <programlisting>
+   @Provides("text/xyz")
+   public class EntityWriter implements MessageBodyWriter&lt;Object&gt; { ...
+   </programlisting>
+   
+   <para>
+   with parameter type <classname>Object</classname> were ignored in this context. That bug is now fixed, but a side effect is that some unexpected media types
+   (like "text/xyz" in this case) might be considered. The moral is that it's a good idea to use Accept request
+   headers. But it's also possible to request the earlier behavior by setting the context parameter
+   "resteasy.use.object.message.body.writers" to false.
+   </para>
+   
+   </sect1>
 </chapter>
