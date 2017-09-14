@@ -3,6 +3,7 @@ package org.jboss.resteasy.specimpl;
 import org.jboss.resteasy.core.Headers;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.util.Chunked;
 import org.jboss.resteasy.util.HeaderHelper;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
@@ -402,4 +403,8 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder
       return this;
    }
 
+   public Response.ResponseBuilder chunked(boolean c) {
+      ResteasyProviderFactory.pushContext(Chunked.class, new Chunked(c));;
+      return this;
+   }
 }

@@ -1,5 +1,8 @@
 package org.jboss.resteasy.plugins.providers;
 
+import org.apache.http.HttpHeaders;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.util.Chunked;
 import org.jboss.resteasy.util.NoContent;
 import org.jboss.resteasy.util.NoContentInputStreamDelegate;
 import org.jboss.resteasy.util.TypeConverter;
@@ -19,6 +22,8 @@ import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -64,9 +69,31 @@ public class DefaultTextPlain implements MessageBodyReader, MessageBodyWriter
    }
 
    public void writeTo(Object o, Class type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException
-   {
+   {/*
       String charset = mediaType.getParameters().get("charset");
       if (charset == null) entityStream.write(o.toString().getBytes(StandardCharsets.UTF_8));
       else entityStream.write(o.toString().getBytes(charset));
+  */
+      String charset = mediaType.getParameters().get("charset");
+      byte[] bytes = charset == null ? o.toString().getBytes(StandardCharsets.UTF_8) : o.toString().getBytes(charset);
+      Chunked chunked = ResteasyProviderFactory.getContextData(Chunked.class);
+      if (chunked != null &&
+            !httpHeaders.containsKey(HttpHeaders.TRANSFER_ENCODING) && 
+            !httpHeaders.containsKey(HttpHeaders.CONTENT_LENGTH))
+      {
+         if (chunked.isChunked())
+         {
+            List<Object> headers = new ArrayList<Object>();
+            headers.add("chunked");
+            httpHeaders.put(HttpHeaders.TRANSFER_ENCODING, headers);
+         }
+         else
+         {
+            List<Object> headers = new ArrayList<Object>();
+            headers.add(bytes.length);
+            httpHeaders.put(HttpHeaders.CONTENT_LENGTH, headers);
+         }
+      }
+      entityStream.write(bytes);
    }
 }
