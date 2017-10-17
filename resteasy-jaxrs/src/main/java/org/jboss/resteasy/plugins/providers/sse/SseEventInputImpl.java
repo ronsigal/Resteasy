@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -23,9 +22,9 @@ public class SseEventInputImpl implements EventInput, Closeable
    private MediaType mediaType;
    private MultivaluedMap<String, String> httpHeaders;
    private InputStream inputStream;
+   private final byte[] EventEND = "\r\n\r\n".getBytes();
    private volatile boolean isClosed = false;
-   private boolean lastFieldWasData;
-   private final String DELIMITER = new String(SseConstants.EVENT_DELIMITER, StandardCharsets.UTF_8);
+
    public SseEventInputImpl(Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
          InputStream inputStream)
    {
@@ -52,13 +51,11 @@ public class SseEventInputImpl implements EventInput, Closeable
       byte[] chunk = null;
       try
       {
-         lastFieldWasData = false;
          chunk = readEvent(inputStream);
-         if (chunk == null)
-         {
+         if (chunk == null) {
             close();
             return null;
-         }
+         } 
       }
       catch (IOException e1)
       {
@@ -75,15 +72,13 @@ public class SseEventInputImpl implements EventInput, Closeable
 
       final ByteArrayInputStream entityStream = new ByteArrayInputStream(chunk);
       final ByteArrayOutputStream temSave = new ByteArrayOutputStream();
-      Charset charset = StandardCharsets.UTF_8;
+      Charset charset = SseConstants.UTF8;
       if (mediaType != null && mediaType.getParameters().get(MediaType.CHARSET_PARAMETER) != null)
       {
          charset = Charset.forName(mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
       }
-
       final InboundSseEventImpl.Builder eventBuilder = new InboundSseEventImpl.Builder(annotations, mediaType,
             httpHeaders);
-      //TODO: Look at if this can be improved
       int b = -1;
       SseConstants.EVENT currentState = SseConstants.EVENT.START;
       while ((b = entityStream.read()) != -1)
@@ -113,7 +108,7 @@ public class SseEventInputImpl implements EventInput, Closeable
             {
 
                b = readLine(entityStream, '\n', temSave);
-               String commentLine = temSave.toString(charset.name());
+               String commentLine = temSave.toString(charset.toString());               
                eventBuilder.commentLine(commentLine);
                temSave.reset();
                currentState = SseConstants.EVENT.START;
@@ -123,11 +118,11 @@ public class SseEventInputImpl implements EventInput, Closeable
             {
                temSave.write(b);
                b = readLine(entityStream, ':', temSave);
-               String fieldName = temSave.toString(StandardCharsets.UTF_8.name());
+               String fieldName = temSave.toString(charset.toString());
                temSave.reset();
                if (b == ':')
                {
-                  //spec says there is space after colon
+                  //space after the colon is ignored
                   do
                   {
                      b = entityStream.read();
@@ -175,23 +170,20 @@ public class SseEventInputImpl implements EventInput, Closeable
    private void processField(final InboundSseEventImpl.Builder inboundEventBuilder, final String name,
          final MediaType mediaType, final byte[] value)
    {
-      Charset charset = StandardCharsets.UTF_8;
+      Charset charset = SseConstants.UTF8;
       if (mediaType != null && mediaType.getParameters().get(MediaType.CHARSET_PARAMETER) != null)
       {
          charset = Charset.forName(mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
       }
       String valueString = new String(value, charset);
-      boolean newLastFieldWasData = false;
       if ("event".equals(name))
       {
          inboundEventBuilder.name(valueString);
       }
       else if ("data".equals(name))
       {
-         if(lastFieldWasData)
-            inboundEventBuilder.write(SseConstants.EOL);
          inboundEventBuilder.write(value);
-         newLastFieldWasData = true;
+         inboundEventBuilder.write(SseConstants.EOL);
       }
       else if ("id".equals(name))
       {
@@ -212,7 +204,6 @@ public class SseEventInputImpl implements EventInput, Closeable
       {
          LogMessages.LOGGER.skipUnkownFiled(name);
       }
-      lastFieldWasData = newLastFieldWasData;
    }
 
    public byte[] readEvent(final InputStream in) throws IOException
@@ -221,40 +212,25 @@ public class SseEventInputImpl implements EventInput, Closeable
       EventByteArrayOutputStream buffer = new EventByteArrayOutputStream();
       int data;
       int pos = 0;
-      boolean boundary = false;
-      byte[] eolBuffer = new byte[5];
       while ((data = in.read()) != -1)
       {
          byte b = (byte) data;
-         if (b == '\r' || b == '\n')
+         if (b == EventEND[pos])
          {
-            eolBuffer[pos] = b;
-            //if it meets \r\r , \n\n , \r\n\r\n or \n\r\n\r\n
-            if ((pos > 0 && eolBuffer[pos] == eolBuffer[pos - 1])
-                  || (pos >= 3 && new String(eolBuffer, 0, pos, StandardCharsets.UTF_8).contains(DELIMITER)))
-            {
-               boundary = true;
-            }
-            //take it a boundary if there are 5 unexpected eols  
-            if (pos++ > 4)
-            {
-               boundary = true;
-            }
+            pos++;
          }
          else
          {
             pos = 0;
          }
          buffer.write(b);
-         if (boundary && buffer.size() > pos)
+         if (pos >= EventEND.length && buffer.toByteArray().length > EventEND.length)
          {
             return buffer.getEventPayLoad();
          }
-         //if it's emtpy 
-         if (boundary && buffer.size() == pos)
+         if (pos >= EventEND.length && buffer.toByteArray().length == EventEND.length)
          {
             pos = 0;
-            boundary=false;
             buffer.reset();
             continue;
          }

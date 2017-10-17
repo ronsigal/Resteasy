@@ -147,8 +147,7 @@ public abstract class AbstractAsynchronousResponse implements ResteasyAsynchrono
       this.annotations = annotations;
    }
 
-   @Override
-   public void completionCallbacks(Throwable throwable)
+   protected void completionCallbacks(Throwable throwable)
    {
       for (CompletionCallback callback : completionCallbacks)
       {

@@ -8,18 +8,20 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.SseEventSink;
 
+import org.jboss.resteasy.plugins.server.servlet.Servlet3AsyncHttpRequest;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
-import org.jboss.resteasy.spi.HttpResponse;
-import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
@@ -27,9 +29,10 @@ import org.jboss.resteasy.util.HttpHeaderNames;
 public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements SseEventSink
 {
    private final MessageBodyWriter<OutboundSseEvent> writer;
-   private final ResteasyAsynchronousContext asyncContext;
-   private final HttpResponse response;
+   private final Servlet3AsyncHttpRequest request;
+   private final HttpServletResponse response;
    private volatile boolean closed;
+   private static final byte[] END = "\r\n\r\n".getBytes();
    private final Map<Class<?>, Object> contextDataMap;
    private boolean responseFlushed = false;
    
@@ -38,13 +41,16 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
       this.writer = writer; 
       contextDataMap = ResteasyProviderFactory.getContextDataMap();
 
-      org.jboss.resteasy.spi.HttpRequest req = ResteasyProviderFactory.getContextData(org.jboss.resteasy.spi.HttpRequest.class);
-      asyncContext = req.getAsyncContext();
+      Object req = ResteasyProviderFactory.getContextData(org.jboss.resteasy.spi.HttpRequest.class);
+      if (!(req instanceof Servlet3AsyncHttpRequest)) {
+          throw new ServerErrorException(Messages.MESSAGES.asyncServletIsRequired(), Status.INTERNAL_SERVER_ERROR);
+      }
+      request = (Servlet3AsyncHttpRequest)req;
 
-      if (!asyncContext.isSuspended()) {
+      if (!request.getAsyncContext().isSuspended()) {
          try
          {
-            asyncContext.suspend();
+            request.getAsyncContext().suspend();
          }
          catch (IllegalStateException ex)
          {
@@ -52,39 +58,36 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
          }
       }
 
-      response =  ResteasyProviderFactory.getContextData(HttpResponse.class);
+      response =  ResteasyProviderFactory.getContextData(HttpServletResponse.class);
    }
    
    @Override
    public synchronized void close()
    {
-      closed = true;
-      if (asyncContext.isSuspended() && asyncContext.getAsyncResponse() != null) {
-         if (asyncContext.isSuspended()) {
+      if (request.getAsyncContext().isSuspended() && request.getAsyncContext().getAsyncResponse() != null) {
+         if (request.getAsyncContext().isSuspended()) {
             //resume(null) will call into AbstractAsynchronousResponse.internalResume(Throwable exc)
             //The null is valid reference for Throwable:http://stackoverflow.com/questions/17576922/why-can-i-throw-null-in-java
             //Response header will be set with original one
-            asyncContext.getAsyncResponse().resume(Response.noContent().build());
+            request.getAsyncContext().getAsyncResponse().resume(Response.noContent().build());
          }
       }
-      
+      closed = true;
    }
 
    protected synchronized void flushResponseToClient()
    {
       if (!responseFlushed) {
-         response.getOutputHeaders().add(HttpHeaderNames.CONTENT_TYPE, MediaType.SERVER_SENT_EVENTS);
+         response.setHeader(HttpHeaderNames.CONTENT_TYPE, MediaType.SERVER_SENT_EVENTS);
          //set back to client 200 OK to implies the SseEventOutput is ready
          try
          {
-            response.getOutputStream().write(SseConstants.EOL);
-            response.getOutputStream().write(SseConstants.EOL);
+            response.getOutputStream().write(END);
             response.flushBuffer();
             responseFlushed = true;
          }
          catch (IOException e)
          {
-            close();
             throw new ProcessingException(Messages.MESSAGES.failedToCreateSseEventOutput(), e);
          }
       }
@@ -105,51 +108,30 @@ public class SseEventOutputImpl extends GenericType<OutboundSseEvent> implements
    //We need this to make it async enough
    public CompletionStage<?> send(OutboundSseEvent event, BiConsumer<SseEventSink, Throwable> errorConsumer)
    {
-      if (closed)
-      {
-         throw new IllegalStateException(Messages.MESSAGES.sseEventSinkIsClosed());
-      }
       flushResponseToClient();
-      try
-      {
-         writeEvent(event);
-         
-      }
-      catch (Exception ex)
-      {
-         errorConsumer.accept(this, ex);
-         return CompletableFuture.completedFuture(ex);
-      }
-      return CompletableFuture.completedFuture(event);
+      CompletableFuture<Object> future = CompletableFuture
+            .supplyAsync(() -> {writeEvent(event); return event;});
+      //TODO: log this 
+      future.exceptionally((Throwable ex) -> { errorConsumer.accept(this, ex); return ex;});
+      return future;
    }
    
  
-   protected synchronized void writeEvent(OutboundSseEvent event) throws IOException
+   protected synchronized void writeEvent(OutboundSseEvent event)
    {
       ResteasyProviderFactory.pushContextDataMap(contextDataMap);
-      try
-      {
+      try {
          if (event != null)
          {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             writer.writeTo(event, event.getClass(), null, new Annotation[]{}, event.getMediaType(), null, bout);
             response.getOutputStream().write(bout.toByteArray());
-            response.flushBuffer();
          }
-      }
-      catch (IOException e)
-      {
-         //The connection could be broken or closed. whenever IO error happens, mark closed to true to 
-         //stop event writing 
-         close();
-         LogMessages.LOGGER.failedToWriteSseEvent(event.toString(), e);
-         throw e;
-      }
-      catch (Exception e) {
-         LogMessages.LOGGER.failedToWriteSseEvent(event.toString(), e);
+         response.getOutputStream().write(END);
+         response.flushBuffer();
+      } catch (Exception e) {
          throw new ProcessingException(e);
-      }
-      finally {
+      } finally {
          ResteasyProviderFactory.removeContextDataLevel();
       }
    }

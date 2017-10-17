@@ -148,9 +148,4 @@ public class MockHttpResponse implements HttpResponse
       status = 0;
       errorMessage = null;
    }
-
-   @Override
-   public void flushBuffer() throws IOException
-   {
-   }
 }

@@ -10,7 +10,6 @@ import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.test.response.resource.AsyncResponseCallback;
 import org.jboss.resteasy.test.response.resource.CompletionStageResponseMessageBodyWriter;
 import org.jboss.resteasy.test.response.resource.CompletionStageResponseResource;
 import org.jboss.resteasy.test.response.resource.CompletionStageResponseTestClass;
@@ -39,10 +38,7 @@ public class CompletionStageResponseTest {
    public static Archive<?> deploy() {
       WebArchive war = TestUtil.prepareArchive(CompletionStageResponseTest.class.getSimpleName());
       war.addClass(CompletionStageResponseTestClass.class);
-      war.addAsLibrary(TestUtil.resolveDependency("io.reactivex.rxjava2:rxjava:2.1.3"));
-      return TestUtil.finishContainerPrepare(war, null, CompletionStageResponseMessageBodyWriter.class, 
-            CompletionStageResponseResource.class, SingleProvider.class,
-            AsyncResponseCallback.class);
+      return TestUtil.finishContainerPrepare(war, null, CompletionStageResponseMessageBodyWriter.class, CompletionStageResponseResource.class);
    }
 
    private String generateURL(String path) {
@@ -73,12 +69,6 @@ public class CompletionStageResponseTest {
       String entity = response.readEntity(String.class);
       Assert.assertEquals(200, response.getStatus());
       Assert.assertEquals(CompletionStageResponseResource.HELLO, entity);
-
-      // make sure the completion callback was called with no error
-      request = client.target(generateURL("/callback-called-no-error")).request();
-      response = request.get();
-      Assert.assertEquals(200, response.getStatus());
-      response.close();
    }
 
    /**
@@ -161,12 +151,6 @@ public class CompletionStageResponseTest {
       String entity = response.readEntity(String.class);
       Assert.assertEquals(444, response.getStatus());
       Assert.assertEquals(CompletionStageResponseResource.EXCEPTION, entity);
-
-      // make sure the completion callback was called with with an error
-      request = client.target(generateURL("/callback-called-with-error")).request();
-      response = request.get();
-      Assert.assertEquals(200, response.getStatus());
-      response.close();
    }
 
    /**
@@ -182,12 +166,6 @@ public class CompletionStageResponseTest {
       String entity = response.readEntity(String.class);
       Assert.assertEquals(500, response.getStatus());
       Assert.assertTrue(entity.contains(CompletionStageResponseResource.EXCEPTION));
-
-      // make sure the completion callback was called with with an error
-      request = client.target(generateURL("/callback-called-with-error")).request();
-      response = request.get();
-      Assert.assertEquals(200, response.getStatus());
-      response.close();
    }
 
    /**
@@ -204,25 +182,5 @@ public class CompletionStageResponseTest {
       Assert.assertEquals(500, response.getStatus());
       Assert.assertTrue(entity.contains(CompletionStageResponseResource.EXCEPTION));
       response.close();
-      
-      // make sure the completion callback was called with with an error
-      request = client.target(generateURL("/callback-called-with-error")).request();
-      response = request.get();
-      Assert.assertEquals(200, response.getStatus());
-      response.close();
-   }
-
-   /**
-    * @tpTestDetails Resource method returns CompletionStage<String>.
-    * @tpSince RESTEasy 4.0
-    */
-   @Test
-   public void testTextSingle() throws Exception
-   {
-      Invocation.Builder request = client.target(generateURL("/textSingle")).request();
-      Response response = request.get();
-      String entity = response.readEntity(String.class);
-      Assert.assertEquals(200, response.getStatus());
-      Assert.assertEquals(CompletionStageResponseResource.HELLO, entity);
    }
 }

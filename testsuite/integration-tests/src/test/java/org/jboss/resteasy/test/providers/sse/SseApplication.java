@@ -16,7 +16,6 @@ public class SseApplication extends Application
       if (singletons.isEmpty()) {
          singletons.add(new SseResource());
          singletons.add(new AnotherSseResource());
-         singletons.add(new EscapingSseResource());
       }
       return singletons;
    }

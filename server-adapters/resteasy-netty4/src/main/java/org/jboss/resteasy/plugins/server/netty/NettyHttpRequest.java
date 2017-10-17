@@ -263,18 +263,6 @@ public class NettyHttpRequest extends BaseHttpRequest
             }
 
             @Override
-            public void complete() {
-                synchronized (responseLock)
-                {
-                    if (done) return;
-                    if (cancelled) return;
-                    done = true;
-                    nettyFlush();
-                }
-            }
-
-
-            @Override
             public boolean resume(Object entity) {
                 synchronized (responseLock)
                 {

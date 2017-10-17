@@ -5,6 +5,7 @@ import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.ResteasyAsynchronousResponse;
 import org.jboss.resteasy.spi.UnhandledException;
 
+import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import java.util.Date;
@@ -72,17 +73,7 @@ public class SynchronousExecutionContext extends AbstractExecutionContext
          super(dispatcher, request, response);
       }
 
-      @Override
-      public void complete()
-      {
-         synchronized (responseLock)
-         {
-            if (done) return;
-            if (cancelled) return;
-            done = true;
-            syncLatch.countDown();
-         }
-      }
+
 
       @Override
       public boolean resume(Object entity)

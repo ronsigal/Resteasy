@@ -96,20 +96,7 @@ public class LinkBuilderImpl implements Link.Builder
    public Link build(Object... values) throws UriBuilderException
    {
       if (values == null) throw new IllegalArgumentException(Messages.MESSAGES.valuesParamWasNull());
-      URI built = null;
-      if (uriBuilder == null)
-      {
-        built = baseUri;
-      }
-      else
-      {
-        built = this.uriBuilder.build(values);
-      }
-      if (!built.isAbsolute() && baseUri != null)
-      {
-        built = baseUri.resolve(built);
-      }
-      return new LinkImpl(built, this.map);
+      return new LinkImpl(this.uriBuilder.build(values), this.map);
    }
 
    @Override

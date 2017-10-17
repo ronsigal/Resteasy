@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -48,7 +47,11 @@ public class SseEventProvider implements MessageBodyWriter<OutboundSseEvent>, Me
          MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream)
          throws IOException, WebApplicationException
    {
-      Charset charset = StandardCharsets.UTF_8;
+      Charset charset = SseConstants.UTF8;
+      if (mediaType != null && mediaType.getParameters().get(MediaType.CHARSET_PARAMETER) != null)
+      {
+         charset = Charset.forName(mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
+      }
       if (event.getComment() != null)
       {
          for (final String comment : event.getComment().split("\n"))
@@ -76,7 +79,7 @@ public class SseEventProvider implements MessageBodyWriter<OutboundSseEvent>, Me
          if (event.getReconnectDelay() > -1)
          {
             entityStream.write(SseConstants.RETRY_LEAD);
-            entityStream.write(Long.toString(event.getReconnectDelay()).getBytes(StandardCharsets.UTF_8));
+            entityStream.write(Long.toString(event.getReconnectDelay()).getBytes(charset));
             entityStream.write(SseConstants.EOL);
          }
 
@@ -104,6 +107,7 @@ public class SseEventProvider implements MessageBodyWriter<OutboundSseEvent>, Me
                throw new ServerErrorException(Messages.MESSAGES.notFoundMBW(payloadClass.getName()),
                      Response.Status.INTERNAL_SERVER_ERROR);
             }
+            
             writer.writeTo(event.getData(), payloadClass, payloadType, annotations, event.getMediaType(), httpHeaders,
                   new OutputStream()
                   {
@@ -143,11 +147,9 @@ public class SseEventProvider implements MessageBodyWriter<OutboundSseEvent>, Me
                      }                    
                   });
             entityStream.write(SseConstants.EOL);
-
          }
 
       }
-      entityStream.write(SseConstants.EOL);
    }
    
    

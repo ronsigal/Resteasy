@@ -169,11 +169,4 @@ public class VertxHttpResponse implements HttpResponse
       }
       response.end();
    }
-
-   @Override
-   public void flushBuffer() throws IOException {
-	   if(os != null) {
-		   os.flush();
-	   }
-   }
 }

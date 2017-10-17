@@ -1,6 +1,5 @@
 package org.jboss.resteasy.plugins.providers.sse.client;
 
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -12,7 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -38,7 +36,7 @@ public class SseEventSourceImpl implements SseEventSource
    private enum State {
       PENDING, OPEN, CLOSED
    }
-   private final AtomicReference<State> state = new AtomicReference<>(State.PENDING);
+   private final AtomicReference<State> state = new AtomicReference<>(State.CLOSED);
    private final List<Consumer<InboundSseEvent>> onEventConsumers = new CopyOnWriteArrayList<>();
    private final List<Consumer<Throwable>> onErrorConsumers = new CopyOnWriteArrayList<>();
    private final List<Runnable> onCompleteConsumers = new CopyOnWriteArrayList<>();
@@ -151,7 +149,7 @@ public class SseEventSourceImpl implements SseEventSource
 
    public void open(String lastEventId)
    {
-      if (!state.compareAndSet(State.PENDING, State.OPEN))
+      if (!state.compareAndSet(State.CLOSED, State.PENDING))
       {
          throw new IllegalStateException(Messages.MESSAGES.eventSourceIsNotReadyForOpen());
       }
@@ -218,8 +216,7 @@ public class SseEventSourceImpl implements SseEventSource
       if (state.getAndSet(State.CLOSED) != State.CLOSED)
       {
          ResteasyWebTarget resteasyWebTarget = (ResteasyWebTarget)target;
-         //close httpEngine to close connection
-         resteasyWebTarget.getResteasyClient().httpEngine().close();
+         resteasyWebTarget.getResteasyClient().close();
          executor.shutdownNow();
       }
       try
@@ -264,38 +261,24 @@ public class SseEventSourceImpl implements SseEventSource
       public void run()
       {
          SseEventInputImpl eventInput = null;
-         try
-         {
+         try {
             final Invocation.Builder request = buildRequest();
-            if (state.get() == State.OPEN)
+            if (state.get() == State.PENDING)
             {
                eventInput = request.get(SseEventInputImpl.class);
             }
-         }
-         catch (ServiceUnavailableException ex)
-         {
-            if (ex.hasRetryAfter())
-            {
-               Date requestTime = new Date();
-               reconnectDelay = ex.getRetryTime(requestTime).getTime() - requestTime.getTime();
-            }
-            onErrorConsumers.forEach(consumer -> {consumer.accept(ex);});
-         }
-         catch (Throwable e)
-         {
+            state.set(State.OPEN);
+         } catch (Throwable e) {
             onErrorConsumers.forEach(consumer -> {consumer.accept(e);});
             state.set(State.CLOSED);
-         }
-         finally
-         {
-            if (connectedLatch != null)
-            {
+         } finally {
+            if (connectedLatch != null) {
                connectedLatch.countDown();
             }
          }
          while (!Thread.currentThread().isInterrupted() && state.get() == State.OPEN)
          {
-            if (eventInput == null || eventInput.isClosed())
+            if (eventInput.isClosed())
             {
                reconnect(reconnectDelay);
                break;
@@ -363,6 +346,8 @@ public class SseEventSourceImpl implements SseEventSource
          }
 
          EventHandler processor = new EventHandler(this);
+         //reset state to PENDING
+         state.compareAndSet(State.OPEN, State.PENDING);
          if (delay > 0)
          {
             executor.schedule(processor, delay, TimeUnit.MILLISECONDS);

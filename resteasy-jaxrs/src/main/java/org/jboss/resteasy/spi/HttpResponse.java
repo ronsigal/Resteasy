@@ -42,6 +42,4 @@ public interface HttpResponse extends Closeable
       getOutputStream().close();
    }
 
-   void flushBuffer() throws IOException;
-
 }

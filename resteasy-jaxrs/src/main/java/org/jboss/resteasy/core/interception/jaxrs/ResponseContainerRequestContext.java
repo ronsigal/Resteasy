@@ -17,7 +17,7 @@ public class ResponseContainerRequestContext extends PreMatchContainerRequestCon
 {
    public ResponseContainerRequestContext(HttpRequest request)
    {
-      super(request, null, null);
+      super(request);
    }
 
 

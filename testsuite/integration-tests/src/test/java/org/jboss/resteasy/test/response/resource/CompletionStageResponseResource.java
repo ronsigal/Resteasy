@@ -9,14 +9,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-
-import org.jboss.resteasy.spi.HttpRequest;
-import org.reactivestreams.Publisher;
-
-import io.reactivex.Flowable;
-import io.reactivex.Single;
 
 @Path("")
 public class CompletionStageResponseResource {
@@ -27,8 +20,7 @@ public class CompletionStageResponseResource {
    @GET
    @Path("text")
    @Produces("text/plain")
-   public CompletionStage<String> text(@Context HttpRequest req) {
-      req.getAsyncContext().getAsyncResponse().register(new AsyncResponseCallback());
+   public CompletionStage<String> text() {
       CompletableFuture<String> cs = new CompletableFuture<>();
       ExecutorService executor = Executors.newSingleThreadExecutor();
       executor.submit(
@@ -39,22 +31,7 @@ public class CompletionStageResponseResource {
             });
       return cs;
    }
-
-   @GET
-   @Path("textSingle")
-   @Produces("text/plain")
-   public Single<String> textSingle() {
-      return Single.create(emitter -> {
-         ExecutorService executor = Executors.newSingleThreadExecutor();
-         executor.submit(
-               new Runnable() {
-                  public void run() {
-                     emitter.onSuccess(HELLO);
-                  }
-               });
-      });
-   }
-
+   
    @GET
    @Path("testclass")
    public CompletionStage<CompletionStageResponseTestClass> entityTestClass() {
@@ -116,8 +93,7 @@ public class CompletionStageResponseResource {
    @GET
    @Path("exception/delay")
    @Produces("text/plain")
-   public CompletionStage<String> exceptionDelay(@Context HttpRequest req) {
-      req.getAsyncContext().getAsyncResponse().register(new AsyncResponseCallback());
+   public CompletionStage<String> exceptionDelay() {
       CompletableFuture<String> cs = new CompletableFuture<>();
       ExecutorService executor = Executors.newSingleThreadExecutor();
       executor.submit(
@@ -133,30 +109,14 @@ public class CompletionStageResponseResource {
    @GET
    @Path("exception/immediate/runtime")
    @Produces("text/plain")
-   public CompletionStage<String> exceptionImmediateRuntime(@Context HttpRequest req) {
-      req.getAsyncContext().getAsyncResponse().register(new AsyncResponseCallback());
+   public CompletionStage<String> exceptionImmediateRuntime() {
       throw new RuntimeException(EXCEPTION + ": expect stacktrace");
    }
 
    @GET
    @Path("exception/immediate/notruntime")
    @Produces("text/plain")
-   public CompletionStage<String> exceptionImmediateNotRuntime(@Context HttpRequest req) throws Exception {
-      req.getAsyncContext().getAsyncResponse().register(new AsyncResponseCallback());
+   public CompletionStage<String> exceptionImmediateNotRuntime() throws Exception {
       throw new Exception( EXCEPTION + ": expect stacktrace");
-   }
-
-   @GET
-   @Path("callback-called-no-error")
-   public String callbackCalledNoError() {
-      AsyncResponseCallback.assertCalled(false);
-      return "OK";
-   }
-
-   @GET
-   @Path("callback-called-with-error")
-   public String callbackCalledWithError() {
-      AsyncResponseCallback.assertCalled(true);
-      return "OK";
    }
 }

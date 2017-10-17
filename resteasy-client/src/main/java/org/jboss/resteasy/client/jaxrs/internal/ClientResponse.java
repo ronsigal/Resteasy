@@ -41,7 +41,6 @@ public abstract class ClientResponse extends BuiltResponse
    protected Map<String, Object> properties;
    protected ClientConfiguration configuration;
    protected byte[] bufferedEntity;
-   protected boolean streamFullyRead;
 
    protected ClientResponse(ClientConfiguration configuration)
    {
@@ -72,39 +71,10 @@ public abstract class ClientResponse extends BuiltResponse
    }
 
    @Override
-   public synchronized Object getEntity()
+   public Object getEntity()
    {
       abortIfClosed();
-      Object entity = super.getEntity();
-      if (entity != null)
-      {
-         return entity;
-      }
-      //Check if the entity was previously fully consumed
-      if (streamFullyRead && bufferedEntity == null)
-      {
-         throw new IllegalStateException();
-      }
-      return getEntityStream();
-   }
-   
-   @Override
-   public Class<?> getEntityClass()
-   {
-      Class<?> classs = super.getEntityClass();
-      if (classs != null)
-      {
-         return classs;
-      }
-      Object entity = null;
-      try
-      {
-         entity = getEntity();
-      }
-      catch (Exception e)
-      {
-      }
-      return entity != null ? entity.getClass() : null;
+      return super.getEntity();
    }
 
    @Override
@@ -174,30 +144,6 @@ public abstract class ClientResponse extends BuiltResponse
          this.response = response;
       }
       
-      public int read() throws IOException
-      {
-         return checkEOF(super.read());
-      }
-
-      public int read(byte b[]) throws IOException
-      {
-         return checkEOF(super.read(b));
-      }
-
-      public int read(byte b[], int off, int len) throws IOException
-      {
-         return checkEOF(super.read(b, off, len));
-      }
-
-      private int checkEOF(int v)
-      {
-         if (v < 0)
-         {
-            response.streamFullyRead = true;
-         }
-         return v;
-      }
-
       @Override
       public void close() throws IOException {
          super.close();

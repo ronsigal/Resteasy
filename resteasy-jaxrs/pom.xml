@@ -34,11 +34,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.reactivestreams</groupId>
-            <artifactId>reactive-streams</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>provided</scope>
@@ -129,7 +124,7 @@
         <plugins>
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
-                <artifactId>clover-maven-plugin</artifactId>
+                <artifactId>maven-clover2-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

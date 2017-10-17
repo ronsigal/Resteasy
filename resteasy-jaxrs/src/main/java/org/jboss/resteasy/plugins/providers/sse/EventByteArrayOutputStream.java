@@ -5,16 +5,25 @@ import java.util.Arrays;
 
 public class EventByteArrayOutputStream extends ByteArrayOutputStream
 {
+   private void removeBlankLine()
+   {
+      if (this.count > 4)
+      {
+         count = count - 4;
+      }
+   }
+
    public synchronized byte[] getEventPayLoad()
    {
-      // delimiter is \r or \n
-      if (count >=2 && this.buf[count-2] == this.buf[count-1])
+      removeBlankLine();
+      return Arrays.copyOf(buf, count);
+   }
+   
+   public synchronized byte[] getEventData()
+   {
+      if (buf[count] == '\n')
       {
-         return Arrays.copyOf(buf, count -1);
-      }
-      //delimiter is \r\n
-      if (count >= 2 && buf[count-2] == '\r' && buf[count-1] == '\n') {
-         return Arrays.copyOf(buf, count-2);
+         return Arrays.copyOf(buf, count - 1);
       }
       return Arrays.copyOf(buf, count);
    }

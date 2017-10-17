@@ -99,9 +99,13 @@ public class SynchronousDispatcher implements Dispatcher
             preprocessor.preProcess(request);
          }
          ContainerRequestFilter[] requestFilters = providerFactory.getContainerRequestFilterRegistry().preMatch();
-         // FIXME: support async
-         PreMatchContainerRequestContext requestContext = new PreMatchContainerRequestContext(request, requestFilters, null);
-         aborted = requestContext.filter();
+         PreMatchContainerRequestContext requestContext = new PreMatchContainerRequestContext(request);
+         for (ContainerRequestFilter filter : requestFilters)
+         {
+            filter.filter(requestContext);
+            aborted = requestContext.getResponseAbortedWith();
+            if (aborted != null) break;
+         }
       }
       catch (Exception e)
       {
@@ -116,10 +120,9 @@ public class SynchronousDispatcher implements Dispatcher
     *
     * @return true if request should continue
     */
-   protected void preprocess(HttpRequest request, HttpResponse response, Runnable continuation)
+   protected boolean preprocess(HttpRequest request, HttpResponse response)
    {
       Response aborted = null;
-      PreMatchContainerRequestContext requestContext = null;
       try
       {
          for (HttpRequestPreprocessor preprocessor : this.requestPreprocessors)
@@ -127,37 +130,26 @@ public class SynchronousDispatcher implements Dispatcher
             preprocessor.preProcess(request);
          }
          ContainerRequestFilter[] requestFilters = providerFactory.getContainerRequestFilterRegistry().preMatch();
-         requestContext = new PreMatchContainerRequestContext(request, requestFilters, 
-               () -> { 
-                  continuation.run();
-                  return null;
-               });
-         aborted = requestContext.filter();
+         PreMatchContainerRequestContext requestContext = new PreMatchContainerRequestContext(request);
+         for (ContainerRequestFilter filter : requestFilters)
+         {
+            filter.filter(requestContext);
+            aborted = requestContext.getResponseAbortedWith();
+            if (aborted != null) break;
+         }
       }
       catch (Exception e)
       {
          //logger.error("Failed in preprocess, mapping exception", e);
-         // we only want to catch exceptions happening in the filters, not in the continuation
-         if(requestContext == null || !requestContext.startedContinuation())
-         {
-            writeException(request, response, e);
-            return;
-         }
-         else
-         {
-            rethrow(e);
-         }
+         writeException(request, response, e);
+         return false;
       }
       if (aborted != null)
       {
          writeResponse(request, response, aborted);
-         return;
+         return false;
       }
-   }
-
-   public static <T extends Throwable> void rethrow(Throwable t) throws T
-   {
-      throw (T)t;
+      return true;
    }
 
    public void writeException(HttpRequest request, HttpResponse response, Throwable e)
@@ -202,28 +194,19 @@ public class SynchronousDispatcher implements Dispatcher
       try
       {
          pushContextObjects(request, response);
-         preprocess(request, response, () -> {
-            ResourceInvoker invoker = null;
-            try
-            {
-               try
-               {
-                  invoker = getInvoker(request);
-               }
-               catch (Exception exception)
-               {
-                  //logger.error("getInvoker() failed mapping exception", exception);
-                  writeException(request, response, exception);
-                  return;
-               }
-               invoke(request, response, invoker);
-            }
-            finally
-            {
-               // we're probably clearing it twice but still required
-               clearContextData();
-            }
-         });
+         if (!preprocess(request, response)) return;
+         ResourceInvoker invoker = null;
+         try
+         {
+            invoker = getInvoker(request);
+         }
+         catch (Exception exception)
+         {
+            //logger.error("getInvoker() failed mapping exception", exception);
+            writeException(request, response, exception);
+            return;
+         }
+         invoke(request, response, invoker);
       }
       finally
       {
@@ -242,35 +225,26 @@ public class SynchronousDispatcher implements Dispatcher
       try
       {
          pushContextObjects(request, response);
-         preprocess(request, response, () -> {
-            ResourceInvoker invoker = null;
-            try
+         if (!preprocess(request, response)) return;
+         ResourceInvoker invoker = null;
+         try
+         {
+            invoker = getInvoker(request);
+         }
+         catch (Exception failure)
+         {
+            if (failure instanceof NotFoundException)
             {
-               try
-               {
-                  invoker = getInvoker(request);
-               }
-               catch (Exception failure)
-               {
-                  if (failure instanceof NotFoundException)
-                  {
-                     throw ((NotFoundException) failure);
-                  }
-                  else
-                  {
-                     //logger.error("getInvoker() failed mapping exception", failure);
-                     writeException(request, response, failure);
-                     return;
-                  }
-               }
-               invoke(request, response, invoker);
+               throw ((NotFoundException) failure);
             }
-            finally
+            else
             {
-               // we're probably clearing it twice but still required
-               clearContextData();
+               //logger.error("getInvoker() failed mapping exception", failure);
+               writeException(request, response, failure);
+               return;
             }
-         });
+         }
+         invoke(request, response, invoker);
       }
       finally
       {

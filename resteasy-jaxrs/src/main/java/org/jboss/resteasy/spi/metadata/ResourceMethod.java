@@ -43,9 +43,4 @@ public class ResourceMethod extends ResourceLocator
    {
       return asynchronous;
    }
-
-   public void markAsynchronous()
-   {
-      asynchronous = true;
-   }
 }
