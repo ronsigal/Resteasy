@@ -125,6 +125,7 @@ public class JAXBElementProvider extends AbstractJAXBProvider<JAXBElement<?>>
          throw new JAXBUnmarshalException(e);
       }
       JAXBElement<?> element = result;
+      System.out.println(this + ". readFrom() 1: element.getValue(): " + element.getValue());
       return element;
    }
 
