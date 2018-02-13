@@ -104,6 +104,7 @@ public class NamespaceJaxbTest {
         Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
         String entity = response.readEntity(String.class);
         Assert.assertEquals(WRONG_RESPONSE_ERROR_MSG, "La Cage Aux Folles", entity);
+        Assert.fail("testJAXBElement()");
     }
 
     /**

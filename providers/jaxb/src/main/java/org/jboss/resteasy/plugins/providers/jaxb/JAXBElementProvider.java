@@ -52,7 +52,7 @@ public class JAXBElementProvider extends AbstractJAXBProvider<JAXBElement<?>>
                                     Annotation[] annotations,
                                     MediaType mediaType)
    {
-
+	   System.out.println(this + ".isReadWritable(): " + JAXBElement.class.equals(type));
       return JAXBElement.class.equals(type);
    }
 
@@ -84,7 +84,8 @@ public class JAXBElementProvider extends AbstractJAXBProvider<JAXBElement<?>>
       {
          Unmarshaller unmarshaller = jaxb.createUnmarshaller();
          unmarshaller = decorateUnmarshaller(type, annotations, mediaType, unmarshaller);
-         
+         System.out.println(this + ".readFrom(): unmarshaller: " + unmarshaller);
+         System.out.println(this + ".readFrom(): needsSecurity: " + needsSecurity());
          if (needsSecurity())
          {
             unmarshaller = new SecureUnmarshaller(unmarshaller, isDisableExternalEntities(), isEnableSecureProcessingFeature(), isDisableDTDs());
@@ -98,6 +99,7 @@ public class JAXBElementProvider extends AbstractJAXBProvider<JAXBElement<?>>
                source = new SAXSource(new InputSource(entityStream));
             }
             result = unmarshaller.unmarshal(source, (Class<?>) typeArg);
+            System.out.println(this + ". readFrom() 1: result: " + result);
          }
          else
          {
@@ -108,11 +110,13 @@ public class JAXBElementProvider extends AbstractJAXBProvider<JAXBElement<?>>
                StreamSource source = new StreamSource(new InputStreamReader(entityStream, StandardCharsets.UTF_8));
                source.setInputStream(entityStream);
                result = unmarshaller.unmarshal(source, (Class<?>) typeArg);
+               System.out.println(this + ". readFrom() 2: result: " + result);
             }
             else
             {
                JAXBElement<?> e = unmarshaller.unmarshal(new StreamSource(entityStream), (Class<?>) typeArg);
                result = e;
+               System.out.println(this + ". readFrom() 3: result: " + result);
             }
          };
       }
