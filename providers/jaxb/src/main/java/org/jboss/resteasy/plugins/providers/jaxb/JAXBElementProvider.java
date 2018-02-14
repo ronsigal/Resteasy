@@ -14,6 +14,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
@@ -22,6 +23,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 
@@ -125,7 +128,17 @@ public class JAXBElementProvider extends AbstractJAXBProvider<JAXBElement<?>>
          throw new JAXBUnmarshalException(e);
       }
       JAXBElement<?> element = result;
-      System.out.println(this + ". readFrom() 1: element.getValue(): " + element.getValue());
+      System.out.println(this + ". readFrom(): element.getValue(): " + element.getValue());
+      Object o = element.getValue();
+      Class<?> clazz = o.getClass();
+      Method method;
+	      try {
+	  		method = clazz.getDeclaredMethod("getTitle");
+			System.out.println(this + ". readFrom(): element.getValue().getTitle(): " + method.invoke(o));
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
       return element;
    }
 
@@ -143,5 +156,4 @@ public class JAXBElementProvider extends AbstractJAXBProvider<JAXBElement<?>>
       if (genericType != null) typeArg = Types.getTypeArgument(genericType);
       super.writeTo(t, typeArg, genericType, annotations, mediaType, httpHeaders, outputStream);
    }
-
 }
