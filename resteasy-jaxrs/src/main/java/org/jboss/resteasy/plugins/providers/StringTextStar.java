@@ -61,6 +61,7 @@ public class StringTextStar implements MessageBodyReader<String>, MessageBodyWri
                        OutputStream entityStream) throws IOException
    {
       String charset = mediaType.getParameters().get("charset");
+      System.out.println("StringTextStar.writeTo(): o: " + o);
       if (charset == null) entityStream.write(o.getBytes(StandardCharsets.UTF_8));
       else entityStream.write(o.getBytes(charset));
 

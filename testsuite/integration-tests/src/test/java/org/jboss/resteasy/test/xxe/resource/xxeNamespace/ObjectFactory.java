@@ -43,6 +43,7 @@ public class ObjectFactory {
      */
     @XmlElementDecl(namespace = "", name = "favoriteMovie")
     public JAXBElement<FavoriteMovieXmlType> createFavoriteMovie(FavoriteMovieXmlType value) {
+    	System.out.println("ObjectFactory.createFavoriteMovie(): value.getTitle(): " + value.getTitle());
         return new JAXBElement<FavoriteMovieXmlType>(_FavoriteMovie_QNAME, FavoriteMovieXmlType.class, null, value);
     }
 }

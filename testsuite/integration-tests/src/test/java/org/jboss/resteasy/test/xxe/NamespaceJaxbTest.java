@@ -103,6 +103,7 @@ public class NamespaceJaxbTest {
         Response response = target.request().post(Entity.entity(str, "application/xml"));
         Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
         String entity = response.readEntity(String.class);
+        System.out.println("entity: " + entity);
         Assert.assertEquals(WRONG_RESPONSE_ERROR_MSG, "La Cage Aux Folles", entity);
         Assert.fail("testJAXBElement()");
     }
