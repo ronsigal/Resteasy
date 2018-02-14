@@ -107,6 +107,19 @@ public class NamespaceJaxbTest {
         Assert.assertEquals(WRONG_RESPONSE_ERROR_MSG, "La Cage Aux Folles", entity);
         Assert.fail("testJAXBElement()");
     }
+    
+    @Test
+    public void testJAXBElementNoNamespace() throws Exception {
+    	System.out.println("URL: " + generateURL("/JAXBElement"));
+        ResteasyWebTarget target = client.target(generateURL("/JAXBElement"));
+        String str = "<?xml version=\"1.0\"?>\r" +
+                "<favoriteMovieXmlType><title>La Cage Aux Folles</title></favoriteMovieXmlType>";
+        Response response = target.request().post(Entity.entity(str, "application/xml"));
+        System.out.println("status: " + response.getStatus());
+//        Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
+        String entity = response.readEntity(String.class);
+        Assert.assertEquals(WRONG_RESPONSE_ERROR_MSG, "La Cage Aux Folles", entity);
+    }
 
     /**
      * @tpTestDetails Check list
