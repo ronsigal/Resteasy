@@ -18,6 +18,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -69,6 +71,15 @@ public class JAXBElementProvider extends AbstractJAXBProvider<JAXBElement<?>>
                                   MultivaluedMap<String, String> httpHeaders,
                                   InputStream entityStream) throws IOException
    {
+	  ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	  int b = entityStream.read();
+	  while (b != -1)
+	  {
+		  baos.write(b);
+		  b = entityStream.read();
+	  }
+	  System.out.println("JAXBElementProvider.readFrom(): entityStream: " + baos.toString());
+	  entityStream = new ByteArrayInputStream(baos.toByteArray());
       LogMessages.LOGGER.debugf("Provider : %s,  Method : readFrom", getClass().getName());
       NoContent.contentLengthCheck(httpHeaders);
       Class<?> typeArg = Object.class;
@@ -154,6 +165,10 @@ public class JAXBElementProvider extends AbstractJAXBProvider<JAXBElement<?>>
       LogMessages.LOGGER.debugf("Provider : %s,  Method : writeTo", getClass().getName());
       Class<?> typeArg = Object.class;
       if (genericType != null) typeArg = Types.getTypeArgument(genericType);
-      super.writeTo(t, typeArg, genericType, annotations, mediaType, httpHeaders, outputStream);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//      super.writeTo(t, typeArg, genericType, annotations, mediaType, httpHeaders, outputStream);
+      super.writeTo(t, typeArg, genericType, annotations, mediaType, httpHeaders, baos);
+      System.out.println("baos:" + baos.toString());
+      outputStream.write(baos.toByteArray());
    }
 }
