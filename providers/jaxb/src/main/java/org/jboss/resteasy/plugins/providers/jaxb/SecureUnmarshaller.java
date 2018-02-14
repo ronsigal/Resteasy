@@ -96,6 +96,9 @@ public class SecureUnmarshaller implements Unmarshaller {
 		this.disableExternalEntities = disableExternalEntities;
 		this.enableSecureProcessingFeature = enableSecureProcessingFeature;
 		this.disableDTDs = disableDTDs;
+		System.out.println("disableExternalEntities: " + disableExternalEntities);
+		System.out.println("enableSecureProcessingFeature: " + enableSecureProcessingFeature);
+		System.out.println("disableDTDs: " + disableDTDs);
 	}
 	
 	@SuppressWarnings("unchecked")
