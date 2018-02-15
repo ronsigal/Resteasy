@@ -99,7 +99,20 @@ public class NamespaceJaxbTest {
     public void testJAXBElement() throws Exception {
         ResteasyWebTarget target = client.target(generateURL("/JAXBElement"));
         String str = "<?xml version=\"1.0\"?>\r" +
-                "<favoriteMovieXmlType xmlns=\"http://abc.com\"><title>La Cage Aux Folles</title></favoriteMovieXmlType>";
+                     "<favoriteMovieXmlType xmlns=\"http://abc.com\"><title>La Cage Aux Folles</title></favoriteMovieXmlType>";
+        Response response = target.request().post(Entity.entity(str, "application/xml"));
+        Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
+        String entity = response.readEntity(String.class);
+        System.out.println("entity: " + entity);
+        Assert.assertEquals(WRONG_RESPONSE_ERROR_MSG, "La Cage Aux Folles", entity);
+        Assert.fail("testJAXBElement()");
+    }
+    
+    @Test
+    public void testJAXBElementNS() throws Exception {
+        ResteasyWebTarget target = client.target(generateURL("/JAXBElement"));
+        String str = "<?xml version=\"1.0\"?>\r" +
+                     "<favoriteMovieXmlType xmlns:ns=\"http://abc.com\"><title>La Cage Aux Folles</title></favoriteMovieXmlType>";
         Response response = target.request().post(Entity.entity(str, "application/xml"));
         Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
         String entity = response.readEntity(String.class);
