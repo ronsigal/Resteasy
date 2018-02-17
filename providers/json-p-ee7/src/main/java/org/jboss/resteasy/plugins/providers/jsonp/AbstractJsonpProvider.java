@@ -5,6 +5,7 @@ import javax.json.JsonReader;
 import javax.json.JsonReaderFactory;
 import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
+import javax.json.spi.JsonProvider;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -33,6 +34,17 @@ public class AbstractJsonpProvider
 
    protected JsonReader findReader(MediaType mediaType, InputStream is)
    {
+	   try {
+		   ClassLoader cl1 = javax.json.spi.JsonProvider.class.getClassLoader();
+		   System.out.println("javax.json.spi.JsonProvider classloader: " + cl1);
+		   Class<?> clazz = Class.forName("org.glassfish.json.JsonProviderImpl", true, cl1);
+		   System.out.println(clazz + " classloader: " + clazz.getClassLoader());
+		   Object o = JsonProvider.provider();
+		   System.out.println("JsonProvider.provider() classloader: " + o.getClass().getClassLoader());
+	   } catch (Exception e) {
+		   // TODO Auto-generated catch block
+		   e.printStackTrace();
+	   }
       ContextResolver<JsonReaderFactory> resolver = providers.getContextResolver(JsonReaderFactory.class, mediaType);
       JsonReaderFactory factory = null;
       if (resolver != null)
@@ -43,6 +55,9 @@ public class AbstractJsonpProvider
       {
          factory = Json.createReaderFactory(null);
       }
+      /**/
+
+      /* */
       Charset charset = getCharset(mediaType);
       return charset == null ? factory.createReader(is) : factory.createReader(is, charset);
    }
