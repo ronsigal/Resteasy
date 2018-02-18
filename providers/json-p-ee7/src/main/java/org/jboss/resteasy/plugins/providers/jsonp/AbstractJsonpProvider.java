@@ -12,6 +12,8 @@ import javax.ws.rs.ext.ContextResolver;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -35,6 +37,13 @@ public class AbstractJsonpProvider
    protected JsonReader findReader(MediaType mediaType, InputStream is)
    {
 	   try {
+	        ServiceLoader<JsonProvider> loader = ServiceLoader.load(JsonProvider.class);
+	        Iterator<JsonProvider> it = loader.iterator();
+	        System.out.println("ServiceLoader: " + it.hasNext());
+	        if (it.hasNext()) {
+	            System.out.println(" " + it.next());
+	        }
+//		   new Exception("AbstractJsonProvider.findReader()").printStackTrace();
 		   ClassLoader cl1 = javax.json.spi.JsonProvider.class.getClassLoader();
 		   System.out.println("javax.json.spi.JsonProvider classloader: " + cl1);
 		   Class<?> clazz = Class.forName("org.glassfish.json.JsonProviderImpl", true, cl1);
