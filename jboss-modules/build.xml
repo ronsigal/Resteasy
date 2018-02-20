@@ -120,9 +120,9 @@
         </module-def>
         <!-- todo this is temporary and should be removed when wildfly makes the needed update
      -->
-        <module-def name="org.glassfish.javax.json">
+        <!--module-def name="org.glassfish.javax.json">
             <maven-resource group="org.glassfish" artifact="javax.json"/>
-        </module-def>
+        </module-def-->
 
         <!-- already present in wildfly -->
         <module-def name="javax.ws.rs.api">
