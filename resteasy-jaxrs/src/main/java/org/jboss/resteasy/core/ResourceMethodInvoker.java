@@ -25,6 +25,7 @@ import org.jboss.resteasy.spi.validation.GeneralValidator;
 import org.jboss.resteasy.spi.validation.GeneralValidatorCDI;
 import org.jboss.resteasy.util.FeatureContextDelegate;
 
+import javax.ws.rs.HEAD;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
@@ -42,6 +43,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -438,7 +440,10 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
 
       if(asyncStreamResponseConsumer != null)
       {
-         asyncStreamResponseConsumer.subscribe(rtn);
+         if (!isHead())
+         {
+            asyncStreamResponseConsumer.subscribe(rtn);
+         }
          return null;
       }
       if (request.getAsyncContext().isSuspended())
@@ -653,5 +658,17 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
    public void markMethodAsAsync()
    {
       method.markAsynchronous();
+   }
+   
+   private boolean isHead()
+   {
+      for (Annotation annotation : methodAnnotations)
+      {
+         if (HEAD.class == annotation.annotationType())
+         {
+            return true;
+         }
+      }
+      return false;
    }
 }

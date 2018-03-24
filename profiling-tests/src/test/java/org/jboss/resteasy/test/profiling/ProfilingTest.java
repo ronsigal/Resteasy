@@ -76,13 +76,13 @@ public class ProfilingTest
       Client client = new ResteasyClientBuilder().httpEngine(engine).build();
       final int ITERATIONS = 1000;
 
-//      long start = System.currentTimeMillis();
+      long start = System.currentTimeMillis();
       for (int i = 0; i < ITERATIONS; i++)
       {
          Builder request = client.target("/").request();
          request.post(Entity.entity(new Customer("bill", "burke"), "application/json"), String.class);
       }
-//      long end = System.currentTimeMillis() - start;
-//      System.out.println(ITERATIONS + " iterations took " + end + "ms");
+      long end = System.currentTimeMillis() - start;
+      System.out.println(ITERATIONS + " iterations took " + end + "ms");
    }
 }

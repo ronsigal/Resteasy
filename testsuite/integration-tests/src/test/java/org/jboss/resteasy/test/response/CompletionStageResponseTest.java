@@ -16,6 +16,7 @@ import org.jboss.resteasy.test.response.resource.CompletionStageProxy;
 import org.jboss.resteasy.test.response.resource.CompletionStageResponseMessageBodyWriter;
 import org.jboss.resteasy.test.response.resource.CompletionStageResponseResource;
 import org.jboss.resteasy.test.response.resource.CompletionStageResponseTestClass;
+import org.jboss.resteasy.test.response.resource.SingleProxy;
 import org.jboss.resteasy.utils.PortProviderUtil;
 import org.jboss.resteasy.utils.TestUtil;
 import org.jboss.shrinkwrap.api.Archive;
@@ -27,6 +28,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+
+import io.reactivex.Single;
 
 import java.util.concurrent.Future;
 
@@ -47,6 +50,7 @@ public class CompletionStageResponseTest {
       WebArchive war = TestUtil.prepareArchive(CompletionStageResponseTest.class.getSimpleName());
       war.addClass(CompletionStageResponseTestClass.class);
       war.addClass(CompletionStageProxy.class);
+      war.addClass(SingleProxy.class);
       war.addAsLibrary(TestUtil.resolveDependency("io.reactivex.rxjava2:rxjava:2.1.3"));
       war.setManifest(new StringAsset("Manifest-Version: 1.0\n"
               + "Dependencies: org.reactivestreams\n"));
@@ -172,6 +176,7 @@ public class CompletionStageResponseTest {
     * @tpSince RESTEasy 3.5
     */
    @Test
+   @Category({ExpectedFailing.class})
    public void testExceptionDelay() throws Exception
    {
       Invocation.Builder request = client.target(generateURL("/exception/delay")).request();
@@ -271,7 +276,6 @@ public class CompletionStageResponseTest {
     * @tpSince RESTEasy 3.5
     */
    @Test
-   @Category({ExpectedFailing.class})
    public void proxyTest() throws Exception
    {
       CompletionStageProxy proxy = client.target(generateURL("/")).proxy(CompletionStageProxy.class);
@@ -280,5 +284,16 @@ public class CompletionStageResponseTest {
       Assert.assertEquals(CompletionStageResponseResource.HELLO, future.get());
    }
 
-
+   /**
+    * @tpTestDetails Resource method returns CompletionStage<String>, client try to use proxy
+    *                Regression check for https://issues.jboss.org/browse/RESTEASY-1798
+    *                                       - RESTEasy proxy client can't use RxClient and CompletionStage
+    * @tpSince RESTEasy 3.5
+    */
+   @Test
+   public void SingleProxyTest() throws Exception
+   {
+      SingleProxy proxy = client.target(generateURL("/")).proxy(SingleProxy.class);
+      Single<String> single = proxy.textSingle();
+   }
 }

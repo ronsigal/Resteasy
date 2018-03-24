@@ -27,7 +27,6 @@ import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.plugins.providers.sse.client.SseEventSourceImpl;
 import org.jboss.resteasy.utils.PortProviderUtil;
@@ -246,8 +245,7 @@ public class SseTest
    //This test is checking SseEventSource reconnect ability. When request post /addMessageAndDisconnect path, server will 
    //disconnect the connection, but events is continued to add to eventsStore. SseEventSource will automatically reconnect
    //with LastEventId and receive the missed events  
-   //TODO: look at how can we mock a connection loss for this test
-   //@Test
+   @Test
    @InSequence(5)
    public void testReconnect() throws Exception
    {
@@ -255,7 +253,7 @@ public class SseTest
       final CountDownLatch closeLatch = new CountDownLatch(1);
       final List<String> results = new ArrayList<String>();
       final AtomicInteger errors = new AtomicInteger(0);
-      ResteasyClient client = new ResteasyClientBuilder().connectionPoolSize(10).build();
+      Client client = new ResteasyClientBuilder().connectionPoolSize(10).build();
       WebTarget target = client.target(generateURL("/service/server-sent-events"));
       try (SseEventSource eventSource = SseEventSource.target(target).reconnectingEvery(1, TimeUnit.SECONDS).build())
       {
@@ -408,6 +406,35 @@ public class SseTest
    }
 
    @Test
+   @InSequence(9)
+   public void testServiceUnavialbeRetryAfter() throws Exception
+   {
+      final CountDownLatch latch = new CountDownLatch(1);
+      final AtomicInteger errors = new AtomicInteger(0);
+      final List<String> results = new ArrayList<String>();
+      Client client = ClientBuilder.newBuilder().build();
+      WebTarget target = client.target(generateURL("/service/server-sent-events/retryafter"));
+      SseEventSource msgEventSource = SseEventSource.target(target).build();
+      try (SseEventSource eventSource = msgEventSource)
+      {
+         Assert.assertEquals(SseEventSourceImpl.class, eventSource.getClass());
+         eventSource.register(event -> {
+            results.add(event.readData(String.class));
+            latch.countDown();
+         }, ex -> {
+            errors.incrementAndGet();
+            Assert.assertTrue("ServiceUnavalile exception is expected", ex instanceof ServiceUnavailableException);
+         });
+         eventSource.open();
+
+         boolean waitResult = latch.await(30, TimeUnit.SECONDS);
+         Assert.assertEquals(1, errors.get());
+         Assert.assertTrue("Waiting for event to be delivered has timed out.", waitResult);
+      }
+      Assert.assertTrue("ServiceAvailable message is expected", results.get(0).equals("ServiceAvailable"));
+   }
+
+   @Test
    @InSequence(10)
    public void testXmlEvent() throws Exception
    {
@@ -450,52 +477,6 @@ public class SseTest
       Assert.assertEquals("response OK is expected", response.getStatus(), 200);
       Assert.assertEquals("text/event-stream is expected", response.getMediaType(), MediaType.SERVER_SENT_EVENTS_TYPE);
       client.close();
-   }
-   @Test
-   @InSequence(12)
-   public void testNoReconnectAfterEventSinkClose() throws Exception
-   {
-      final List<String> results = new ArrayList<String>();
-      Client client = ClientBuilder.newBuilder().build();
-      WebTarget target = client.target(generateURL("/service/server-sent-events/closeAfterSent"));
-      try (SseEventSource source = SseEventSource.target(target).build())
-      {
-         source.register(event -> results.add(event.readData()));
-         source.open();
-         Thread.sleep(1000);
-      }
-      catch (InterruptedException e)
-      {
-         // falls through
-         e.printStackTrace();
-      }
-      Assert.assertEquals("Received unexpected events", "[thing1, thing2, thing3]", results.toString());
-   }
-   
-   @Test
-   @InSequence(13)
-   public void testNoContent() throws Exception
-   {
-      Client client = ClientBuilder.newBuilder().build();
-      final AtomicInteger errors = new AtomicInteger(0);
-      WebTarget target = client.target(generateURL("/service/server-sent-events/noContent"));
-      try (SseEventSource source = SseEventSource.target(target).build())
-      {
-         source.register(event -> {
-            System.out.println(event);
-         }, ex -> {
-            ex.printStackTrace();
-            errors.incrementAndGet();
-         });
-         source.open();
-         Thread.sleep(1000);
-      }
-      catch (InterruptedException e)
-      {
-         // falls through
-         e.printStackTrace();
-      }
-      Assert.assertTrue("error is not expected", errors.get() == 0);
    }
 
    //    @Test

@@ -52,7 +52,7 @@ public class SseEnablingTest {
 	// ...
 	// }
 	@Test
-	public void testAcceptXmlSseServerXml() throws Exception {
+	public void testSseEnabling_1() throws Exception {
 		Client client = ClientBuilder.newClient();
 		try {
 			WebTarget baseTarget = client.target(generateURL()).path(SseEnablingTestResource.PATH);
@@ -75,7 +75,7 @@ public class SseEnablingTest {
 	// ...
 	// }
 	@Test
-	public void testSseAcceptWithQualityFactors() throws Exception {
+	public void testSseEnabling_2() throws Exception {
 		Client client = ClientBuilder.newClient();
 		try {
 			WebTarget baseTarget = client.target(generateURL()).path(SseEnablingTestResource.PATH);
@@ -98,7 +98,7 @@ public class SseEnablingTest {
 	// ...
 	// }
 	@Test
-	public void testSseServerQualityFactors() throws Exception {
+	public void testSseEnabling_3() throws Exception {
 		Client client = ClientBuilder.newClient();
 		try {
 			WebTarget baseTarget = client.target(generateURL()).path(SseEnablingTestResource.PATH);
@@ -122,7 +122,7 @@ public class SseEnablingTest {
 	// ...
 	// }
 	@Test
-	public void testAcceptXmlJsonServerXmlJsonSse() throws Exception {
+	public void testSseEnabling_4() throws Exception {
 		Client client = ClientBuilder.newClient();
 		try {
 			WebTarget baseTarget = client.target(generateURL()).path(SseEnablingTestResource.PATH);
@@ -145,7 +145,7 @@ public class SseEnablingTest {
 	// ...
 	// }
 	@Test
-	public void testAcceptSseServerSseNoContent() throws Exception {
+	public void testSseEnabling_5() throws Exception {
 		Client client = ClientBuilder.newClient();
 		try {
 			WebTarget baseTarget = client.target(generateURL()).path(SseEnablingTestResource.PATH);
@@ -167,7 +167,7 @@ public class SseEnablingTest {
 	// ...
 	// }
 	@Test
-	public void testAcceptSseServerSseEvent() throws Exception {
+	public void testSseEnabling_6() throws Exception {
 
 		Client client = ClientBuilder.newClient();
 		try {

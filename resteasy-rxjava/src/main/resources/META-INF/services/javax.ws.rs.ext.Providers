@@ -1,2 +1,3 @@
 org.jboss.resteasy.rxjava.SingleProvider
 org.jboss.resteasy.rxjava.ObservableProvider
+org.jboss.resteasy.rxjava.ObservableRxInvokerProvider

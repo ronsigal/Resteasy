@@ -11,7 +11,6 @@ import javax.ws.rs.core.Response;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.logging.Logger;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.test.client.resource.AsyncInvokeResource;
 import org.jboss.resteasy.utils.TestUtil;
@@ -30,8 +29,8 @@ public class AsyncBenchTest extends ClientTestBase
 {
 
    static Client client;
+
    static Client nioClient;
-   private static Logger log = Logger.getLogger(AsyncBenchTest.class);
    
    static final int ITERATIONS = 4000;
    static final int MAX_CONNECTIONS = 200;
@@ -64,7 +63,7 @@ public class AsyncBenchTest extends ClientTestBase
       WebTarget wt = nioClient.target(generateURL("/test"));
       runCallback(wt, "NIO");
       long end = System.currentTimeMillis() - start;
-      log.info("TEST NON BLOCKING IO - " + ITERATIONS + " iterations took " + end + "ms");
+      System.out.println("TEST NON BLOCKING IO - " + ITERATIONS + " iterations took " + end + "ms");
       if (oldProp != null)
       {
          System.setProperty("http.maxConnections", oldProp);
@@ -83,7 +82,7 @@ public class AsyncBenchTest extends ClientTestBase
       WebTarget wt2 = client.target(generateURL("/test"));
       runCallback(wt2, "BIO");
       long end = System.currentTimeMillis() - start;
-      log.info("TEST BLOCKING IO - " + ITERATIONS + " iterations took " + end + "ms");
+      System.out.println("TEST BLOCKING IO - " + ITERATIONS + " iterations took " + end + "ms");
    }
    
    private void runCallback(WebTarget wt, String msg) throws Exception

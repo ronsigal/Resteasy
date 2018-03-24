@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.DELETE;
@@ -53,9 +51,9 @@ public class SseResource
 
    private volatile boolean sending = true;
 
+   private volatile boolean isServiceAvailable = false;
+
    private List<OutboundSseEvent> eventsStore = new ArrayList<OutboundSseEvent>();
-   
-   private AtomicInteger noContentCount = new AtomicInteger();
 
    private final static Logger logger = Logger.getLogger(SseResource.class);
 
@@ -305,6 +303,27 @@ public class SseResource
    }
 
    @GET
+   @Path("/retryafter")
+   @Produces(MediaType.SERVER_SENT_EVENTS)
+   public void sendMessage(@Context SseEventSink sink)
+   {
+      if (!isServiceAvailable)
+      {
+         isServiceAvailable = true;
+         throw new WebApplicationException(Response.status(503).header(HttpHeaders.RETRY_AFTER, String.valueOf(1))
+               .build());
+      }
+      else
+      {
+         try (SseEventSink s = sink)
+         {
+            s.send(sse.newEvent("ServiceAvailable"));
+            isServiceAvailable = false;
+         }
+      }
+   }
+
+   @GET
    @Path("/xmlevent")
    @Produces(MediaType.SERVER_SENT_EVENTS)
    public void sendXmlType(@Context SseEventSink sink)
@@ -314,38 +333,5 @@ public class SseResource
          JAXBElement<String> element = new JAXBElement<String>(new QName("name"), String.class, "xmldata");
          eventSink.send(sse.newEventBuilder().data(element).mediaType(MediaType.APPLICATION_XML_TYPE).build());
       }
-   }
-   
-   @GET
-   @Path("/closeAfterSent")
-   @Produces(MediaType.SERVER_SENT_EVENTS)
-   public void eventStream(@Context SseEventSink eventSink, @Context Sse sse) throws Exception {
-      System.out.println("entering eventStream()");
-      ExecutorService pool = Executors.newCachedThreadPool();
-      OutboundSseEvent.Builder builder = sse.newEventBuilder().mediaType(MediaType.APPLICATION_XML_TYPE);
-      pool.execute(new Thread()
-      {
-         public void run()
-         {
-            try (SseEventSink sink = eventSink) 
-            {
-               System.out.println("sending 3 events");
-               eventSink.send(builder.data("thing1").build());
-               eventSink.send(builder.data("thing2").build());
-               eventSink.send(builder.data("thing3").build());
-               System.out.println("sent 3 events");
-            }
-         }
-      });
-   }
-   @GET
-   @Path("/noContent")
-   @Produces(MediaType.SERVER_SENT_EVENTS)
-   public void noEventStream(@Context SseEventSink eventSink) throws Exception {
-      noContentCount.incrementAndGet();
-      if (noContentCount.get() > 1) {
-         throw new IllegalStateException("Client reconnect after http response 204");
-      }
-      eventSink.close();
    }
 }

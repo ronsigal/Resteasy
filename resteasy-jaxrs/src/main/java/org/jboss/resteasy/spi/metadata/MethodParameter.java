@@ -23,7 +23,7 @@ public class MethodParameter extends Parameter
    @Override
    public AccessibleObject getAccessibleObject()
    {
-      return locator.getMethod();
+      return locator.method;
    }
 
    public Annotation[] getAnnotations()

@@ -1,7 +1,9 @@
 package org.jboss.resteasy.rxjava2;
 
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -9,6 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+
+import org.jboss.resteasy.annotations.Stream;
+import org.reactivestreams.Publisher;
 
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -18,6 +23,9 @@ import io.reactivex.Single;
 @Path("/")
 public class RxResource
 {
+   
+   private static boolean terminated = false;
+   
    @Path("single")
    @GET
    public Single<String> single()
@@ -101,6 +109,31 @@ public class RxResource
       }, BackpressureStrategy.BUFFER).map(str -> {
          uriInfo.getAbsolutePath();
          return str;
+      });
+   }
+
+   @Stream
+   @GET
+   @Path("chunked")
+   @Produces("application/json")
+   public Publisher<String> chunked() {
+      return Flowable.fromArray("one", "two");
+   }
+
+   @Stream
+   @GET
+   @Path("chunked-infinite")
+   @Produces("application/json")
+   public Publisher<String> chunkedInfinite() {
+      terminated = false;
+      System.err.println("Starting ");
+      char[] chunk = new char[8192];
+      Arrays.fill(chunk, 'a');
+      String ret = new String(chunk);
+      return Flowable.interval(1, TimeUnit.SECONDS).map(v -> {
+         return ret;
+      }).doFinally(() -> {
+         terminated = true;
       });
    }
 }

@@ -4,7 +4,6 @@ import org.jboss.resteasy.client.jaxrs.ProxyConfig;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
-import org.jboss.resteasy.client.jaxrs.internal.ClientInvocationBuilder;
 import org.jboss.resteasy.client.jaxrs.internal.ClientRequestHeaders;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.jboss.resteasy.client.jaxrs.internal.proxy.extractors.ClientContext;
@@ -13,6 +12,7 @@ import org.jboss.resteasy.client.jaxrs.internal.proxy.extractors.EntityExtractor
 import org.jboss.resteasy.client.jaxrs.internal.proxy.processors.InvocationProcessor;
 import org.jboss.resteasy.client.jaxrs.internal.proxy.processors.ProcessorFactory;
 import org.jboss.resteasy.client.jaxrs.internal.proxy.processors.WebTargetProcessor;
+import org.jboss.resteasy.spi.AsyncClientResponseProvider;
 import org.jboss.resteasy.util.FeatureContextDelegate;
 import org.jboss.resteasy.util.MediaTypeHelper;
 
@@ -20,10 +20,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -42,7 +43,8 @@ public class ClientInvoker implements MethodInvoker
    protected EntityExtractor extractor;
    protected DefaultEntityExtractorFactory entityExtractorFactory;
    protected ClientConfiguration invokerConfig;
-
+   protected AsyncClientResponseProvider<?> asyncClientResponseProvider;
+   
 
    public ClientInvoker(ResteasyWebTarget parent, Class<?> declaring, Method method, ProxyConfig config)
    {
@@ -82,6 +84,7 @@ public class ClientInvoker implements MethodInvoker
       accepts = MediaTypeHelper.getProduces(declaring, method, config.getDefaultProduces());
       entityExtractorFactory = new DefaultEntityExtractorFactory();
       this.extractor = entityExtractorFactory.createExtractor(method);
+      asyncClientResponseProvider = invokerConfig.getAsyncClientResponseProvider(method.getReturnType());
    }
 
    public MediaType[] getAccepts()
@@ -100,6 +103,17 @@ public class ClientInvoker implements MethodInvoker
    }
 
    public Object invoke(Object[] args)
+   {
+      return asyncClientResponseProvider != null ? invokeAsync(args) : invokeSync(args);
+   }
+   
+   protected Object invokeAsync(final Object[] args)
+   {
+      CompletionStage<?> stage = CompletableFuture.supplyAsync(() -> invokeSync(args));
+      return asyncClientResponseProvider.fromCompletionStage(stage);
+   }
+   
+   protected Object invokeSync(Object[] args)
    {
       ClientInvocation request = createRequest(args);
       ClientResponse response = (ClientResponse)request.invoke();

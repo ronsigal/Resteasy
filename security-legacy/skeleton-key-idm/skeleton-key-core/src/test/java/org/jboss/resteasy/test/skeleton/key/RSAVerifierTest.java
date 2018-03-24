@@ -105,7 +105,7 @@ public class RSAVerifierTest
       {
          throw new RuntimeException(e);
       }
-//      System.out.println(sw.toString());
+      System.out.println(sw.toString());
    }
 
 
@@ -142,7 +142,7 @@ public class RSAVerifierTest
 
       }
       long end = System.currentTimeMillis() - start;
-//      System.out.println("rate: " + ((double)end/(double)count));
+      System.out.println("rate: " + ((double)end/(double)count));
    }
    */
 
@@ -207,7 +207,7 @@ public class RSAVerifierTest
       }
       catch (VerificationException ignored)
       {
-         ignored.printStackTrace();
+         System.out.println(ignored.getMessage());
       }
    }
 
@@ -250,7 +250,7 @@ public class RSAVerifierTest
       }
       catch (VerificationException ignored)
       {
-         ignored.printStackTrace();
+         System.out.println(ignored.getMessage());
       }
    }
 
@@ -274,7 +274,7 @@ public class RSAVerifierTest
       }
       catch (VerificationException ignored)
       {
-         ignored.printStackTrace();
+         System.out.println(ignored.getMessage());
       }
    }
 

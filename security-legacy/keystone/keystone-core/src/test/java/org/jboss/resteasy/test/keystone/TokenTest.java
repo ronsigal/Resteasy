@@ -217,7 +217,7 @@ public class TokenTest
       admin.projects().addUserRole(project.getId(), user.getId(), role.getId());
 
       String signed = new SkeletonKeyClientBuilder().username("jsmith").password("foobar").idp(target).obtainSignedToken("Skeleton Key");
-//      System.out.println(signed);
+      System.out.println(signed);
       PKCS7SignatureInput input = new PKCS7SignatureInput(signed);
       input.setCertificate(certificate);
       Assert.assertTrue(input.verify());
@@ -264,8 +264,8 @@ public class TokenTest
       WebTarget target = client.target(generateBaseUrl());
       Mappers.registerContextResolver(client);
       String tiny = target.path("tokens").path("url").request().post(Entity.json(auth), String.class);
-//      System.out.println(tiny);
-//      System.out.println("tiny.size: " + tiny.length());
+      System.out.println(tiny);
+      System.out.println("tiny.size: " + tiny.length());
       Security.addProvider(new BouncyCastleProvider());
 
 
@@ -277,15 +277,13 @@ public class TokenTest
 
 
       CMSSignedData data = new CMSSignedData(signed);
-//      byte[] bytes = (byte[])data.getSignedContent().getContent();
-//      System.out.println("BYTES: " + new String(bytes));
-//      System.out.println("size:" + signed.length);
-//      int length = Base64.encodeBytes(signed).length();
-//      System.out.println("Base64.size: " + length);
+      byte[] bytes = (byte[])data.getSignedContent().getContent();
+      System.out.println("BYTES: " + new String(bytes));
+      System.out.println("size:" + signed.length);
+      System.out.println("Base64.size: " + Base64.encodeBytes(signed).length());
 
-      SignerInformation signer = data.getSignerInfos().getSigners().iterator().next();
-      boolean valid = signer.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider("BC").build(cert.getPublicKey()));
-      System.out.println("valid: " + valid);
+      SignerInformation signer = (SignerInformation)data.getSignerInfos().getSigners().iterator().next();
+      System.out.println("valid: " + signer.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider("BC").build(cert.getPublicKey())));
       client.close();
 
 

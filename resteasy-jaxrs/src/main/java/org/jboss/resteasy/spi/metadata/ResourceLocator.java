@@ -1,27 +1,83 @@
 package org.jboss.resteasy.spi.metadata;
 
+import org.jboss.resteasy.util.Types;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 /**
- * @author Christian Kaltepoth
+ * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
+ * @version $Revision: 1 $
  */
-public interface ResourceLocator
+public class ResourceLocator
 {
-  ResourceClass getResourceClass();
+   protected ResourceClass resourceClass;
+   protected Class<?> returnType;
+   protected Type genericReturnType;
+   protected Method method;
+   protected Method annotatedMethod;
+   protected MethodParameter[] params = {};
+   protected String fullpath;
+   protected String path;
 
-  Class<?> getReturnType();
+   public ResourceLocator(ResourceClass resourceClass, Method method, Method annotatedMethod)
+   {
+      this.resourceClass = resourceClass;
+      this.annotatedMethod = annotatedMethod;
+      this.method = method;
+      // we initialize generic types based on the method of the resource class rather than the Method that is actually
+      // annotated.  This is so we have the appropriate generic type information.
+      this.genericReturnType = Types.resolveTypeVariables(resourceClass.getClazz(), method.getGenericReturnType());
+      this.returnType = Types.getRawType(genericReturnType);
+      this.params = new MethodParameter[method.getParameterTypes().length];
+      for (int i = 0; i < method.getParameterTypes().length; i++)
+      {
+         this.params[i] = new MethodParameter(this, method.getParameterTypes()[i], method.getGenericParameterTypes()[i], annotatedMethod.getParameterAnnotations()[i]);
+      }
+   }
 
-  Type getGenericReturnType();
+   public ResourceClass getResourceClass()
+   {
+      return resourceClass;
+   }
 
-  Method getMethod();
+   public Class<?> getReturnType()
+   {
+      return returnType;
+   }
 
-  Method getAnnotatedMethod();
+   public Type getGenericReturnType()
+   {
+      return genericReturnType;
+   }
 
-  MethodParameter[] getParams();
+   public Method getMethod()
+   {
+      return method;
+   }
 
-  String getFullpath();
+   public Method getAnnotatedMethod()
+   {
+      return annotatedMethod;
+   }
 
-  String getPath();
+   public MethodParameter[] getParams()
+   {
+      return params;
+   }
 
+   public String getFullpath()
+   {
+      return fullpath;
+   }
+
+   public String getPath()
+   {
+      return path;
+   }
+
+   @Override
+   public String toString() {
+      return method.toString();
+   }
 }

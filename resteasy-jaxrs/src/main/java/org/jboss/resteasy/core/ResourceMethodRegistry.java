@@ -48,13 +48,11 @@ public class ResourceMethodRegistry implements Registry
    protected RootClassNode root = new RootClassNode();
    protected boolean widerMatching;
    protected RootNode rootNode = new RootNode();
-   protected ResourceBuilder resourceBuilder;
 
 
    public ResourceMethodRegistry(ResteasyProviderFactory providerFactory)
    {
       this.providerFactory = providerFactory;
-      this.resourceBuilder = providerFactory.getResourceBuilder();
    }
 
    public boolean isWiderMatching()
@@ -69,7 +67,7 @@ public class ResourceMethodRegistry implements Registry
 
    public void addPerRequestResource(Class clazz, String basePath)
    {
-      addResourceFactory(new POJOResourceFactory(resourceBuilder, clazz), basePath);
+      addResourceFactory(new POJOResourceFactory(clazz), basePath);
 
    }
 
@@ -80,13 +78,13 @@ public class ResourceMethodRegistry implements Registry
     */
    public void addPerRequestResource(Class clazz)
    {
-      addResourceFactory(new POJOResourceFactory(resourceBuilder, clazz));
+      addResourceFactory(new POJOResourceFactory(clazz));
    }
 
    @Override
    public void addPerRequestResource(ResourceClass clazz)
    {
-      POJOResourceFactory resourceFactory = new POJOResourceFactory(resourceBuilder, clazz);
+      POJOResourceFactory resourceFactory = new POJOResourceFactory(clazz);
       register(resourceFactory, null, clazz);
       resourceFactory.registered(providerFactory);
    }
@@ -94,21 +92,19 @@ public class ResourceMethodRegistry implements Registry
    @Override
    public void addPerRequestResource(ResourceClass clazz, String basePath)
    {
-      POJOResourceFactory resourceFactory = new POJOResourceFactory(resourceBuilder, clazz);
+      POJOResourceFactory resourceFactory = new POJOResourceFactory(clazz);
       register(resourceFactory, basePath, clazz);
       resourceFactory.registered(providerFactory);
    }
 
    public void addSingletonResource(Object singleton)
    {
-      ResourceClass resourceClass = resourceBuilder.getRootResourceFromAnnotations(singleton.getClass());
-      addResourceFactory(new SingletonResource(singleton, resourceClass));
+      addResourceFactory(new SingletonResource(singleton));
    }
 
    public void addSingletonResource(Object singleton, String basePath)
    {
-      ResourceClass resourceClass = resourceBuilder.getRootResourceFromAnnotations(singleton.getClass());
-      addResourceFactory(new SingletonResource(singleton, resourceClass), basePath);
+      addResourceFactory(new SingletonResource(singleton), basePath);
    }
 
    @Override
@@ -122,7 +118,7 @@ public class ResourceMethodRegistry implements Registry
    @Override
    public void addSingletonResource(Object singleton, ResourceClass resourceClass, String basePath)
    {
-      SingletonResource resourceFactory = new SingletonResource(singleton, resourceClass);
+      SingletonResource resourceFactory = new SingletonResource(singleton);
       register(resourceFactory, basePath, resourceClass);
       resourceFactory.registered(providerFactory);
    }
@@ -221,13 +217,13 @@ public class ResourceMethodRegistry implements Registry
          {
             for (Class<?> intf : clazz.getInterfaces())
             {
-               ResourceClass resourceClass = resourceBuilder.getRootResourceFromAnnotations(intf);
+               ResourceClass resourceClass = ResourceBuilder.rootResourceFromAnnotations(intf);
                register(ref, base, resourceClass);
             }
          }
          else
          {
-            ResourceClass resourceClass = resourceBuilder.getRootResourceFromAnnotations(clazz);
+            ResourceClass resourceClass = ResourceBuilder.rootResourceFromAnnotations(clazz);
             register(ref, base, resourceClass);
          }
       }
@@ -237,7 +233,7 @@ public class ResourceMethodRegistry implements Registry
       {
          for (Method method : getDeclaredMethods(clazz))
          {
-            Method _method = resourceBuilder.getAnnotatedMethod(clazz, method);
+            Method _method = ResourceBuilder.findAnnotatedMethod(clazz, method);
             if (_method != null && !java.lang.reflect.Modifier.isPublic(_method.getModifiers()))
             {
                LogMessages.LOGGER.JAXRSAnnotationsFoundAtNonPublicMethod(method.getDeclaringClass().getName(), method.getName());

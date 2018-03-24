@@ -5,7 +5,6 @@ import org.jboss.resteasy.plugins.server.resourcefactory.POJOResourceFactory;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResourceFactory;
-import org.jboss.resteasy.spi.metadata.ResourceBuilder;
 import org.jboss.resteasy.spi.metadata.ResourceClass;
 
 /**
@@ -15,33 +14,31 @@ public class VertxRegistry implements Registry
 {
 
    private final Registry delegate;
-   private final ResourceBuilder resourceBuilder;
 
-   public VertxRegistry(Registry delegate, ResourceBuilder resourceBuilder)
+   public VertxRegistry(Registry delegate)
    {
       this.delegate = delegate;
-      this.resourceBuilder = resourceBuilder;
    }
 
 
    public void addPerInstanceResource(Class<?> clazz)
    {
-      delegate.addResourceFactory(new VertxResourceFactory(new POJOResourceFactory(resourceBuilder, clazz)));
+      delegate.addResourceFactory(new VertxResourceFactory(new POJOResourceFactory(clazz)));
    }
 
    public void addPerInstanceResource(Class<?> clazz, String basePath)
    {
-      delegate.addResourceFactory(new VertxResourceFactory(new POJOResourceFactory(resourceBuilder, clazz)), basePath);
+      delegate.addResourceFactory(new VertxResourceFactory(new POJOResourceFactory(clazz)), basePath);
    }
 
    public void addPerInstanceResource(ResourceClass resourceClass)
    {
-      delegate.addResourceFactory(new VertxResourceFactory(new POJOResourceFactory(resourceBuilder, resourceClass)));
+      delegate.addResourceFactory(new VertxResourceFactory(new POJOResourceFactory(resourceClass)));
    }
 
    public void addPerInstanceResource(ResourceClass resourceClass, String basePath)
    {
-      delegate.addResourceFactory(new VertxResourceFactory(new POJOResourceFactory(resourceBuilder, resourceClass)), basePath);
+      delegate.addResourceFactory(new VertxResourceFactory(new POJOResourceFactory(resourceClass)), basePath);
    }
 
    @Override

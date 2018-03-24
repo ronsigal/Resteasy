@@ -45,7 +45,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import static org.jboss.resteasy.util.FindAnnotation.findAnnotation;
@@ -59,7 +58,7 @@ public class ResourceBuilder
 {
    public static class ResourceClassBuilder
    {
-      final DefaultResourceClass resourceClass;
+      final ResourceClass resourceClass;
       List<FieldParameter> fields = new ArrayList<FieldParameter>();
       List<SetterParameter> setters = new ArrayList<SetterParameter>();
       List<ResourceMethod> resourceMethods = new ArrayList<ResourceMethod>();
@@ -67,7 +66,7 @@ public class ResourceBuilder
 
       public ResourceClassBuilder(Class<?> root, String path)
       {
-         this.resourceClass = new DefaultResourceClass(root, path);
+         this.resourceClass = new ResourceClass(root, path);
       }
 
       public ResourceMethodBuilder method(Method method)
@@ -438,7 +437,7 @@ public class ResourceBuilder
       public ResourceConstructorBuilder(ResourceClassBuilder resourceClassBuilder, Constructor constructor)
       {
          this.resourceClassBuilder = resourceClassBuilder;
-         this.constructor = new DefaultResourceConstructor(resourceClassBuilder.resourceClass, constructor);
+         this.constructor = new ResourceConstructor(resourceClassBuilder.resourceClass, constructor);
       }
       public ConstructorParameterBuilder param(int i)
       {
@@ -455,7 +454,7 @@ public class ResourceBuilder
    public static class ResourceLocatorBuilder<T extends ResourceLocatorBuilder<T>>
    {
 
-      DefaultResourceLocator locator;
+      ResourceLocator locator;
       ResourceClassBuilder resourceClassBuilder;
 
       ResourceLocatorBuilder()
@@ -465,7 +464,7 @@ public class ResourceBuilder
       public ResourceLocatorBuilder(ResourceClassBuilder resourceClassBuilder, Method method, Method annotatedMethod)
       {
          this.resourceClassBuilder = resourceClassBuilder;
-         this.locator = new DefaultResourceLocator(resourceClassBuilder.resourceClass, method, annotatedMethod);
+         this.locator = new ResourceLocator(resourceClassBuilder.resourceClass, method, annotatedMethod);
       }
 
       public T returnType(Class<?> type)
@@ -495,7 +494,7 @@ public class ResourceBuilder
       public ResourceClassBuilder buildMethod()
       {
          ResteasyUriBuilder builder = new ResteasyUriBuilder();
-         if (locator.resourceClass.getPath() != null) builder.path(locator.resourceClass.getPath());
+         if (locator.resourceClass.path != null) builder.path(locator.resourceClass.path);
          if (locator.path != null) builder.path(locator.path);
          String pathExpression = builder.getPath();
          if (pathExpression == null)
@@ -518,11 +517,11 @@ public class ResourceBuilder
 
    public static class ResourceMethodBuilder extends ResourceLocatorBuilder<ResourceMethodBuilder>
    {
-      DefaultResourceMethod method;
+      ResourceMethod method;
 
       ResourceMethodBuilder(ResourceClassBuilder resourceClassBuilder, Method method, Method annotatedMethod)
       {
-         this.method = new DefaultResourceMethod(resourceClassBuilder.resourceClass, method, annotatedMethod);
+         this.method = new ResourceMethod(resourceClassBuilder.resourceClass, method, annotatedMethod);
          this.locator = this.method;
          this.resourceClassBuilder = resourceClassBuilder;
       }
@@ -630,7 +629,7 @@ public class ResourceBuilder
       public ResourceClassBuilder buildMethod()
       {
          ResteasyUriBuilder builder = new ResteasyUriBuilder();
-         if (method.resourceClass.getPath() != null) builder.path(method.resourceClass.getPath());
+         if (method.resourceClass.path != null) builder.path(method.resourceClass.path);
          if (method.path != null) builder.path(method.path);
          String pathExpression = builder.getPath();
          if (pathExpression == null)
@@ -683,55 +682,22 @@ public class ResourceBuilder
       }
    }
 
-   private final List<ResourceClassProcessor> processors = new ArrayList<>();
 
-   /**
-    * Register a new {@link ResourceClassProcessor} which will be used to post-process all
-    * {@link ResourceClass} instances created from the builder.
-    */
-   public void registerResourceClassProcessor(ResourceClassProcessor processor)
-   {
-      this.processors.add(processor);
-   }
-
-   @Deprecated
    public static ResourceClassBuilder rootResource(Class<?> root)
-   {
-      return new ResourceBuilder().buildRootResource(root);
-   }
-
-   public ResourceClassBuilder buildRootResource(Class<?> root)
    {
       return new ResourceClassBuilder(root, "/");
    }
 
-   @Deprecated
    public static ResourceClassBuilder rootResource(Class<?> root, String path)
-   {
-      return new ResourceBuilder().buildRootResource(root, path);
-   }
-
-   protected ResourceClassBuilder buildRootResource(Class<?> root, String path)
    {
       return new ResourceClassBuilder(root, path);
    }
 
-   @Deprecated
    public static ResourceClassBuilder locator(Class<?> root)
-   {
-      return new ResourceBuilder().buildLocator(root);
-   }
-
-   protected ResourceClassBuilder buildLocator(Class<?> root)
    {
       return new ResourceClassBuilder(root, null);
    }
 
-   @Deprecated
-   public static ResourceConstructor constructor(Class<?> annotatedResourceClass)
-   {
-      return new ResourceBuilder().getConstructor(annotatedResourceClass);
-   }
 
    /**
     * Picks a constructor from an annotated resource class based on spec rules
@@ -739,26 +705,19 @@ public class ResourceBuilder
     * @param annotatedResourceClass
     * @return
     */
-   public ResourceConstructor getConstructor(Class<?> annotatedResourceClass)
+   public static ResourceConstructor constructor(Class<?> annotatedResourceClass)
    {
       Constructor constructor = PickConstructor.pickPerRequestConstructor(annotatedResourceClass);
       if (constructor == null)
       {
          throw new RuntimeException(Messages.MESSAGES.couldNotFindConstructor(annotatedResourceClass.getName()));
       }
-      ResourceConstructorBuilder builder = buildRootResource(annotatedResourceClass).constructor(constructor);
+      ResourceConstructorBuilder builder = rootResource(annotatedResourceClass).constructor(constructor);
       if (constructor.getParameterTypes() != null)
       {
          for (int i = 0; i < constructor.getParameterTypes().length; i++) builder.param(i).fromAnnotations();
       }
-      ResourceClass resourceClass = applyProcessors(builder.buildConstructor().buildClass());
-      return resourceClass.getConstructor();
-   }
-
-   @Deprecated
-   public static ResourceClass rootResourceFromAnnotations(Class<?> clazz)
-   {
-      return new ResourceBuilder().getRootResourceFromAnnotations(clazz);
+      return builder.buildConstructor().buildClass().getConstructor();
    }
 
    /**
@@ -766,23 +725,17 @@ public class ResourceBuilder
     *
     * @return
     */
-   public ResourceClass getRootResourceFromAnnotations(Class<?> clazz)
+   public static ResourceClass rootResourceFromAnnotations(Class<?> clazz)
    {
       return fromAnnotations(false, clazz);
    }
 
-   @Deprecated
    public static ResourceClass locatorFromAnnotations(Class<?> clazz)
-   {
-      return new ResourceBuilder().getLocatorFromAnnotations(clazz);
-   }
-
-   public ResourceClass getLocatorFromAnnotations(Class<?> clazz)
    {
       return fromAnnotations(true, clazz);
    }
 
-   private ResourceClass fromAnnotations(boolean isLocator, Class<?> clazz)
+   private static ResourceClass fromAnnotations(boolean isLocator, Class<?> clazz)
    {
       // stupid hack for Weld as it loses generic type information, but retains annotations.
       if (!clazz.isInterface() && clazz.getSuperclass() != null && !clazz.getSuperclass().equals(Object.class) && clazz.isSynthetic())
@@ -792,12 +745,12 @@ public class ResourceBuilder
 
 
       ResourceClassBuilder builder = null;
-      if (isLocator) builder = buildLocator(clazz);
+      if (isLocator) builder = locator(clazz);
       else
       {
          Path path = clazz.getAnnotation(Path.class);
-         if (path == null) builder = buildRootResource(clazz, null);
-         else builder = buildRootResource(clazz, path.value());
+         if (path == null) builder = rootResource(clazz, null);
+         else builder = rootResource(clazz, path.value());
       }
       for (Method method : clazz.getMethods())
       {
@@ -810,13 +763,7 @@ public class ResourceBuilder
          processFields(builder, clazz);
       }
       processSetters(builder, clazz);
-      return applyProcessors(builder.buildClass());
-   }
-
-   @Deprecated
-   public static Method findAnnotatedMethod(final Class<?> root, final Method implementation)
-   {
-      return new ResourceBuilder().getAnnotatedMethod(root, implementation);
+      return builder.buildClass();
    }
 
    /**
@@ -826,7 +773,7 @@ public class ResourceBuilder
     * @param implementation The resource method or sub-resource method / sub-resource locator implementation
     * @return The annotated resource method or sub-resource method / sub-resource locator.
     */
-   public Method getAnnotatedMethod(final Class<?> root, final Method implementation)
+   public static Method findAnnotatedMethod(final Class<?> root, final Method implementation)
    {
       if (implementation.isSynthetic())
       {
@@ -921,7 +868,7 @@ public class ResourceBuilder
       return null;
    }
 
-   protected void processFields(ResourceClassBuilder resourceClassBuilder, Class<?> root)
+   protected static void processFields(ResourceClassBuilder resourceClassBuilder, Class<?> root)
    {
       do
       {
@@ -931,7 +878,7 @@ public class ResourceBuilder
       } while (root != null && !root.equals(Object.class));
    }
 
-   protected void processSetters(ResourceClassBuilder resourceClassBuilder, Class<?> root)
+   protected static void processSetters(ResourceClassBuilder resourceClassBuilder, Class<?> root)
    {
       HashSet<Long> hashes = new HashSet<Long>();
       do
@@ -941,7 +888,7 @@ public class ResourceBuilder
       } while (root != null && !root.equals(Object.class));
    }
 
-   protected void processDeclaredFields(ResourceClassBuilder resourceClassBuilder, final Class<?> root)
+   protected static void processDeclaredFields(ResourceClassBuilder resourceClassBuilder, final Class<?> root)
    {
       Field[] fieldList = new Field[0];
       try {
@@ -967,7 +914,7 @@ public class ResourceBuilder
          builder.buildField();
       }
    }
-   protected void processDeclaredSetters(ResourceClassBuilder resourceClassBuilder, final Class<?> root, Set<Long> visitedHashes)
+   protected static void processDeclaredSetters(ResourceClassBuilder resourceClassBuilder, final Class<?> root, Set<Long> visitedHashes)
    {
       Method[] methodList = new Method[0];
       try {
@@ -1007,9 +954,9 @@ public class ResourceBuilder
       }
    }
 
-   protected void processMethod(boolean isLocator, ResourceClassBuilder resourceClassBuilder, Class<?> root, Method implementation)
+   protected static void processMethod(boolean isLocator, ResourceClassBuilder resourceClassBuilder, Class<?> root, Method implementation)
    {
-      Method method = getAnnotatedMethod(root, implementation);
+      Method method = findAnnotatedMethod(root, implementation);
       if (method != null)
       {
          Set<String> httpMethods = IsHttpMethod.getHttpMethods(method);
@@ -1053,20 +1000,6 @@ public class ResourceBuilder
          }
          resourceLocatorBuilder.buildMethod();
       }
-   }
-
-   /**
-    * Apply the list of {@link ResourceClassProcessor} to the supplied {@link ResourceClass}.
-    */
-   private ResourceClass applyProcessors(ResourceClass original)
-   {
-      ResourceClass current = original;
-      for (ResourceClassProcessor processor : processors)
-      {
-         current = processor.process(current);
-         Objects.requireNonNull(current, "ResourceClassProcessor must not return null");
-      }
-      return current;
    }
 
 }
