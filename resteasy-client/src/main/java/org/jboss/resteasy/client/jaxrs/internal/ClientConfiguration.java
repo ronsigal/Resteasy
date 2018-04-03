@@ -1,6 +1,7 @@
 package org.jboss.resteasy.client.jaxrs.internal;
 
 import org.jboss.resteasy.core.ThreadLocalResteasyProviderFactory;
+import org.jboss.resteasy.spi.AsyncClientResponseProvider;
 import org.jboss.resteasy.spi.HeaderValueProcessor;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.*;
@@ -281,8 +282,13 @@ public class ClientConfiguration implements Configuration, Configurable<ClientCo
       return providerFactory.getContracts(componentClass);
    }
    
-   public <I extends RxInvoker<?>> RxInvokerProvider<I> getRxInvokerProvider(Class<I> clazz)
+   public RxInvokerProvider<?> getRxInvokerProvider(Class<?> clazz)
    {
       return providerFactory.getRxInvokerProvider(clazz);
+   }
+   
+   public <T> AsyncClientResponseProvider<T> getAsyncClientResponseProvider(Class<T> type)
+   {
+      return providerFactory.getAsyncClientResponseProvider(type);
    }
 }
