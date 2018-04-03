@@ -27,6 +27,7 @@ import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.plugins.providers.sse.client.SseEventSourceImpl;
 import org.jboss.resteasy.utils.PortProviderUtil;
@@ -249,22 +250,44 @@ public class SseTest
    @InSequence(5)
    public void testReconnect() throws Exception
    {
+      int proxyPort = 9090;
+      SimpleProxyServer proxy = new SimpleProxyServer(PortProviderUtil.getHost(), PortProviderUtil.getPort(), proxyPort);
+      proxy.start();
       final CountDownLatch latch = new CountDownLatch(10);
-      final CountDownLatch closeLatch = new CountDownLatch(1);
       final List<String> results = new ArrayList<String>();
       final AtomicInteger errors = new AtomicInteger(0);
-      Client client = new ResteasyClientBuilder().connectionPoolSize(10).build();
-      WebTarget target = client.target(generateURL("/service/server-sent-events"));
-      try (SseEventSource eventSource = SseEventSource.target(target).reconnectingEvery(1, TimeUnit.SECONDS).build())
+      ResteasyClient client = new ResteasyClientBuilder().connectionPoolSize(10).build();
+      String requestPath = PortProviderUtil.generateURL("/service/server-sent-events",
+            SseTest.class.getSimpleName(), PortProviderUtil.getHost(), proxyPort);
+      WebTarget target = client.target(requestPath);
+      try (SseEventSource eventSource = SseEventSource.target(target).reconnectingEvery(500, TimeUnit.MILLISECONDS).build())
       {
          Assert.assertEquals(SseEventSourceImpl.class, eventSource.getClass());
          eventSource.register(event -> {
             results.add(event.toString());
             latch.countDown();
-            closeLatch.countDown();
+            if (latch.getCount() == 8)
+            {
+               new Thread()
+               {
+                  public void run()
+                  {
+                     proxy.stop();
+                     try
+                     {
+                        Thread.sleep(300);
+                     }
+                     catch (Exception e)
+                     {
+                        logger.error("Exception thrown when sleep some time to start proxy ", e);
+                     }
+                     proxy.start();
+                  }
+               }.start();
+            }
          }, ex -> {
             errors.incrementAndGet();
-            logger.error(ex.getMessage(), ex);
+            logger.error("test reconnect error", ex);
             throw new RuntimeException(ex);
          });
          eventSource.open();
@@ -280,8 +303,10 @@ public class SseTest
          Assert.assertTrue("Waiting for event to be delivered has timed out.", waitResult);
          Assert.assertTrue("10 events are expected, but is : " + results.size(), results.size() == 10);
          target.request().delete();
+         proxy.stop();
       }
    }
+
 
    @Test
    @InSequence(6)
@@ -448,6 +473,52 @@ public class SseTest
       Assert.assertEquals("response OK is expected", response.getStatus(), 200);
       Assert.assertEquals("text/event-stream is expected", response.getMediaType(), MediaType.SERVER_SENT_EVENTS_TYPE);
       client.close();
+   }
+   @Test
+   @InSequence(12)
+   public void testNoReconnectAfterEventSinkClose() throws Exception
+   {
+      final List<String> results = new ArrayList<String>();
+      Client client = ClientBuilder.newBuilder().build();
+      WebTarget target = client.target(generateURL("/service/server-sent-events/closeAfterSent"));
+      try (SseEventSource source = SseEventSource.target(target).build())
+      {
+         source.register(event -> results.add(event.readData()));
+         source.open();
+         Thread.sleep(1000);
+      }
+      catch (InterruptedException e)
+      {
+         // falls through
+         e.printStackTrace();
+      }
+      Assert.assertEquals("Received unexpected events", "[thing1, thing2, thing3]", results.toString());
+   }
+   
+   @Test
+   @InSequence(13)
+   public void testNoContent() throws Exception
+   {
+      Client client = ClientBuilder.newBuilder().build();
+      final AtomicInteger errors = new AtomicInteger(0);
+      WebTarget target = client.target(generateURL("/service/server-sent-events/noContent"));
+      try (SseEventSource source = SseEventSource.target(target).build())
+      {
+         source.register(event -> {
+            System.out.println(event);
+         }, ex -> {
+            ex.printStackTrace();
+            errors.incrementAndGet();
+         });
+         source.open();
+         Thread.sleep(1000);
+      }
+      catch (InterruptedException e)
+      {
+         // falls through
+         e.printStackTrace();
+      }
+      Assert.assertTrue("error is not expected", errors.get() == 0);
    }
 
    //    @Test
