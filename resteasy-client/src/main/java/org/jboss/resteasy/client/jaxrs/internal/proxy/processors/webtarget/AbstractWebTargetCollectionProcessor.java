@@ -3,6 +3,9 @@ package org.jboss.resteasy.client.jaxrs.internal.proxy.processors.webtarget;
 import org.jboss.resteasy.client.jaxrs.internal.proxy.processors.AbstractCollectionProcessor;
 import org.jboss.resteasy.client.jaxrs.internal.proxy.processors.WebTargetProcessor;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+
 import javax.ws.rs.client.WebTarget;
 
 /**
@@ -14,6 +17,11 @@ public abstract class AbstractWebTargetCollectionProcessor extends AbstractColle
    public AbstractWebTargetCollectionProcessor(String paramName)
    {
       super(paramName);
+   }
+   
+   public AbstractWebTargetCollectionProcessor(String paramName, Type type, Annotation[] annotations)
+   {
+      super(paramName, type, annotations);
    }
 
    @Override

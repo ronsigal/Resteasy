@@ -504,7 +504,7 @@ public class StringParameterInjector
        }
        
        // Else try to find a RuntimeDelegate.HeaderDelegate if any
-       if (paramType.equals(HeaderParam.class))
+       if (HeaderParam.class.equals(paramType))
        {
           delegate = factory.getHeaderDelegate(baseType);
           if (delegate != null)

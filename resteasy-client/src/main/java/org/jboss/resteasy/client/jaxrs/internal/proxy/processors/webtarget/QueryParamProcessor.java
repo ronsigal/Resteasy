@@ -1,7 +1,9 @@
 package org.jboss.resteasy.client.jaxrs.internal.proxy.processors.webtarget;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
-import org.jboss.resteasy.util.Encode;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
 import javax.ws.rs.client.WebTarget;
 
@@ -14,6 +16,11 @@ public class QueryParamProcessor extends AbstractWebTargetCollectionProcessor
    public QueryParamProcessor(String paramName)
    {
       super(paramName);
+   }
+   
+   public QueryParamProcessor(String paramName, Type type, Annotation[] annotations)
+   {
+      super(paramName, type, annotations);
    }
 
    @Override

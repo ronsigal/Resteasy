@@ -1,6 +1,10 @@
 package org.jboss.resteasy.client.jaxrs.internal.proxy.processors;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.Collection;
+
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -9,10 +13,19 @@ import java.util.Collection;
 public abstract class AbstractCollectionProcessor<T>
 {
    protected String paramName;
+   protected Type type;
+   protected Annotation[] annotations;
 
    public AbstractCollectionProcessor(String paramName)
    {
       this.paramName = paramName;
+   }
+   
+   public AbstractCollectionProcessor(String paramName, Type type, Annotation[] annotations)
+   {
+      this.paramName = paramName;
+      this.type = type;
+      this.annotations = annotations;
    }
 
    protected abstract T apply(T target, Object object);
@@ -22,9 +35,17 @@ public abstract class AbstractCollectionProcessor<T>
       if (object == null) return target;
       if (object instanceof Collection)
       {
-         for (Object obj : (Collection<?>) object)
+         if (annotations != null && type != null)
          {
-            target = apply(target, obj);
+            object = ResteasyProviderFactory.getInstance().toString(object, object.getClass(), type, annotations);
+            target = apply(target, object);
+         }
+         else
+         {
+            for (Object obj : (Collection<?>) object)
+            {
+               target = apply(target, obj);
+            }
          }
       }
       else if (object.getClass().isArray())

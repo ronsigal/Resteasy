@@ -89,27 +89,27 @@ public class ProcessorFactory
 
       if ((query = FindAnnotation.findAnnotation(annotations, QueryParam.class)) != null)
       {
-         processor = new QueryParamProcessor(query.value());
+         processor = new QueryParamProcessor(query.value(), genericType, annotations);
       }
       else if ((header = FindAnnotation.findAnnotation(annotations,
               HeaderParam.class)) != null)
       {
-         processor = new HeaderParamProcessor(header.value());
+         processor = new HeaderParamProcessor(header.value(), genericType, annotations);
       }
       else if ((cookie = FindAnnotation.findAnnotation(annotations,
               CookieParam.class)) != null)
       {
-         processor = new CookieParamProcessor(cookie.value());
+         processor = new CookieParamProcessor(cookie.value(), genericType, annotations);
       }
       else if ((uriParam = FindAnnotation.findAnnotation(annotations,
               PathParam.class)) != null)
       {
-         processor = new PathParamProcessor(uriParam.value(), isEncoded);
+         processor = new PathParamProcessor(uriParam.value(), isEncoded, genericType, annotations);
       }
       else if ((matrix = FindAnnotation.findAnnotation(annotations,
               MatrixParam.class)) != null)
       {
-         processor = new MatrixParamProcessor(matrix.value());
+         processor = new MatrixParamProcessor(matrix.value(), genericType, annotations);
       }
       else if ((formParam = FindAnnotation.findAnnotation(annotations,
               FormParam.class)) != null)
