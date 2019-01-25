@@ -16,7 +16,7 @@ import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
-import org.jboss.resteasy.core.ResteasyContext;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.resteasy.core.interception.jaxrs.ServerReaderInterceptorContext;
 import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
@@ -132,21 +132,17 @@ public class GZIPDecodingInterceptor implements ReaderInterceptor
       }
 
       int size = -1;
-      ServletContext context = ResteasyContext.getContextData(ServletContext.class);
-      if (context != null)
+      String s = ConfigProvider.getConfig().getOptionalValue(ResteasyContextParameters.RESTEASY_GZIP_MAX_INPUT, String.class).orElse(null);
+      if (s != null)
       {
-         String s = context.getInitParameter(ResteasyContextParameters.RESTEASY_GZIP_MAX_INPUT);
-         if (s != null)
-         {
-            try
-            {
-               size = Integer.parseInt(s);
-            }
-            catch (NumberFormatException e)
-            {
-               LogMessages.LOGGER.invalidFormat(ResteasyContextParameters.RESTEASY_GZIP_MAX_INPUT, Integer.toString(DEFAULT_MAX_SIZE));
-            }
-         }
+    	  try
+    	  {
+    		  size = Integer.parseInt(s);
+    	  }
+    	  catch (NumberFormatException e)
+    	  {
+    		  LogMessages.LOGGER.invalidFormat(ResteasyContextParameters.RESTEASY_GZIP_MAX_INPUT, Integer.toString(DEFAULT_MAX_SIZE));
+    	  }
       }
       if (size == -1)
       {

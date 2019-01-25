@@ -1,5 +1,6 @@
 package org.jboss.resteasy.core;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.mock.MockHttpResponse;
 import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
@@ -96,21 +97,17 @@ public class AsynchronousDispatcher extends SynchronousDispatcher
       private int getMaxUses()
       {
          maxUses = DEFAULT_MAX_USES;
-         ServletContext context = ResteasyContext.getContextData(ServletContext.class);
-         if (context != null)
+         String s = ConfigProvider.getConfig().getOptionalValue(ResteasyContextParameters.RESTEASY_SECURE_RANDOM_MAX_USE, String.class).orElse(null);
+         if (s != null)
          {
-            String s = context.getInitParameter(ResteasyContextParameters.RESTEASY_SECURE_RANDOM_MAX_USE);
-            if (s != null)
-            {
-               try
-               {
-                  maxUses = Integer.parseInt(s);
-               }
-               catch (NumberFormatException e)
-               {
-                  LogMessages.LOGGER.invalidFormat(ResteasyContextParameters.RESTEASY_SECURE_RANDOM_MAX_USE, Integer.toString(DEFAULT_MAX_USES));
-               }
-            }
+        	 try
+        	 {
+        		 maxUses = Integer.parseInt(s);
+        	 }
+        	 catch (NumberFormatException e)
+        	 {
+        		 LogMessages.LOGGER.invalidFormat(ResteasyContextParameters.RESTEASY_SECURE_RANDOM_MAX_USE, Integer.toString(DEFAULT_MAX_USES));
+        	 }
          }
          return maxUses;
       }

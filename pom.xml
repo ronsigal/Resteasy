@@ -95,10 +95,11 @@
             </activation>
             <modules>
                 <module>resteasy-dependencies-bom</module>
+                <module>resteasy-config-microprofile</module> 
                 <module>resteasy-core-spi</module>
                 <module>resteasy-core</module>
                 <module>resteasy-client-api</module>
-                <module>resteasy-client</module>
+                <module>resteasy-client</module> 
                 <module>resteasy-client-microprofile</module>  
                 <module>resteasy-client-jetty</module>
                 <module>providers</module>

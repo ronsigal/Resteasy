@@ -101,18 +101,19 @@ class MicroprofileClientBuilder implements RestClientBuilder {
 
       ClassLoader classLoader = aClass.getClassLoader();
 
+      Config config = ConfigProvider.getConfig();
       List<String> noProxyHosts = Arrays.asList(
-               System.getProperty("http.nonProxyHosts", "localhost|127.*|[::1]").split("\\|"));
+               config.getOptionalValue("http.nonProxyHosts", String.class).orElse("localhost|127.*|[::1]").split("\\|"));
 
       final T actualClient;
 
-      final String proxyHost = System.getProperty("http.proxyHost");
+      final String proxyHost = ConfigProvider.getConfig().getOptionalValue("http.proxyHost", String.class).orElse(null);
 
       if (proxyHost != null && !noProxyHosts.contains(this.baseURI.getHost())) {
          // Use proxy, if defined
          actualClient = this.builderDelegate.defaultProxy(
                    proxyHost,
-                   Integer.parseInt(System.getProperty("http.proxyPort", "80")))
+                   Integer.parseInt(config.getOptionalValue("http.proxyPort", String.class).orElse("80")))
                    .build()
                    .target(this.baseURI)
                    .proxyBuilder(aClass)

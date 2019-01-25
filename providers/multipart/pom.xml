@@ -15,6 +15,11 @@
     <dependencies>
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-config-microprofile</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-core-spi</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -1,0 +1,2 @@
+org.jboss.resteasy.config.ServletConfigConfigSource
+org.jboss.resteasy.config.ServletContextConfigSource
