@@ -18,6 +18,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.wildfly.extras.creaper.core.online.OnlineManagementClient;
 
 /**
  * @tpSubChapter MicroProfile Config
@@ -29,7 +30,8 @@ import org.junit.runner.RunWith;
 @RunAsClient
 public class MicroProfileConfigTest {
 
-   static ResteasyClient client;
+   private static ResteasyClient client;
+   private static OnlineManagementClient managementClient;
 
    @Deployment
    public static Archive<?> deploy() {
@@ -42,11 +44,20 @@ public class MicroProfileConfigTest {
    @BeforeClass
    public static void before() throws Exception {
       client = (ResteasyClient)ClientBuilder.newClient();
+      managementClient = TestUtil.clientInit();
+//      TestUtil.runCmd(managementClient, "/subsystem=microprofile-config-smallrye/config-source=props:"
+//      		+ "add(properties={\"system\" = \"system-management\","
+//      		+                 "\"management\" = \"management-management\"})\n");
+//      TestUtil.runCmd(managementClient, "/subsystem=microprofile-config-smallrye/config-source=props:"
+//        		+ "add(properties={system = system-management,"
+//        		+                 "management = management-management})\n");
    }
 
    @AfterClass
    public static void after() throws Exception {
       client.close();
+//      TestUtil.runCmd(managementClient, "/subsystem=microprofile-config-smallrye/config-source=props:remove");
+//      managementClient.close();
    }
 
    private String generateURL(String path) {
@@ -75,6 +86,33 @@ public class MicroProfileConfigTest {
       Assert.assertEquals("system-system", response.readEntity(String.class));
    }
 
+   /**
+    * @tpTestDetails Verify web.xml context params are accessible; get Config programmatically.
+    * @tpSince RESTEasy 4.0.0
+    */
+   @Test
+   public void testManagementProgrammatic() throws Exception {
+	   
+	      TestUtil.runCmd(managementClient, "/subsystem=microprofile-config-smallrye/config-source=props:"
+	        		+ "add(properties={system = system-management,"
+	        		+                 "management = management-management})\n");
+	      
+      Response response = client.target(generateURL("/management/prog")).request().get();
+      Assert.assertEquals(200, response.getStatus());
+      Assert.assertEquals("management-management", response.readEntity(String.class));
+   }
+
+   /**
+    * @tpTestDetails Verify web.xml context params are accessible; get Config by injection.
+    * @tpSince RESTEasy 4.0.0
+    */
+   @Test
+   public void testManagementInject() throws Exception {
+      Response response = client.target(generateURL("/management/inject")).request().get();
+      Assert.assertEquals(200, response.getStatus());
+      Assert.assertEquals("management-management", response.readEntity(String.class));
+   }
+   
    /**
     * @tpTestDetails Verify web.xml init params are accessible and have higher priority than context params; get Config programmatically.
     * @tpSince RESTEasy 4.0.0

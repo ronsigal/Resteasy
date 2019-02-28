@@ -30,6 +30,20 @@ public class MicroProfileConfigResource {
    public String systemInject() {
       return config.getOptionalValue("system", String.class).orElse("d'oh");
    }
+   
+   @GET
+   @Produces("text/plain")
+   @Path("management/prog")
+   public String managementProg() {
+      return ConfigProvider.getConfig().getOptionalValue("management", String.class).orElse("d'oh");
+   }
+
+   @GET
+   @Produces("text/plain")
+   @Path("management/inject")
+   public String managementInject() {
+      return config.getOptionalValue("management", String.class).orElse("d'oh");
+   }
 
    @GET
    @Produces("text/plain")
