@@ -86,7 +86,7 @@ public class ValidationWithCDITest
       Assert.assertTrue(header instanceof String);
       Assert.assertTrue(Boolean.valueOf(String.class.cast(header)));
       ViolationReport report = response.readEntity(ViolationReport.class);
-      countViolations(report, 0, 0, 0, 1, 0);
+      countViolations(report, 0, 0, 1, 0);
    }
 
    /**
@@ -109,7 +109,7 @@ public class ValidationWithCDITest
          Assert.assertTrue(header instanceof String);
          Assert.assertTrue(Boolean.valueOf(String.class.cast(header)));
          ViolationReport report = response.readEntity(ViolationReport.class);
-         countViolations(report, 0, 0, 0, 1, 0);
+         countViolations(report, 0, 0, 1, 0);
          response.close();
       }
 
@@ -130,14 +130,13 @@ public class ValidationWithCDITest
          Assert.assertTrue(header instanceof String);
          Assert.assertTrue(Boolean.valueOf(String.class.cast(header)));
          ViolationReport report = response.readEntity(ViolationReport.class);
-         countViolations(report, 0, 0, 0, 1, 0);
+         countViolations(report, 0, 0, 1, 0);
          response.close();
       }
    }
 
-   private void countViolations(ViolationReport e, int fieldCount, int propertyCount, int classCount, int parameterCount, int returnValueCount)
+   private void countViolations(ViolationReport e, int propertyCount, int classCount, int parameterCount, int returnValueCount)
    {
-      Assert.assertEquals(fieldCount, e.getFieldViolations().size());
       Assert.assertEquals(propertyCount, e.getPropertyViolations().size());
       Assert.assertEquals(classCount, e.getClassViolations().size());
       Assert.assertEquals(parameterCount, e.getParameterViolations().size());
