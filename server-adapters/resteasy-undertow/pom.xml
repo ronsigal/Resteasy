@@ -41,6 +41,12 @@
             <artifactId>jboss-servlet-api_4.0_spec</artifactId>
             <scope>compile</scope>
         </dependency>
+       <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-config-microprofile</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 
 

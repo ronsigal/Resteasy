@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceContext;
@@ -21,6 +23,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Providers;
 
 import org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext;
+import org.jboss.resteasy.microprofile.config.ConfigContext;
 import org.jboss.resteasy.plugins.server.servlet.Cleanable;
 import org.jboss.resteasy.plugins.server.servlet.Cleanables;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
@@ -360,6 +363,8 @@ public class SynchronousDispatcher implements Dispatcher
       contextDataMap.putAll(defaultContextObjects);
       contextDataMap.put(Cleanables.class, new Cleanables());
       contextDataMap.put(PostResourceMethodInvokers.class, new PostResourceMethodInvokers());
+      ConfigContext.putServletConfig((ServletConfig) defaultContextObjects.get(ServletConfig.class));
+      ConfigContext.putServletContext((ServletContext) defaultContextObjects.get(ServletContext.class));
    }
 
    public Response internalInvocation(HttpRequest request, HttpResponse response, Object entity)
@@ -386,6 +391,7 @@ public class SynchronousDispatcher implements Dispatcher
       finally
       {
          ResteasyContext.removeContextDataLevel();
+         ConfigContext.clear();
          if (pushedBody)
          {
             MessageBodyParameterInjector.popBody();
@@ -414,6 +420,7 @@ public class SynchronousDispatcher implements Dispatcher
       }
       // just in case there were internalDispatches that need to be cleaned up
       MessageBodyParameterInjector.clearBodies();
+      ConfigContext.clear();
    }
 
    /**
@@ -525,6 +532,7 @@ public class SynchronousDispatcher implements Dispatcher
       finally
       {
          ResteasyContext.removeContextDataLevel();
+         ConfigContext.clear();
       }
    }
 
@@ -560,6 +568,7 @@ public class SynchronousDispatcher implements Dispatcher
                unhandledAsynchronousException(response, t);
             onComplete.accept(null);
             ResteasyContext.removeContextDataLevel();
+            ConfigContext.clear();
          });
       }
       catch (Throwable ex)

@@ -1,5 +1,6 @@
 package org.jboss.resteasy.utils;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
@@ -37,7 +38,7 @@ public class PortProviderUtil {
       boolean portSpecificInit = false;
       port = DEFAULT_PORT;
 
-      String property = System.getenv(PORT_ENV_VAR_NAME);
+      String property = ConfigProvider.getConfig().getOptionalValue(PORT_ENV_VAR_NAME, String.class).orElse(null);
       if (property != null) {
          try {
             port = Integer.parseInt(property);

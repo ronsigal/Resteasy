@@ -1,0 +1,2 @@
+org.jboss.resteasy.microprofile.config.ServletConfigConfigSource
+org.jboss.resteasy.microprofile.config.ServletContextConfigSource
