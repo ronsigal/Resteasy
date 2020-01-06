@@ -53,4 +53,5 @@ public interface ResteasyContextParameters
    String RESTEASY_PREFER_JACKSON_OVER_JSONB = "resteasy.preferJacksonOverJsonB";
 
    String RESTEASY_STATISTICS_ENABLED = "resteasy.statistics.enabled";
+   String RESTEASY_JAXB_OVER_JSONB = "resteasy.jaxb.over.jsonb";
 }

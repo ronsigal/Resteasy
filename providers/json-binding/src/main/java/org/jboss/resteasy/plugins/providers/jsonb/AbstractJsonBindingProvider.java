@@ -3,6 +3,9 @@ package org.jboss.resteasy.plugins.providers.jsonb;
 import org.eclipse.yasson.JsonBindingProvider;
 import org.eclipse.yasson.internal.JsonBindingBuilder;
 import org.glassfish.json.JsonProviderImpl;
+import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
+import org.jboss.resteasy.spi.ResteasyConfiguration;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import javax.json.bind.Jsonb;
 import javax.ws.rs.core.Context;
@@ -23,6 +26,8 @@ public class AbstractJsonBindingProvider extends JsonBindingProvider {
    javax.ws.rs.ext.Providers providers;
    private static Jsonb jsonbObj = null;
 
+   protected static volatile Boolean isJaxbAcceptible = null;
+
    protected Jsonb getJsonb(Class<?> type) {
       ContextResolver<Jsonb> contextResolver = providers.getContextResolver(Jsonb.class, MediaType.APPLICATION_JSON_TYPE);
       if (contextResolver != null)
@@ -38,6 +43,29 @@ public class AbstractJsonBindingProvider extends JsonBindingProvider {
          }
          return jsonbObj;
       }
+   }
+   
+   protected boolean isJaxbAcceptible() {
+      if (isJaxbAcceptible != null) {
+         return isJaxbAcceptible;
+      }
+      synchronized (AbstractJsonBindingProvider.class) {
+         if (isJaxbAcceptible != null) {
+            return isJaxbAcceptible;
+         }
+         ResteasyConfiguration context = ResteasyProviderFactory.getContextData(ResteasyConfiguration.class);
+         if (context != null)
+         {
+            String s = context.getParameter(ResteasyContextParameters.RESTEASY_JAXB_OVER_JSONB);
+            if (s != null) {
+               isJaxbAcceptible = Boolean.parseBoolean(s);
+            }
+         }
+         else {
+            isJaxbAcceptible = Boolean.FALSE;
+         }
+      }
+      return isJaxbAcceptible;
    }
 
    public static Charset getCharset(final MediaType mediaType) {
