@@ -84,7 +84,9 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
       this.parentProviderFactory = providerFactory;
       this.method = method;
       this.methodAnnotations = this.method.getAnnotatedMethod().getAnnotations();
-
+//      System.out.println(this + ": resource.getScannableClass(): " + resource.getScannableClass());
+//      System.out.println(this + ": method.getResourceClass().getClazz(): " + method.getResourceClass().getClazz());
+      
        resourceInfo = new ResourceInfo()
       {
          @Override
@@ -127,13 +129,24 @@ public class ResourceMethodInvoker implements ResourceInvoker, JaxrsInterceptorR
       }
       if (validator != null)
       {
-         if (validator instanceof GeneralValidatorCDI)
+         Class<?> clazz = null;
+         if (resource != null && resource.getScannableClass() != null)
          {
-            isValidatable = GeneralValidatorCDI.class.cast(validator).isValidatable(getMethod().getDeclaringClass(), injector);
+            clazz = resource.getScannableClass();
          }
          else
          {
-            isValidatable = validator.isValidatable(getMethod().getDeclaringClass());
+            clazz = getMethod().getDeclaringClass();
+         }
+         if (validator instanceof GeneralValidatorCDI)
+         {
+//            isValidatable = GeneralValidatorCDI.class.cast(validator).isValidatable(getMethod().getDeclaringClass(), injector);
+            isValidatable = GeneralValidatorCDI.class.cast(validator).isValidatable(clazz, injector);
+         }
+         else
+         {
+//            isValidatable = validator.isValidatable(getMethod().getDeclaringClass());
+            isValidatable = validator.isValidatable(clazz);
          }
          methodIsValidatable = validator.isMethodValidatable(getMethod());
       }

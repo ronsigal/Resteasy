@@ -1,5 +1,7 @@
 package org.jboss.resteasy.plugins.validation;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessController;
@@ -11,6 +13,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.validation.Constraint;
 import javax.validation.ConstraintDeclarationException;
 import javax.validation.ConstraintDefinitionException;
 import javax.validation.ConstraintViolation;
@@ -28,6 +31,7 @@ import org.jboss.resteasy.api.validation.ResteasyConstraintViolation;
 import org.jboss.resteasy.api.validation.ResteasyViolationException;
 import org.jboss.resteasy.cdi.CdiInjectorFactory;
 import org.jboss.resteasy.cdi.ResteasyCdiExtension;
+import org.jboss.resteasy.cdi.Utils;
 import org.jboss.resteasy.plugins.validation.i18n.LogMessages;
 import org.jboss.resteasy.plugins.validation.i18n.Messages;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -75,6 +79,7 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
       try
       {
          cdiActive = ResteasyCdiExtension.isCDIActive();
+//         System.out.println(this + ": cdiActive: " + cdiActive);
          LogMessages.LOGGER.debug(Messages.MESSAGES.resteasyCdiExtensionOnClasspath());
       }
       catch (Throwable t)
@@ -97,12 +102,14 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
    @Override
    public void validate(HttpRequest request, Object object, Class<?>... groups)
    {
+//	  new Exception(this + ": entering validate()").printStackTrace();;
       Validator validator = getValidator(request);
       Set<ConstraintViolation<Object>> cvs = null;
       
       try
       {
          cvs = validator.validate(object, groups);
+//         System.out.println(this + ".validate(): new violations: " + cvs.size());
       }
       catch (Exception e)
       {
@@ -131,9 +138,14 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
    @Override
    public void checkViolations(HttpRequest request)
    {
+//	   new Exception(this + ": entering checkViolations()").printStackTrace();
       // Called from resteasy-jaxrs only if two argument version of isValidatable() returns true.
       SimpleViolationsContainer violationsContainer = getViolationsContainer(request, null);
+//      System.out.println(this + ".checkViolations(): violationsContainer: " + violationsContainer);
       Object target = violationsContainer.getTarget();
+//      if (violationsContainer != null)
+//          System.out.println(this + ".checkViolations: violationsContainer.size(): " + violationsContainer.size());
+
       if (target != null && violationsContainer.isFieldsValidated())
       {
          if (violationsContainer != null && violationsContainer.size() > 0)
@@ -146,12 +158,17 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
    @Override
    public void checkViolationsfromCDI(HttpRequest request)
    {
+//	   new Exception(this + ": entering checkViolationsfromCDI()").printStackTrace();
       if (request == null)
       {
          return;
       }
       
       SimpleViolationsContainer violationsContainer = SimpleViolationsContainer.class.cast(request.getAttribute(SimpleViolationsContainer.class.getName()));
+//      System.out.println(this + ".checkViolationsfromCDI(): violationsContainer: " + violationsContainer);
+//     if (violationsContainer != null)           
+//    	 System.out.println(this + ".checkViolationsfromCDI: violationsContainer.size(): " + violationsContainer.size());
+
       if (violationsContainer != null && violationsContainer.size() > 0)
       {
          throw new ResteasyViolationException(violationsContainer, request.getHttpHeaders().getAcceptableMediaTypes());
@@ -161,6 +178,7 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
    @Override
    public void validateAllParameters(HttpRequest request, Object object, Method method, Object[] parameterValues, Class<?>... groups)
    {
+//		  new Exception(this + ": entering validateAllParameters(): " + method.getName()).printStackTrace();;
       Validator validator = getValidator(request);
       SimpleViolationsContainer violationsContainer = getViolationsContainer(request, object);
 
@@ -175,6 +193,7 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
       try
       {
          cvs = validator.forExecutables().validateParameters(object, method, parameterValues, groups);
+//         System.out.println(this + ".validateAllParameters(): new violations: " + cvs.size());
       }
       catch (Exception e)
       {
@@ -182,6 +201,7 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
          throw toValidationException(e, violationsContainer);
       }
       violationsContainer.addViolations(cvs);
+//      System.out.println(this + ": object.getClass(): " + object.getClass());
       if ((violationsContainer.isFieldsValidated()
             || !GetRestful.isRootResource(object.getClass())
             || hasApplicationScope(object))
@@ -218,7 +238,10 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
    public boolean isValidatable(Class<?> clazz)
    {
       // Called from resteasy-jaxrs.
-      if (cdiActive)
+//      System.out.println(this + ".isValidatable(): cdiActive: " + cdiActive);
+//      System.out.println(this + ".isValidatable(): Utils.hasEJBScope(" + clazz + "): " + Utils.hasEJBScope(clazz));
+//      System.out.println(this + ".isValidatable(): hasNoClassOrFieldOrPropertyConstraints(clazz): " + hasNoClassOrFieldOrPropertyConstraints(clazz));      
+      if (cdiActive && !(Utils.hasEJBScope(clazz) && hasNoClassOrFieldOrPropertyConstraints(clazz)))
       {
          return false;
       }
@@ -232,7 +255,12 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
       try
       {
          // Called from resteasy-jaxrs.
-         if (cdiActive && injectorFactory instanceof CdiInjectorFactory)
+//         System.out.println(this + ".isValidatable(2): cdiActive: " + cdiActive);
+//         System.out.println(this + ".isValidatable(2): Utils.hasEJBScope(" + clazz + "): " + Utils.hasEJBScope(clazz));
+//         System.out.println(this + ".isValidatable(2): hasNoClassOrFieldOrPropertyConstraints(clazz): " + hasNoClassOrFieldOrPropertyConstraints(clazz));      
+
+         if (cdiActive && injectorFactory instanceof CdiInjectorFactory
+               && !(Utils.hasEJBScope(clazz) && hasNoClassOrFieldOrPropertyConstraints(clazz)))
          {
             return false;
          }
@@ -690,5 +718,98 @@ public class GeneralValidatorImpl implements GeneralValidatorCDI
    {
       Class<?> clazz = o.getClass();
       return clazz.getAnnotation(ApplicationScoped.class) != null;
+   }
+
+   private boolean hasNoClassOrFieldOrPropertyConstraints(Class<?> clazz)
+   {
+      return !hasClassConstraint(clazz) && !hasFieldConstraint(clazz) && !hasPropertyConstraint(clazz);
+   }
+
+   private static boolean hasPropertyConstraint(Class<?> clazz)
+   {
+      for (Method method : clazz.getDeclaredMethods())
+      {
+         if (isGetter(method))
+         {
+            for (Annotation annotation : method.getAnnotations())
+            {
+               if (isConstraintAnnotation(annotation.annotationType()))
+               {
+                  return true;
+               }
+            }
+         }
+      }
+      for (Class<?> intf : clazz.getInterfaces())
+      {
+         if (hasPropertyConstraint(intf))
+         {
+            return true;
+         }
+      }
+      Class<?> superClass = clazz.getSuperclass();
+      if (superClass != null && !superClass.equals(Object.class))
+      {
+         return hasPropertyConstraint(superClass);
+      }
+      return false;
+   }
+
+   private static boolean hasFieldConstraint(Class<?> clazz)
+   {
+      for (Field field : clazz.getDeclaredFields())
+      {
+         for (Annotation annotation : field.getAnnotations())
+         {
+            if (isConstraintAnnotation(annotation.annotationType()))
+            {
+               return true;
+            }
+         }
+      }
+      Class<?> superClass = clazz.getSuperclass();
+      if (superClass != null && !superClass.equals(Object.class))
+      {
+         return hasFieldConstraint(superClass);
+      }
+      return false;
+   }
+
+   private static boolean hasClassConstraint(Class<?> clazz)
+   {
+      if (classHasConstraintAnnotation(clazz))
+      {
+         return true;
+      }
+      for (Class<?> intf : clazz.getInterfaces())
+      {
+         if (classHasConstraintAnnotation(intf))
+         {
+            return true;
+         }
+      }
+      Class<?> superClass = clazz.getSuperclass();
+      if (superClass != Object.class && superClass != null)
+      {
+         return hasClassConstraint(superClass);
+      }
+      return false;
+   }
+
+   private static boolean classHasConstraintAnnotation(Class<?> clazz)
+   {
+      for (Annotation annotation : clazz.getAnnotations())
+      {
+         if (isConstraintAnnotation(annotation.annotationType()))
+         {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   public static boolean isConstraintAnnotation(Class<?> clazz)
+   {
+      return clazz.isAnnotation() && clazz.getAnnotation(Constraint.class) != null;
    }
 }

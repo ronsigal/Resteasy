@@ -3,12 +3,17 @@ package org.jboss.resteasy.cdi;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
+import javax.ejb.Singleton;
+import javax.ejb.Stateful;
+import javax.ejb.Stateless;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.ext.Provider;
+
+import org.jboss.resteasy.util.AnnotationResolver;
 
 /**
  * Utility methods for detecting CDI scopes and JAX-RS components.
@@ -142,6 +147,20 @@ public class Utils
                return true;
             }
          }
+      }
+      return false;
+   }
+
+   public static boolean hasEJBScope(Class<?> clazz)
+   {
+      if (AnnotationResolver.getClassWithAnnotation(clazz, Stateless.class) != null) {
+    	  return true;
+      }
+      if (AnnotationResolver.getClassWithAnnotation(clazz, Stateful.class) != null) {
+    	  return true;
+      }
+      if (AnnotationResolver.getClassWithAnnotation(clazz, Singleton.class) != null) {
+    	  return true;
       }
       return false;
    }
