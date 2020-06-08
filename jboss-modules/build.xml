@@ -81,6 +81,14 @@
         <module-def name="org.jboss.resteasy.resteasy-atom-provider">
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-atom-provider"/>
         </module-def>
+    	
+        <module-def name="org.jboss.resteasy.resteasy-protobuf-provider">
+            <maven-resource group="org.jboss.resteasy" artifact="resteasy-protobuf-provider"/>
+        </module-def>
+    	
+            <module-def name="com.google.protobuf.protobuf-java">
+                <maven-resource group="com.google.protobuf" artifact="protobuf-java"/>
+            </module-def>
 
         <module-def name="org.jboss.resteasy.resteasy-cdi">
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-cdi"/>
@@ -132,6 +140,8 @@
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-client"/>
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-client-microprofile"/>
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-tracing-api"/>
+            <maven-resource group="org.jboss.resteasy" artifact="resteasy-protobuf-provider"/>
+        	<maven-resource group="com.google.protobuf" artifact="protobuf-java"/>
         </module-def>
 
         <module-def name="org.jboss.resteasy.jose-jwt">

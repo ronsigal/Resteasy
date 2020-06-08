@@ -149,6 +149,18 @@
 
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-protobuf-provider</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+<dependency>
+    <groupId>com.google.protobuf</groupId>
+    <artifactId>protobuf-java</artifactId>
+    <version>3.12.0</version>
+</dependency>
+        
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
             <artifactId>jose-jwt</artifactId>
             <version>${project.version}</version>
         </dependency>

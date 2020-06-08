@@ -1,5 +1,6 @@
 package org.jboss.resteasy.plugins.providers.jsonb;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,6 +40,17 @@ public class JsonBindingProvider extends AbstractJsonBindingProvider
       implements MessageBodyReader<Object>, AsyncMessageBodyWriter<Object> {
 
    private final boolean disabled;
+   private static int size;
+
+   public static int getSize()
+   {
+      return size;
+   }
+
+   public static void setSize(int size)
+   {
+      JsonBindingProvider.size = size;
+   }
 
    public JsonBindingProvider() {
       super();
@@ -139,6 +151,9 @@ public class JsonBindingProvider extends AbstractJsonBindingProvider
          };
          entityStream.write(jsonb.toJson(t).getBytes(getCharset(mediaType)));
          entityStream.flush();
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         baos.write(jsonb.toJson(t).getBytes(getCharset(mediaType)));
+         size += baos.toByteArray().length;
       } catch (Throwable e)
       {
          throw new ProcessingException(Messages.MESSAGES.jsonBSerializationError(e.toString()), e);
