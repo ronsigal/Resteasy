@@ -56,16 +56,14 @@ public class Test2795 {
       Response response = client.target(generateURL("/test")).request().get();
       String answer = response.readEntity(String.class);
       System.out.println("answer: " + answer);
-      assertEquals(400, response.getStatus());
       Assert.fail("ok");
    }
    
-//   @Test
+   @Test
    public void testThrow() throws Exception {
       Response response = client.target(generateURL("/throw")).request().get();
       String answer = response.readEntity(String.class);
       System.out.println("answer: " + answer);
-      assertEquals(400, response.getStatus());
       Assert.fail("ok");
    }
 }
