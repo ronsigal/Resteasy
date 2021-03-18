@@ -13,6 +13,8 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.tools.Diagnostic;
@@ -26,20 +28,48 @@ import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
+import com.google.protobuf.Parser;
 
 public class ProtobufCompiler
 {
-   private static final String PROTOC = "/home/rsigal/bin/protoc ";
-   private static final String PROTOBUF_JAVA_JAR = "/home/rsigal/tmp/git.master.proto/Resteasy/testsuite/integration-tests/target/test-server/wildfly-19.0.0.Final/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs/main/protobuf-java-3.12.0.jar";
+//   private static final String PROTOC = "/home/rsigal/bin/protoc ";
+//   private static final String PROTOBUF_JAVA_JAR = "/home/rsigal/tmp/git.master.proto/Resteasy/testsuite/integration-tests/target/test-server/wildfly-19.0.0.Final/modules/system/layers/base/org/jboss/resteasy/resteasy-jaxrs/main/protobuf-java-3.12.0.jar";
+   private static final String RESOURCES_DIR = System.getProperty("user.dir") + "/resources";
+   private static final String PROTOC = RESOURCES_DIR + "/protoc ";
+   private static final String PROTOBUF_JAVA_JAR = RESOURCES_DIR + "/protobuf-java-3.12.0.jar";
+
    
    public static Message compile(String directory, Object source) throws Exception
    {
+      if (source instanceof Message)
+      {
+         return (Message) source;
+      }
       Message message = getDefaultMessage(directory, source.getClass());
       return copyToProtobufClass(source, message.getDescriptorForType());
    }
 
    public static Object decompile(String directory, Class<?> clazz, InputStream inputStream) throws Exception
    {
+      if (DynamicMessage.class.isAssignableFrom(clazz))
+      {
+         Method getDescriptorForType = clazz.getMethod("getDescriptorForType");
+         getDescriptorForType.setAccessible(true);
+         Method parseFrom = clazz.getMethod("parseFrom", Descriptor.class, InputStream.class);
+         parseFrom.setAccessible(true);
+         return parseFrom.invoke(null, getDescriptorForType.invoke(clazz.newInstance()));
+      }
+      if (Message.class.isAssignableFrom(clazz))
+      {
+//         Method getParserForType = clazz.getMethod("getParserForType");
+//         getParserForType.setAccessible(true);
+//         Method getDefaultInstance = clazz.getMethod("getDefaultInstance");
+//         getDefaultInstance.setAccessible(true);
+//         Parser<?> parser = (Parser<?>) getParserForType.invoke(getDefaultInstance.invoke(null));
+         Method parseFrom = clazz.getMethod("parseFrom", InputStream.class);
+         parseFrom.setAccessible(true);
+         return parseFrom.invoke(null, inputStream);
+      }
       Message message = getDefaultMessage(directory, clazz);
       final Message parsedMessage = message.getParserForType().parseFrom(inputStream);
       Descriptor descriptor = message.getDescriptorForType();
@@ -80,7 +110,7 @@ public class ProtobufCompiler
       return object;
    }
 
-   private static Message getDefaultMessage(String directory, Class<?> clazz) throws Exception
+   static Message getDefaultMessage(String directory, Class<?> clazz) throws Exception
    {
       Message message = null;
       Method getDefaultInstance = ProtobufProvider.getMap().get(clazz);
@@ -144,6 +174,25 @@ public class ProtobufCompiler
 
    private static void compileProtoDescriptor(String directory, String protoFilename) throws IOException, InterruptedException
    {
+//      System.out.println("jboss.home.dir: " + System.getProperty("jboss.home.dir "));
+////      File f = new File(System.getProperty("/opt/eap"));
+//      System.out.println("user.dir: " + System.getProperty("user.dir"));
+//      System.out.println("JBOSS_HOME: " + System.getenv("$JBOSS_HOME"));
+//      System.out.println("jboss.home.dir: " + System.getProperty("jboss.home.dir"));
+//      System.out.println("jboss.server.config.url: " + System.getProperty("jboss.server.config.url"));
+//      System.out.println("jboss.server.config.url: " + System.getenv("jboss.server.config.url"));
+//      Map<String, String> map = System.getenv();
+//      for (Entry<String, String> entry : map.entrySet()) {
+//         System.out.println(entry.getKey() + "->" + entry.getValue());
+//      }
+//      String[] pathnames = f.list();
+//
+//      // For each pathname in the pathnames array
+//      for (String pathname : pathnames) {
+//          // Print the names of files and directories
+//          System.out.println(pathname);
+//      }
+      
       String command = PROTOC + "-I=" + directory + " --java_out=" + directory + " " + protoFilename;
       Runtime run  = Runtime.getRuntime(); 
       Process proc = run.exec(command);
@@ -161,6 +210,7 @@ public class ProtobufCompiler
    { 
       URLClassLoader classLoader = null;
       StandardJavaFileManager fileManager = null;
+      System.out.println("Working Directory = " + System.getProperty("user.dir"));
 
       File file = new File(directory + classnameToFilename("/" + clazz.getName() + "_proto") + ".java");
       Message message = null;

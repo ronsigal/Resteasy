@@ -8,43 +8,56 @@ import javax.ws.rs.Produces;
 @Path("")
 public class ProtobufWFResource
 {
+   private static Person tanicka = new Person(3, "tanicka", "a@b");
+   private static Person_proto.Person tanicka_proto = Person_proto.Person.newBuilder().setId(3).setName("tanicka").setEmail("a@b.c").build();
+   private static VeryBigPerson veryBigTanicka = PersonUtil.getVeryBigPerson("tanicka");
+   private static VeryBigPerson_proto.VeryBigPerson veryBigTanicka_proto = PersonUtil.getVeryBigPerson_proto("tanicka");
+   
    @POST
    @Path("json")
    @Consumes("application/json")
    @Produces("application/json")
    public Person json(Person person) {
-      person.setEmail("a@b");
-      person.setId(3);
-      person.setName("tanicka");
-      return person;
+      return tanicka;
    }
 
    @POST
    @Path("protobuf")
    @Consumes("application/protobuf")
    @Produces("application/protobuf")
-   public Person proto(Person person) {
-      person.setEmail("a@b");
-      person.setId(3);
-      person.setName("tanicka");
-      return person;
+   public Person protobuf(Person person) {
+      return tanicka;
+   }
+   
+   @POST
+   @Path("protobuf/proto")
+   @Consumes("application/protobuf")
+   @Produces("application/protobuf")
+   public Person_proto.Person proto(Person_proto.Person person) {
+      return tanicka_proto;
    }
    
    @POST
    @Path("big/json")
    @Consumes("application/json")
    @Produces("application/json")
-   public BigPerson bigJson(BigPerson person) throws Exception {
-      BigPerson bp = ProtobufWFTest.getBigPerson(3, "tanicka", "a@b");
-      return bp;
+   public VeryBigPerson veryBigJson(VeryBigPerson person) throws Exception {
+      return veryBigTanicka;
    }
 
    @POST
    @Path("big/protobuf")
    @Consumes("application/protobuf")
    @Produces("application/protobuf")
-   public BigPerson bigProto(BigPerson person) throws Exception {
-      BigPerson bp = ProtobufWFTest.getBigPerson(3, "tanicka", "a@b");
-      return bp;
+   public VeryBigPerson veryBigProto(VeryBigPerson person) throws Exception {
+      return veryBigTanicka;
+   }
+   
+   @POST
+   @Path("big/protobuf/proto")
+   @Consumes("application/protobuf")
+   @Produces("application/protobuf")
+   public VeryBigPerson_proto.VeryBigPerson proto(VeryBigPerson_proto.VeryBigPerson person) {
+      return veryBigTanicka_proto;
    }
 }

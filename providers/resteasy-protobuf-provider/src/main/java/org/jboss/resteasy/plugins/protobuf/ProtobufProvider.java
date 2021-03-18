@@ -24,13 +24,13 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
 
 @Provider
-@Produces("application/protobuf")
-@Consumes("application/protobuf")
+@Produces("application/grpc")
+@Consumes("application/grpc")
 public class ProtobufProvider<T> implements MessageBodyReader<T>, MessageBodyWriter<T>
 {  
-   public static int size;
-   
-   public static int getSize()
+   public static long size;
+
+   public static long getSize()
    {
       return size;
    }
@@ -44,17 +44,17 @@ public class ProtobufProvider<T> implements MessageBodyReader<T>, MessageBodyWri
    {
       public void assign(Object from, DynamicMessage.Builder builder);
    }
-   
+
    public interface AssignFrom
    {
       public void assign(Message message, Object object);
    }
-   
+
    private static Map<Class<?>, Method> map = new ConcurrentHashMap<Class<?>, Method>();
    private static Map<Class<?>, List<AssignTo>> assignToMap = new ConcurrentHashMap<Class<?>, List<AssignTo>>();
    private static Map<Class<?>, List<AssignFrom>> assignFromMap = new ConcurrentHashMap<Class<?>, List<AssignFrom>>();
    private String directory = "/tmp";
-   
+
    @Override
    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType)
    {
@@ -66,12 +66,20 @@ public class ProtobufProvider<T> implements MessageBodyReader<T>, MessageBodyWri
          MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream)
                throws IOException, WebApplicationException
    {
+      Message message = null;
       try
       {
-         Message message = new ProtobufCompiler().compile(directory, t);
-         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-         message.writeTo(baos);
-         size += baos.toByteArray().length;
+         if (t instanceof Message)
+         {
+            message = (Message) t;
+         }
+         else
+         {
+            message = new ProtobufCompiler().compile(directory, t);
+         }
+//         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//         message.writeTo(baos);
+//         size += baos.toByteArray().length;
          message.writeTo(entityStream);
       }
       catch (Exception e)
@@ -95,7 +103,7 @@ public class ProtobufProvider<T> implements MessageBodyReader<T>, MessageBodyWri
    {
       try
       {
-         Object obj = new ProtobufCompiler().decompile(directory, type, entityStream);
+         Object obj = ProtobufCompiler.decompile(directory, type, entityStream);
          return (T) obj;
       }
       catch (Exception e)
@@ -105,17 +113,17 @@ public class ProtobufProvider<T> implements MessageBodyReader<T>, MessageBodyWri
          throw new WebApplicationException(e);
       }
    }
-   
+
    public static Map<Class<?>, Method> getMap()
    {
       return map;
    }
-   
+
    public static Map<Class<?>, List<AssignTo>> getAssignToMap()
    {
       return assignToMap;
    }
-   
+
    public static Map<Class<?>, List<AssignFrom>> getAssignFromMap()
    {
       return assignFromMap;

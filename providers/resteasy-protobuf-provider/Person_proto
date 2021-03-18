@@ -1,0 +1,9 @@
+syntax = "proto2";
+package org.jboss.resteasy.experiment;
+option java_package = "org.jboss.resteasy.experiment";
+option java_outer_classname = "Person_proto";
+message Person {
+  required int32 id = 1;
+  required string name = 2;
+  required string email = 3;
+}

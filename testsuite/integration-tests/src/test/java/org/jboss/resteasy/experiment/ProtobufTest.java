@@ -15,9 +15,9 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.infinispan.commons.dataconversion.MediaType;
 import org.jboss.resteasy.plugins.protobuf.ProtobufProvider;
 import org.jboss.resteasy.plugins.providers.jsonb.JsonBindingProvider;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
@@ -32,6 +32,18 @@ import org.junit.Test;
  */
 public class ProtobufTest {
 
+   public static void main(String[] args) {
+      try
+      {
+         init();
+      }
+      catch (Exception e)
+      {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+   }
+   
    private static UndertowJaxrsServer server;
    private static Client client;
 
@@ -172,7 +184,7 @@ public class ProtobufTest {
          doBigRemote("json");
       }
       System.out.println("json: " + (System.currentTimeMillis() - start));
-      System.out.println("json size:     " + JsonBindingProvider.getSize());
+//      System.out.println("json size:     " + JsonBindingProvider.getSize());
    }
    
 //   @Test
@@ -194,19 +206,19 @@ public class ProtobufTest {
       Assert.assertEquals(ron.getName(), person.getName());
    }
    
- int count = 1000;
+ int count = 5000;
    
    @Test
    public void testVeryBigJSONRemote() throws Exception {
       System.out.println("count: " + count);
-      JsonBindingProvider.setSize(0);
+//      JsonBindingProvider.setSize(0);
       doVeryBigRemote("json");
       long start = System.currentTimeMillis();
       for (int i = 0; i < count; i++) {
          doVeryBigRemote("json");
       }
       System.out.println("json:          " + (System.currentTimeMillis() - start));
-      System.out.println("json size:     " + JsonBindingProvider.getSize());
+//      System.out.println("json size:     " + JsonBindingProvider.getSize());
    }
    
    @Test
@@ -223,7 +235,7 @@ public class ProtobufTest {
    }
 
    private void doVeryBigRemote(String transport) throws Exception {
-      System.out.println("doVeryBigRemote");
+//      System.out.println("doVeryBigRemote");
       Builder request = client.target("http://httpbin.org/post").request().accept(MediaType.APPLICATION_JSON_TYPE);
       VeryBigPerson ron = getVeryBigPerson(1, "ron", "ron@jboss");
       Response response = request.post(Entity.entity(ron, "application/" + transport));

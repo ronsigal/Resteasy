@@ -45,11 +45,13 @@
         <container.qualifier.manual.ssl.wrong>jbossas-manual-ssl-wrong</container.qualifier.manual.ssl.wrong>
         <container.qualifier.manual.ssl.wildcard>jbossas-manual-ssl-wildcard</container.qualifier.manual.ssl.wildcard>
         <container.qualifier.manual.ssl.sni>jbossas-manual-ssl-sni</container.qualifier.manual.ssl.sni>
+        <grpc.version>1.30.0</grpc.version><!-- CURRENT_GRPC_VERSION -->
+        <protobuf.version>3.12.0</protobuf.version>
     </properties>
 
     <artifactId>resteasy-integration-tests</artifactId>
     <name>RESTEasy Main testsuite: Integration tests</name>
-
+  
     <profiles>
         <!--
         Name:  download
@@ -188,6 +190,25 @@
     </profiles>
 
     <dependencies>
+ <dependency>
+  <groupId>io.grpc</groupId>
+  <artifactId>grpc-netty-shaded</artifactId>
+  <version>1.22.1</version>
+<dependency>
+  <groupId>io.grpc</groupId>
+  <artifactId>grpc-netty-shaded</artifactId>
+  <version>1.22.1</version>
+</dependency>
+<dependency>
+  <groupId>io.grpc</groupId>
+  <artifactId>grpc-protobuf</artifactId>
+  <version>1.22.1</version>
+</dependency>
+<dependency>
+  <groupId>io.grpc</groupId>
+  <artifactId>grpc-stub</artifactId>
+  <version>1.22.1</version>
+</dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -485,6 +506,53 @@
             <artifactId>resteasy-protobuf-provider</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+  
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-api</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+              
+        <!--dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty</artifactId>
+            <version>1.30.1</version>
+            <scope>runtime</scope>
+        </dependency-->
+    
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java-util</artifactId>
+      <version>${protobuf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-netty-shaded</artifactId>
+      <version>${grpc.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-protobuf</artifactId>
+      <version>${grpc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-testing</artifactId>
+      <scope>test</scope>
+      <version>${grpc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.errorprone</groupId>
+      <artifactId>error_prone_annotations</artifactId>
+      <version>2.3.4</version> <!-- prefer to use 2.3.3 or later -->
+    </dependency>
     </dependencies>
 
     <build>

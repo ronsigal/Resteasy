@@ -38,17 +38,62 @@
       
       <init-param>
          <param-name>init</param-name>
-         <param-value>init-init</param-value>
+         <param-value>init-init1</param-value>
       </init-param>
       
       <init-param>
          <param-name>resteasy.add.charset </param-name>
          <param-value>false</param-value>
       </init-param>
+      
+      <init-param>
+         <param-name>resteasy.servlet.mapping.prefix</param-name>
+         <param-value>/1</param-value>
+      </init-param>
    </servlet>
 
+   <servlet>
+      <servlet-name>Resteasy2</servlet-name>
+      <servlet-class>org.jboss.resteasy.plugins.server.servlet.HttpServlet30Dispatcher</servlet-class>
+
+      <init-param>
+         <param-name>javax.ws.rs.Application</param-name>
+         <param-value>org.jboss.resteasy.utils.TestApplication</param-value>
+        </init-param>
+        
+      <init-param>
+         <param-name>system</param-name>
+         <param-value>system-init</param-value>
+      </init-param>
+      
+      <init-param>
+         <param-name>init</param-name>
+         <param-value>init-init3</param-value>
+      </init-param>
+      
+      <init-param>
+         <param-name>init</param-name>
+         <param-value>init-init2</param-value>
+      </init-param>
+      
+      <init-param>
+         <param-name>resteasy.add.charset </param-name>
+         <param-value>false</param-value>
+      </init-param>
+      
+      <init-param>
+         <param-name>resteasy.servlet.mapping.prefix</param-name>
+         <param-value>/2</param-value>
+      </init-param>
+   </servlet>
+   
    <servlet-mapping>
       <servlet-name>Resteasy</servlet-name>
-      <url-pattern>/*</url-pattern>
+      <url-pattern>/1/*</url-pattern>
+   </servlet-mapping>
+   
+      <servlet-mapping>
+      <servlet-name>Resteasy2</servlet-name>
+      <url-pattern>/2/*</url-pattern>
    </servlet-mapping>
 </web-app>

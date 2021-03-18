@@ -24,6 +24,7 @@ import java.util.Map;
 public class HttpServletDispatcher extends HttpServlet implements HttpRequestFactory, HttpResponseFactory
 {
    protected ServletContainerDispatcher servletContainerDispatcher;
+   protected String name;
 
    public Dispatcher getDispatcher()
    {
@@ -40,6 +41,8 @@ public class HttpServletDispatcher extends HttpServlet implements HttpRequestFac
       servletContainerDispatcher = new ServletContainerDispatcher(servletConfig);
       ServletBootstrap bootstrap = new ServletBootstrap(servletConfig);
       servletContainerDispatcher.init(servletConfig.getServletContext(), bootstrap, this, this);
+      name = servletConfig.getServletName();
+      ResteasyContext.addServlet(name, this);
    }
 
    @Override
@@ -47,6 +50,7 @@ public class HttpServletDispatcher extends HttpServlet implements HttpRequestFac
    {
       super.destroy();
       servletContainerDispatcher.destroy();
+      ResteasyContext.removeServlet(name);
    }
 
    @Override

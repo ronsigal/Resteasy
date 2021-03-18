@@ -84,6 +84,7 @@
     	
         <module-def name="org.jboss.resteasy.resteasy-protobuf-provider">
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-protobuf-provider"/>
+            <maven-resource group="io.grpc" artifact="grpc-api"/>
         </module-def>
     	
             <module-def name="com.google.protobuf.protobuf-java">
@@ -142,6 +143,10 @@
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-tracing-api"/>
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-protobuf-provider"/>
         	<maven-resource group="com.google.protobuf" artifact="protobuf-java"/>
+            <maven-resource group="io.grpc" artifact="grpc-api"/>
+        	<maven-resource group="io.grpc" artifact="grpc-core"/>
+        	<maven-resource group="io.grpc" artifact="grpc-netty"/>
+        	<maven-resource group="io.grpc" artifact="grpc-netty-shaded"/>
         </module-def>
 
         <module-def name="org.jboss.resteasy.jose-jwt">
