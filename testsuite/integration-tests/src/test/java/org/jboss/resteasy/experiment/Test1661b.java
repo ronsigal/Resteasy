@@ -181,21 +181,8 @@ public class Test1661b {
       boolean waitResult = latch.await(5, TimeUnit.SECONDS);
       Assert.assertTrue("Waiting for event to be delivered has timed out.", waitResult);
       Assert.assertEquals(0, errors.get());
-//      Assert.assertEquals(xStringList, stringList);
       for (String s : stringList) {
          System.out.println(" " + s);
       }
-   }
-
-//   @Test
-   public void test() {
-      Builder request = client.target("http://localhost:8081/pb").request();
-      String result = request.get(String.class);
-      System.out.println("result: " + result);
-
-      //         Assert.assertTrue(result.startsWith("HTTP/1.1 200 "));
-      //         Assert.assertTrue(data.contains("Transfer-Encoding: chunked"));
-      //         // there must be no end-chunk
-      //         Assert.assertFalse(data.endsWith("0"));
    }
 }

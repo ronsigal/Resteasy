@@ -193,13 +193,13 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
    {
       return eventSourceToPublishable(getEventSource(), responseType, name, entity, getAccept());
    }
-   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////   
+   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
    public PublisherRxInvoker reactiveStreamsEngine(ReactiveStreamsEngine engine)
    {
       this.engine = engine;
       return this;
    }
-   
+
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
    private class SSEPublisherParent<T> implements Publisher<T>
    {
@@ -207,8 +207,8 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
       protected List<Subscriber<? super T>> subscribers = new ArrayList<Subscriber<? super T>>();
       protected Consumer<Throwable> onError = (Throwable t) -> {for (Subscriber<? super T> subscriber : subscribers) {subscriber.onError(t);}};
       protected Runnable onComplete = () -> {for (Subscriber<? super T> subscriber : subscribers) {subscriber.onComplete();}};
-      
-      SSEPublisherParent(SseEventSourceImpl sseEventSource)
+
+      SSEPublisherParent(final SseEventSourceImpl sseEventSource)
       {
          this.sseEventSource = sseEventSource;
       }
@@ -219,18 +219,18 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
          subscribers.add(s);
       }
    }
-   
+
    private class SSEPublisherType<T> extends SSEPublisherParent<T>
    {
       private GenericType<T> genericType;
-      private Consumer<InboundSseEvent> onEvent = 
-            (InboundSseEvent e) -> 
+      private Consumer<InboundSseEvent> onEvent =
+            (InboundSseEvent e) ->
             {
                T o = e.readData(genericType, ((InboundSseEventImpl) e).getMediaType());
                for (Subscriber<? super T> subscriber : subscribers) {subscriber.onNext(o);}
             };
 
-      SSEPublisherType(SseEventSourceImpl sseEventSource, GenericType<T> genericType)
+      SSEPublisherType(final SseEventSourceImpl sseEventSource, final GenericType<T> genericType)
       {
          super(sseEventSource);
          this.genericType = genericType;
@@ -241,21 +241,21 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
    private class SSEPublisherClass<T> extends SSEPublisherParent<T>
    {
       private Class<T> clazz;
-      private Consumer<InboundSseEvent> onEvent = 
-            (InboundSseEvent e) -> 
+      private Consumer<InboundSseEvent> onEvent =
+            (InboundSseEvent e) ->
             {
                T o = e.readData(clazz, ((InboundSseEventImpl) e).getMediaType());
                for (Subscriber<? super T> subscriber : subscribers) {subscriber.onNext(o);}
             };
 
-      SSEPublisherClass(SseEventSourceImpl sseEventSource, Class<T> clazz)
+      SSEPublisherClass(final SseEventSourceImpl sseEventSource, final Class<T> clazz)
       {
          super(sseEventSource);
          this.clazz = clazz;
          this.sseEventSource.register(onEvent, onError, onComplete);
       }
    }
-   
+
    private <T> Publisher<T> eventSourceToPublishable(SseEventSourceImpl sseEventSource, Class<T> clazz, String verb, Entity<?> entity, MediaType[] mediaTypes)
    {
       synchronized (monitor)
@@ -277,7 +277,14 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
             sseEventSource.open(null, verb, entity, mediaTypes);
          }
       }
-      return ReactiveStreams.fromPublisher(new SSEPublisherType<T>(sseEventSource, type)).buildRs();
+      if (engine != null)
+      {
+         return ReactiveStreams.fromPublisher(new SSEPublisherType<T>(sseEventSource, type)).buildRs(engine);
+      }
+      else
+      {
+         return ReactiveStreams.fromPublisher(new SSEPublisherType<T>(sseEventSource, type)).buildRs();
+      }
    }
 
    private SseEventSourceImpl getEventSource()
