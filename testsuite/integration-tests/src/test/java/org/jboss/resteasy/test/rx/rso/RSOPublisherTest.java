@@ -16,10 +16,16 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
+import org.eclipse.microprofile.reactive.streams.operators.ConsumingOperators;
+import org.eclipse.microprofile.reactive.streams.operators.FilteringOperators;
+import org.eclipse.microprofile.reactive.streams.operators.PeekingOperators;
+import org.eclipse.microprofile.reactive.streams.operators.PublisherBuilder;
 import org.eclipse.microprofile.reactive.streams.operators.ReactiveStreams;
 import org.eclipse.microprofile.reactive.streams.operators.ReactiveStreamsFactory;
+import org.eclipse.microprofile.reactive.streams.operators.TransformingOperators;
 import org.eclipse.microprofile.reactive.streams.operators.core.ReactiveStreamsFactoryImpl;
 import org.eclipse.microprofile.reactive.streams.operators.spi.ReactiveStreamsFactoryResolver;
+import org.eclipse.microprofile.reactive.streams.operators.spi.Stage;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
@@ -52,6 +58,7 @@ import org.junit.runners.MethodSorters;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.eclipse.microprofile.reactive.streams.operators.core.*;
 
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
@@ -115,10 +122,20 @@ public class RSOPublisherTest {
       war.addPackage("org.jboss.resteasy.rso");
       war.addClass(EnableReactiveExtensionsSetupTask.class);
       war.addClass(Publisher.class);
+      war.addClass(PublisherBuilder.class);
       war.addClass(ReactiveStreams.class);
       war.addClass(ReactiveStreamsFactoryResolver.class);
       war.addClass(ReactiveStreamsFactory.class);
       war.addClass(ReactiveStreamsFactoryImpl.class);
+      war.addAsServiceProvider(ReactiveStreamsFactory.class, ReactiveStreamsFactoryImpl.class);
+      war.addClass(Stage.class);
+      war.addClass(TransformingOperators.class);
+      war.addClass(FilteringOperators.class);
+      war.addClass(PeekingOperators.class);
+      war.addClass(ConsumingOperators.class);
+      war.addPackage("org.eclipse.microprofile.reactive.streams.operators");
+      war.addPackage("org.eclipse.microprofile.reactive.streams.operators.core");
+//      war.addClass(org.eclipse.microprofile.reactive.streams.operators.core.ReactiveStreamsGraphBuilder.class);
       
 //      war.addAsManifestResource(new StringAsset("Dependencies: org.reactivestreams"), "MANIFEST.MF");
 //    war.addAsManifestResource(new StringAsset("Dependencies: org.reactivestreams,org.eclipse.microprofile.reactive-streams-operators.api"), "MANIFEST.MF");
