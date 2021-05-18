@@ -10,10 +10,10 @@ import io.reactivex.plugins.RxJavaPlugins;
 @Provider
 public class PublisherProvider implements AsyncStreamProvider<Publisher<?>>
 {
-   static
-   {
-      RxJavaPlugins.setOnFlowableSubscribe(new ResteasyContextPropagatingOnPublisherBuilderCreateAction());
-   }
+//   static
+//   {
+//      RxJavaPlugins.setOnFlowableSubscribe(new ResteasyContextPropagatingOnPublisherBuilderCreateAction());
+//   }
 
    @Override
    public Publisher<?> toAsyncStream(Publisher<?> asyncResponse)

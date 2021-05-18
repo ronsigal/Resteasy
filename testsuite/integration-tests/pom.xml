@@ -43,6 +43,8 @@
         <container.qualifier.manual.ssl.sni>jbossas-manual-ssl-sni</container.qualifier.manual.ssl.sni>
         <!-- https://issues.jboss.org/browse/RESTEASY-2411 -->
         <additionalJvmArgs>-Dresteasy.jackson.deserialization.whitelist.allowIfBaseType.prefix=org.jboss.resteasy.test.providers.jackson2.whitelist.model.land -Dresteasy.jackson.deserialization.whitelist.allowIfSubType.prefix=org.jboss.resteasy.test.providers.jackson2.whitelist.model.land</additionalJvmArgs>
+        <microprofile-reactive-streams.version>1.0.1</microprofile-reactive-streams.version>
+        <smallrye-reactive-streams-operators.version>1.0.13</smallrye-reactive-streams-operators.version>
     </properties>
 
     <artifactId>resteasy-integration-tests</artifactId>
@@ -360,6 +362,16 @@
     </profiles>
 
     <dependencies>
+    <dependency>
+   <groupId>javax.el</groupId>
+   <artifactId>javax.el-api</artifactId>
+   <version>3.0.1-b06</version>
+</dependency>
+<dependency>
+   <groupId>org.glassfish.web</groupId>
+   <artifactId>javax.el</artifactId>
+   <version>2.2.6</version>
+</dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -526,7 +538,36 @@
             <artifactId>resteasy-html</artifactId>
             <version>${project.version}</version>
         </dependency>
-                         
+
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-reactive-streams-operators</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.reactivestreams</groupId>
+            <artifactId>reactive-streams</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.eclipse.microprofile.reactive-streams-operators</groupId>
+            <artifactId>microprofile-reactive-streams-operators-api</artifactId>
+            <version>${microprofile-reactive-streams.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.microprofile.reactive-streams-operators</groupId>
+            <artifactId>microprofile-reactive-streams-operators-core</artifactId>
+            <version>${microprofile-reactive-streams.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>smallrye-reactive-streams-operators</artifactId>
+            <version>${smallrye-reactive-streams-operators.version}</version>
+        </dependency>
+      
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -631,6 +672,32 @@
         </dependency>
 
         <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-testsuite-shared</artifactId>
+            <version>${server.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.xml.bind</groupId>
+                    <artifactId>jaxb-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.activation</groupId>
+                    <artifactId>activation</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.activation</groupId>
+                    <artifactId>javax.activation-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!--dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-ts-integ-microprofile</artifactId>
+            <version>${server.version}</version>
+        </dependency-->        
+
+        <dependency>
             <groupId>io.reactivex</groupId>
             <artifactId>rxjava</artifactId>
             <scope>provided</scope>
@@ -671,7 +738,26 @@
         <dependency>
             <groupId>io.smallrye.config</groupId>
             <artifactId>smallrye-config</artifactId>
-        </dependency>    
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-api-maven</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-depchain</artifactId>
+            <version>3.1.4</version>
+            <type>pom</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.inject</groupId>
+                    <artifactId>javax.inject</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 
     <build>
