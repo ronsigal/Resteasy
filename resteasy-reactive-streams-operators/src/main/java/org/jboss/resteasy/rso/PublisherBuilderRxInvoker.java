@@ -1,4 +1,4 @@
-package org.jboss.resteasy.rso.save;
+package org.jboss.resteasy.rso;
 
 import javax.ws.rs.client.RxInvoker;
 

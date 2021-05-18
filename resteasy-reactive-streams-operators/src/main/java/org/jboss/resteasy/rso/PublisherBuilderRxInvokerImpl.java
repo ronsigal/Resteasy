@@ -1,4 +1,4 @@
-package org.jboss.resteasy.rso.save;
+package org.jboss.resteasy.rso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -213,8 +213,8 @@ public class PublisherBuilderRxInvokerImpl implements PublisherBuilderRxInvoker
       protected List<Subscriber<? super T>> subscribers = new ArrayList<Subscriber<? super T>>();
       protected Consumer<Throwable> onError = (Throwable t) -> {for (Subscriber<? super T> subscriber : subscribers) {subscriber.onError(t);}};
       protected Runnable onComplete = () -> {for (Subscriber<? super T> subscriber : subscribers) {subscriber.onComplete();}};
-      
-      SSEPublisherParent(SseEventSourceImpl sseEventSource)
+
+      SSEPublisherParent(final SseEventSourceImpl sseEventSource)
       {
          this.sseEventSource = sseEventSource;
       }
@@ -225,18 +225,18 @@ public class PublisherBuilderRxInvokerImpl implements PublisherBuilderRxInvoker
          subscribers.add(s);
       }
    }
-   
+
    private class SSEPublisherType<T> extends SSEPublisherParent<T>
    {
       private GenericType<T> genericType;
-      private Consumer<InboundSseEvent> onEvent = 
-            (InboundSseEvent e) -> 
+      private Consumer<InboundSseEvent> onEvent =
+            (InboundSseEvent e) ->
             {
                T o = e.readData(genericType, ((InboundSseEventImpl) e).getMediaType());
                for (Subscriber<? super T> subscriber : subscribers) {subscriber.onNext(o);}
             };
 
-      SSEPublisherType(SseEventSourceImpl sseEventSource, GenericType<T> genericType)
+      SSEPublisherType(final SseEventSourceImpl sseEventSource, final GenericType<T> genericType)
       {
          super(sseEventSource);
          this.genericType = genericType;
@@ -247,21 +247,21 @@ public class PublisherBuilderRxInvokerImpl implements PublisherBuilderRxInvoker
    private class SSEPublisherClass<T> extends SSEPublisherParent<T>
    {
       private Class<T> clazz;
-      private Consumer<InboundSseEvent> onEvent = 
-            (InboundSseEvent e) -> 
+      private Consumer<InboundSseEvent> onEvent =
+            (InboundSseEvent e) ->
             {
                T o = e.readData(clazz, ((InboundSseEventImpl) e).getMediaType());
                for (Subscriber<? super T> subscriber : subscribers) {subscriber.onNext(o);}
             };
 
-      SSEPublisherClass(SseEventSourceImpl sseEventSource, Class<T> clazz)
+      SSEPublisherClass(final SseEventSourceImpl sseEventSource, final Class<T> clazz)
       {
          super(sseEventSource);
          this.clazz = clazz;
          this.sseEventSource.register(onEvent, onError, onComplete);
       }
    }
-   
+
    private <T> Publisher<T> eventSourceToPublishable(SseEventSourceImpl sseEventSource, Class<T> clazz, String verb, Entity<?> entity, MediaType[] mediaTypes)
    {
       synchronized (monitor)
@@ -322,6 +322,6 @@ public class PublisherBuilderRxInvokerImpl implements PublisherBuilderRxInvoker
    public void setBackpressureStrategy(BackpressureStrategy backpressureStrategy)
    {
       // TODO Auto-generated method stub
-      
+
    }
 }
