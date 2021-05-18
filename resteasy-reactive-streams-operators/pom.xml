@@ -16,11 +16,6 @@
     <smallrye-reactive-streams-operators.version>1.0.13</smallrye-reactive-streams-operators.version>
   </properties>
   <dependencies>
-          <dependency>
-            <groupId>org.wildfly</groupId>
-            <artifactId>wildfly-ts-integ-microprofile</artifactId>
-            <version>23.0.2.Final</version>
-        </dependency>  
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
