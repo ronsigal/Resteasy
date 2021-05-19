@@ -58,7 +58,6 @@ import org.junit.runners.MethodSorters;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import org.eclipse.microprofile.reactive.streams.operators.core.*;
 
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
@@ -136,13 +135,13 @@ public class RSOPublisherTest {
       war.addPackage("org.eclipse.microprofile.reactive.streams.operators");
       war.addPackage("org.eclipse.microprofile.reactive.streams.operators.core");
 //      war.addClass(org.eclipse.microprofile.reactive.streams.operators.core.ReactiveStreamsGraphBuilder.class);
-      
+
 //      war.addAsManifestResource(new StringAsset("Dependencies: org.reactivestreams"), "MANIFEST.MF");
 //    war.addAsManifestResource(new StringAsset("Dependencies: org.reactivestreams,org.eclipse.microprofile.reactive-streams-operators.api"), "MANIFEST.MF");
 //    war.addAsManifestResource(new StringAsset("Dependencies: org.reactivestreams,org.eclipse.microprofile.reactive-streams-operators.api,org.eclipse.microprofile.reactive-streams-operators.core\n"), "MANIFEST.MF");
 //    war.addAsManifestResource(new StringAsset("Dependencies: org.reactivestreams,org.reactivestreams,org.eclipse.microprofile.reactive-streams-operators.api,org.eclipse.microprofile.reactive-streams-operators.core"),  "MANIFEST.MF");
 //          + "//,org.eclipse.microprofile.reactive-streams-operators.api,org.eclipse.microprofile.reactive-streams-operators.core\n"), "MANIFEST.MF");
-//      
+//
 //      JavaArchive[] jars = Maven.resolver().loadPomFromFile("pom.xml")
 //            .resolve("org.reactivestreams:reactive-streams")
 //            .withTransitivity().as(JavaArchive.class);
@@ -963,7 +962,7 @@ public class RSOPublisherTest {
             onComplete.run();
          } catch (Exception e) {
             throw new RuntimeException(e);
-         };
+         }
       }
    }
 }

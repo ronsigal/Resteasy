@@ -25,7 +25,7 @@ import org.reactivestreams.Publisher;
 
 @Path("")
 public class RSOPublisherResourceImpl {
-   
+
    private static final String[] X_ARRAY = buildArrayString("x", 3);
    private static final Thing[] THING_X_ARRAY = buildArrayThing("x", 3);
    private static final List<Thing>[] LIST_THING_X_ARRAY = buildArrayListThing("x", 2, 3);
