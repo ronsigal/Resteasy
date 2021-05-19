@@ -32,12 +32,12 @@ import org.jboss.dmr.ModelNode;
  * @author <a href="mailto:kabir.khan@jboss.com">Kabir Khan</a>
  */
 public class EnableReactiveExtensionsSetupTask extends CLIServerSetupTask {
-    private static final String MODULE_REACTIVE_STREAMS = "org.reactivestreams";
-    private static final String MODULE_REACTIVE_STREAMS_OPERATORS_API = "org.eclipse.microprofile.reactive-streams-operators.api";
-    private static final String MODULE_REACTIVE_STREAMS_OPERATORS_CORE = "org.eclipse.microprofile.reactive-streams-operators.core";
-    private static final String MODULE_REACTIVE_MESSAGING = "org.wildfly.extension.microprofile.reactive-messaging-smallrye";
+    //private static final String MODULE_REACTIVE_STREAMS = "org.reactivestreams";
+    //private static final String MODULE_REACTIVE_STREAMS_OPERATORS_API = "org.eclipse.microprofile.reactive-streams-operators.api";
+    //private static final String MODULE_REACTIVE_STREAMS_OPERATORS_CORE = "org.eclipse.microprofile.reactive-streams-operators.core";
+//    private static final String MODULE_REACTIVE_MESSAGING = "org.wildfly.extension.microprofile.reactive-messaging-smallrye";
     private static final String MODULE_REACTIVE_STREAMS_OPERATORS = "org.wildfly.extension.microprofile.reactive-streams-operators-smallrye";
-    private static final String SUBSYSTEM_REACTIVE_MESSAGING = "microprofile-reactive-messaging-smallrye";
+//    private static final String SUBSYSTEM_REACTIVE_MESSAGING = "microprofile-reactive-messaging-smallrye";
     private static final String SUBSYSTEM_REACTIVE_STREAMS_OPERATORS = "microprofile-reactive-streams-operators-smallrye";
 
     public EnableReactiveExtensionsSetupTask() {
@@ -45,45 +45,45 @@ public class EnableReactiveExtensionsSetupTask extends CLIServerSetupTask {
 
     @Override
     public void setup(ManagementClient managementClient, String containerId) throws Exception {
-        boolean rsExt = !containsChild(managementClient, "extension", MODULE_REACTIVE_STREAMS);
-        boolean rsoaExt = !containsChild(managementClient, "extension", MODULE_REACTIVE_STREAMS_OPERATORS_API);
-        boolean rsocExt = !containsChild(managementClient, "extension", MODULE_REACTIVE_STREAMS_OPERATORS_CORE);
+//        boolean rsExt = !containsChild(managementClient, "extension", MODULE_REACTIVE_STREAMS);
+//        boolean rsoaExt = !containsChild(managementClient, "extension", MODULE_REACTIVE_STREAMS_OPERATORS_API);
+//        boolean rsocExt = !containsChild(managementClient, "extension", MODULE_REACTIVE_STREAMS_OPERATORS_CORE);
         boolean rsoExt = !containsChild(managementClient, "extension", MODULE_REACTIVE_STREAMS_OPERATORS);
         boolean rsoSs = !containsChild(managementClient, "extension", SUBSYSTEM_REACTIVE_STREAMS_OPERATORS);
-        boolean rmExt = !containsChild(managementClient, "extension", MODULE_REACTIVE_MESSAGING);
-        boolean rmSs = !containsChild(managementClient, "extension", SUBSYSTEM_REACTIVE_MESSAGING);
+//        boolean rmExt = !containsChild(managementClient, "extension", MODULE_REACTIVE_MESSAGING);
+//        boolean rmSs = !containsChild(managementClient, "extension", SUBSYSTEM_REACTIVE_MESSAGING);
 
         NodeBuilder nb = this.builder.node(containerId);
-        if (rsExt) {
-           nb.setup("/extension=%s:add", MODULE_REACTIVE_STREAMS);
-        }
-        if (rsoaExt) {
-           nb.setup("/extension=%s:add", MODULE_REACTIVE_STREAMS_OPERATORS_API);
-        }
-        if (rsocExt) {
-           nb.setup("/extension=%s:add", MODULE_REACTIVE_STREAMS_OPERATORS_CORE);
-        }
+//        if (rsExt) {
+//           nb.setup("/extension=%s:add", MODULE_REACTIVE_STREAMS);
+//        }
+//        if (rsoaExt) {
+//           nb.setup("/extension=%s:add", MODULE_REACTIVE_STREAMS_OPERATORS_API);
+//        }
+//        if (rsocExt) {
+//           nb.setup("/extension=%s:add", MODULE_REACTIVE_STREAMS_OPERATORS_CORE);
+//        }
         if (rsoExt) {
             nb.setup("/extension=%s:add", MODULE_REACTIVE_STREAMS_OPERATORS);
         }
-        if (rmExt) {
-            nb.setup("/extension=%s:add", MODULE_REACTIVE_MESSAGING);
-        }
+//        if (rmExt) {
+//            nb.setup("/extension=%s:add", MODULE_REACTIVE_MESSAGING);
+//        }
         if (rsoSs) {
             nb.setup("/subsystem=%s:add", SUBSYSTEM_REACTIVE_STREAMS_OPERATORS);
         }
-        if (rmSs) {
-            nb.setup("/subsystem=%s:add", SUBSYSTEM_REACTIVE_MESSAGING);
-        }
-        if (rmSs) {
-            nb.teardown("/subsystem=%s:remove", SUBSYSTEM_REACTIVE_MESSAGING);
-        }
+//        if (rmSs) {
+//            nb.setup("/subsystem=%s:add", SUBSYSTEM_REACTIVE_MESSAGING);
+//        }
+//        if (rmSs) {
+//            nb.teardown("/subsystem=%s:remove", SUBSYSTEM_REACTIVE_MESSAGING);
+//        }
         if (rsoSs) {
             nb.teardown("/subsystem=%s:remove", SUBSYSTEM_REACTIVE_STREAMS_OPERATORS);
         }
-        if (rmExt) {
-            nb.teardown("/extension=%s:remove", MODULE_REACTIVE_MESSAGING);
-        }
+//        if (rmExt) {
+//            nb.teardown("/extension=%s:remove", MODULE_REACTIVE_MESSAGING);
+//        }
         if (rsoSs) {
             nb.teardown("/extension=%s:remove", MODULE_REACTIVE_STREAMS_OPERATORS);
         }
