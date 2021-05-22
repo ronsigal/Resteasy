@@ -47,151 +47,151 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
    @Override
    public Publisher<?> get()
    {
-      return eventSourceToPublishable(getEventSource(), String.class, "GET", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), String.class, "GET", null, getAccept());
    }
 
    @Override
    public <R> Publisher<?> get(Class<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "GET", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "GET", null, getAccept());
    }
 
    @Override
    public <R> Publisher<?> get(GenericType<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "GET", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "GET", null, getAccept());
    }
 
    @Override
    public Publisher<?> put(Entity<?> entity)
    {
-      return eventSourceToPublishable(getEventSource(), String.class, "PUT", entity, getAccept());
+      return eventSourceToPublisher(getEventSource(), String.class, "PUT", entity, getAccept());
    }
 
    @Override
    public <R> Publisher<?> put(Entity<?> entity, Class<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "PUT", entity, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "PUT", entity, getAccept());
    }
 
    @Override
    public <R> Publisher<?> put(Entity<?> entity, GenericType<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "PUT", entity, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "PUT", entity, getAccept());
    }
 
    @Override
    public Publisher<?> post(Entity<?> entity)
    {
-      return eventSourceToPublishable(getEventSource(), String.class, "POST", entity, getAccept());
+      return eventSourceToPublisher(getEventSource(), String.class, "POST", entity, getAccept());
    }
 
    @Override
    public <R> Publisher<?> post(Entity<?> entity, Class<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "POST", entity, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "POST", entity, getAccept());
    }
 
    @Override
    public <R> Publisher<?> post(Entity<?> entity, GenericType<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "POST", entity, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "POST", entity, getAccept());
    }
 
    @Override
    public Publisher<?> delete()
    {
-      return eventSourceToPublishable(getEventSource(), String.class, "DELETE", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), String.class, "DELETE", null, getAccept());
    }
 
    @Override
    public <R> Publisher<?> delete(Class<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "DELETE", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "DELETE", null, getAccept());
    }
 
    @Override
    public <R> Publisher<?> delete(GenericType<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "DELETE", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "DELETE", null, getAccept());
    }
 
    @Override
    public Publisher<?> head()
    {
-      return eventSourceToPublishable(getEventSource(), String.class, "HEAD", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), String.class, "HEAD", null, getAccept());
    }
 
    @Override
    public Publisher<?> options()
    {
-      return eventSourceToPublishable(getEventSource(), String.class, "OPTIONS", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), String.class, "OPTIONS", null, getAccept());
    }
 
    @Override
    public <R> Publisher<?> options(Class<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "OPTIONS", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "OPTIONS", null, getAccept());
    }
 
    @Override
    public <R> Publisher<?> options(GenericType<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "OPTIONS", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "OPTIONS", null, getAccept());
    }
 
    @Override
    public Publisher<?> trace()
    {
-      return eventSourceToPublishable(getEventSource(), String.class, "TRACE", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), String.class, "TRACE", null, getAccept());
    }
 
    @Override
    public <R> Publisher<?> trace(Class<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "TRACE", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "TRACE", null, getAccept());
    }
 
    @Override
    public <R> Publisher<?> trace(GenericType<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, "TRACE", null, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, "TRACE", null, getAccept());
    }
 
    @Override
    public Publisher<?> method(String name)
    {
-      return eventSourceToPublishable(getEventSource(), String.class, name, null, getAccept());
+      return eventSourceToPublisher(getEventSource(), String.class, name, null, getAccept());
    }
 
    @Override
    public <R> Publisher<?> method(String name, Class<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, name, null, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, name, null, getAccept());
    }
 
    @Override
    public <R> Publisher<?> method(String name, GenericType<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, name, null, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, name, null, getAccept());
    }
 
    @Override
    public Publisher<?> method(String name, Entity<?> entity)
    {
-      return eventSourceToPublishable(getEventSource(), String.class, name, entity, getAccept());
+      return eventSourceToPublisher(getEventSource(), String.class, name, entity, getAccept());
    }
 
    @Override
    public <R> Publisher<?> method(String name, Entity<?> entity, Class<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, name, entity, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, name, entity, getAccept());
    }
 
    @Override
    public <R> Publisher<?> method(String name, Entity<?> entity, GenericType<R> responseType)
    {
-      return eventSourceToPublishable(getEventSource(), responseType, name, entity, getAccept());
+      return eventSourceToPublisher(getEventSource(), responseType, name, entity, getAccept());
    }
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
    public PublisherRxInvoker reactiveStreamsEngine(ReactiveStreamsEngine engine)
@@ -206,17 +206,38 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
       protected SseEventSourceImpl sseEventSource;
       protected List<Subscriber<? super T>> subscribers = new ArrayList<Subscriber<? super T>>();
       protected Consumer<Throwable> onError = (Throwable t) -> {for (Subscriber<? super T> subscriber : subscribers) {subscriber.onError(t);}};
-      protected Runnable onComplete = () -> {for (Subscriber<? super T> subscriber : subscribers) {subscriber.onComplete();}};
+      protected Runnable onComplete = () -> {for (Subscriber<? super T> subscriber : subscribers) {subscriber.onComplete();}; sseEventSource.close();};
+      protected String verb;
+      protected Entity<?> entity;
+      protected MediaType[] mediaTypes;
 
-      SSEPublisherParent(final SseEventSourceImpl sseEventSource)
+      SSEPublisherParent(final SseEventSourceImpl sseEventSource, String verb, Entity<?> entity, MediaType[] mediaTypes)
       {
          this.sseEventSource = sseEventSource;
+         this.verb = verb;
+         this.entity = entity;
+         this.mediaTypes = mediaTypes;
       }
 
       @Override
       public void subscribe(Subscriber<? super T> s)
       {
+    	  System.out.println("adding subscriber: " + s);
+         System.out.println("subscribers.size(): (before)" + subscribers.size());
          subscribers.add(s);
+         System.out.println("subscribers.size(): (after)" + subscribers.size());
+
+         System.out.println(this + ": subscribers: ");
+         for (Subscriber sub : subscribers) {
+        	 System.out.println("  " + sub);
+         }
+         synchronized (monitor)
+         {
+            if (!sseEventSource.isOpen())
+            {
+               sseEventSource.open(null, verb, entity, mediaTypes);
+            }
+         }
       }
    }
 
@@ -230,9 +251,9 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
                for (Subscriber<? super T> subscriber : subscribers) {subscriber.onNext(o);}
             };
 
-      SSEPublisherType(final SseEventSourceImpl sseEventSource, final GenericType<T> genericType)
+      SSEPublisherType(final SseEventSourceImpl sseEventSource, final GenericType<T> genericType, String verb, Entity<?> entity, MediaType[] mediaTypes)
       {
-         super(sseEventSource);
+         super(sseEventSource, verb, entity, mediaTypes);
          this.genericType = genericType;
          this.sseEventSource.register(onEvent, onError, onComplete);
       }
@@ -248,42 +269,37 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
                for (Subscriber<? super T> subscriber : subscribers) {subscriber.onNext(o);}
             };
 
-      SSEPublisherClass(final SseEventSourceImpl sseEventSource, final Class<T> clazz)
+      SSEPublisherClass(final SseEventSourceImpl sseEventSource, final Class<T> clazz, String verb, Entity<?> entity, MediaType[] mediaTypes)
       {
-         super(sseEventSource);
+         super(sseEventSource, verb, entity, mediaTypes);
          this.clazz = clazz;
          this.sseEventSource.register(onEvent, onError, onComplete);
       }
    }
 
-   private <T> Publisher<T> eventSourceToPublishable(SseEventSourceImpl sseEventSource, Class<T> clazz, String verb, Entity<?> entity, MediaType[] mediaTypes)
+   private <T> Publisher<T> eventSourceToPublisher(SseEventSourceImpl sseEventSource, Class<T> clazz, String verb, Entity<?> entity, MediaType[] mediaTypes)
    {
-      synchronized (monitor)
-      {
-         if (!sseEventSource.isOpen())
-         {
-            sseEventSource.open(null, verb, entity, mediaTypes);
-         }
-      }
-      return ReactiveStreams.fromPublisher(new SSEPublisherClass<T>(sseEventSource, clazz)).buildRs();
-   }
-
-   private <T> Publisher<T> eventSourceToPublishable(SseEventSourceImpl sseEventSource, GenericType<T> type, String verb, Entity<?> entity, MediaType[] mediaTypes)
-   {
-      synchronized (monitor)
-      {
-         if (!sseEventSource.isOpen())
-         {
-            sseEventSource.open(null, verb, entity, mediaTypes);
-         }
-      }
+      SSEPublisherClass publisher = new SSEPublisherClass<T>(sseEventSource, clazz, verb, entity, mediaTypes);
       if (engine != null)
       {
-         return ReactiveStreams.fromPublisher(new SSEPublisherType<T>(sseEventSource, type)).buildRs(engine);
+         return ReactiveStreams.fromPublisher(publisher).buildRs(engine);
       }
       else
       {
-         return ReactiveStreams.fromPublisher(new SSEPublisherType<T>(sseEventSource, type)).buildRs();
+         return ReactiveStreams.fromPublisher(publisher).buildRs();
+      }
+   }
+
+   private <T> Publisher<T> eventSourceToPublisher(SseEventSourceImpl sseEventSource, GenericType<T> type, String verb, Entity<?> entity, MediaType[] mediaTypes)
+   {
+      Publisher publisher = new SSEPublisherType<T>(sseEventSource, type, verb, entity, mediaTypes);
+      if (engine != null)
+      {
+         return ReactiveStreams.fromPublisher(publisher).buildRs(engine);
+      }
+      else
+      {
+         return ReactiveStreams.fromPublisher(publisher).buildRs();
       }
    }
 

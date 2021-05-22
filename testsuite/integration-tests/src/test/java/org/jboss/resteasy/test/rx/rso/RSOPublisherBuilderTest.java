@@ -29,18 +29,22 @@ import org.jboss.as.arquillian.api.ServerSetup;
 import org.jboss.as.test.shared.CLIServerSetupTask;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.rso.PublisherBuilderProvider;
 import org.jboss.resteasy.rso.PublisherRxInvoker;
 import org.jboss.resteasy.rso.PublisherRxInvokerProvider;
+import org.jboss.resteasy.spi.AsyncStreamProvider;
 import org.jboss.resteasy.test.rx.resource.Bytes;
 import org.jboss.resteasy.test.rx.resource.RxScheduledExecutorService;
 import org.jboss.resteasy.test.rx.resource.TRACE;
 import org.jboss.resteasy.test.rx.resource.TestException;
 import org.jboss.resteasy.test.rx.resource.TestExceptionMapper;
 import org.jboss.resteasy.test.rx.resource.Thing;
+import org.jboss.resteasy.test.rx.rso.resource.RSOPublisherBuilderResourceImpl;
 import org.jboss.resteasy.test.rx.rso.resource.RSOPublisherResourceImpl;
 import org.jboss.resteasy.utils.PortProviderUtil;
 import org.jboss.resteasy.utils.TestUtil;
 import org.jboss.shrinkwrap.api.Archive;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.AfterClass;
@@ -70,7 +74,7 @@ import org.reactivestreams.Subscription;
 @RunAsClient
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @ServerSetup(EnableReactiveExtensionsSetupTask.class)
-public class RSOPublisherTest {
+public class RSOPublisherBuilderTest {
 
    private static ResteasyClient client;
    private static CountDownLatch latch;
@@ -103,7 +107,25 @@ public class RSOPublisherTest {
 
    @Deployment
    public static Archive<?> deploy() {
-      WebArchive war = TestUtil.prepareArchive(RSOPublisherTest.class.getSimpleName());
+//      WebArchive war = TestUtil.prepareArchive(RSOPublisherBuilderTest.class.getSimpleName());
+//      war.addClass(Thing.class);
+//      war.addClass(TRACE.class);
+//      war.addClass(Bytes.class);
+//      war.addClass(TestException.class);
+//      war.addPackage("org.jboss.resteasy.rso");
+//      war.addClasses(EnableReactiveExtensionsSetupTask.class, CLIServerSetupTask.class);
+//      war.addClass(Publisher.class);
+//      war.addClass(PublisherBuilder.class);
+//      war.addClass(ReactiveStreams.class);
+//      war.addClass(ReactiveStreamsFactoryResolver.class);
+//      war.addClass(ReactiveStreamsFactory.class);
+//      war.addClass(ReactiveStreamsFactoryImpl.class);
+//      war.addAsServiceProvider(ReactiveStreamsFactory.class, ReactiveStreamsFactoryImpl.class);
+////      war.addAsServiceProvider(AsyncStreamProvider.class, PublisherBuilderProvider.class);
+//      war.addAsManifestResource(new StringAsset("Dependencies: org.reactivestreams,org.reactivestreams,org.eclipse.microprofile.reactive-streams-operators.api"), "MANIFEST.MF");
+////      war.addAsManifestResource(new StringAsset("Dependencies: org.reactivestreams,org.eclipse.microprofile.reactive-streams-operators.api"), "MANIFEST.MF");
+//      return TestUtil.finishContainerPrepare(war, null, RSOPublisherBuilderResourceImpl.class, TestExceptionMapper.class);
+      WebArchive war = TestUtil.prepareArchive(RSOPublisherBuilderTest.class.getSimpleName());
       war.addClass(Thing.class);
       war.addClass(TRACE.class);
       war.addClass(Bytes.class);
@@ -117,11 +139,13 @@ public class RSOPublisherTest {
       war.addClass(ReactiveStreamsFactory.class);
       war.addClass(ReactiveStreamsFactoryImpl.class);
       war.addAsServiceProvider(ReactiveStreamsFactory.class, ReactiveStreamsFactoryImpl.class);
+      war.addAsManifestResource(new StringAsset("Dependencies: org.reactivestreams,org.eclipse.microprofile.reactive-streams-operators.api, org.jboss.resteasy.resteasy-reactive-streams-operators"), "MANIFEST.MF");
       return TestUtil.finishContainerPrepare(war, null, RSOPublisherResourceImpl.class, TestExceptionMapper.class);
+
    }
 
    private static String generateURL(String path) {
-      return PortProviderUtil.generateURL(path, RSOPublisherTest.class.getSimpleName());
+      return PortProviderUtil.generateURL(path, RSOPublisherBuilderTest.class.getSimpleName());
    }
 
    //////////////////////////////////////////////////////////////////////////////

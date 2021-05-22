@@ -15,6 +15,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.eclipse.microprofile.reactive.streams.operators.PublisherBuilder;
 import org.eclipse.microprofile.reactive.streams.operators.ReactiveStreams;
 import org.jboss.resteasy.annotations.Stream;
 import org.jboss.resteasy.test.rx.resource.Bytes;
@@ -24,7 +25,7 @@ import org.jboss.resteasy.test.rx.resource.Thing;
 import org.reactivestreams.Publisher;
 
 @Path("")
-public class RSOPublisherResourceImpl {
+public class RSOPublisherBuilderResourceImpl {
 
    private static final String[] X_ARRAY = buildArrayString("x", 3);
    private static final Thing[] THING_X_ARRAY = buildArrayThing("x", 3);
@@ -35,56 +36,56 @@ public class RSOPublisherResourceImpl {
    @Path("get/string")
    @Produces(MediaType.TEXT_PLAIN)
    @Stream
-   public Publisher<String> get() {
-      return ReactiveStreams.of(X_ARRAY).buildRs();
+   public PublisherBuilder<String> get() {
+      return ReactiveStreams.of(X_ARRAY);
    }
 
    @GET
    @Path("get/thing")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<Thing> getThing() {
-      return ReactiveStreams.of(THING_X_ARRAY).buildRs();
+   public PublisherBuilder<Thing> getThing() {
+      return ReactiveStreams.of(THING_X_ARRAY);
    }
 
    @GET
    @Path("get/thing/list")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<List<Thing>> getThingList() {
-      return ReactiveStreams.of(LIST_THING_X_ARRAY).buildRs();
+   public PublisherBuilder<List<Thing>> getThingList() {
+      return ReactiveStreams.of(LIST_THING_X_ARRAY);
    }
 
    @GET
    @Path("get/bytes")
    @Produces(MediaType.APPLICATION_OCTET_STREAM)
    @Stream
-   public Publisher<byte[]> getBytes() {
-      return ReactiveStreams.of(BYTE_ARRAY_ARRAY).buildRs();
+   public PublisherBuilder<byte[]> getBytes() {
+      return ReactiveStreams.of(BYTE_ARRAY_ARRAY);
    }
 
    @PUT
    @Path("put/string")
    @Produces(MediaType.TEXT_PLAIN)
    @Stream
-   public Publisher<String> put(String s) {
-      return ReactiveStreams.of(buildArrayString(s, 3)).buildRs();
+   public PublisherBuilder<String> put(String s) {
+      return ReactiveStreams.of(buildArrayString(s, 3));
    }
 
    @PUT
    @Path("put/thing")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<Thing> putThing(String s) {
-      return ReactiveStreams.of(buildArrayThing(s, 3)).buildRs();
+   public PublisherBuilder<Thing> putThing(String s) {
+      return ReactiveStreams.of(buildArrayThing(s, 3));
    }
 
    @PUT
    @Path("put/thing/list")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<List<Thing>> putThingList(String s) {
-      return ReactiveStreams.of(buildArrayListThing(s, 3, 2)).buildRs();
+   public PublisherBuilder<List<Thing>> putThingList(String s) {
+      return ReactiveStreams.of(buildArrayListThing(s, 3, 2));
    }
 
    @PUT
@@ -92,32 +93,32 @@ public class RSOPublisherResourceImpl {
    @Consumes(MediaType.TEXT_PLAIN)
    @Produces(MediaType.APPLICATION_OCTET_STREAM)
    @Stream
-   public Publisher<byte[]> putBytes(String s) {
-      return ReactiveStreams.of(buildArrayArrayBytes(Integer.valueOf(s))).buildRs();
+   public PublisherBuilder<byte[]> putBytes(String s) {
+      return ReactiveStreams.of(buildArrayArrayBytes(Integer.valueOf(s)));
    }
 
    @POST
    @Path("post/string")
    @Produces(MediaType.TEXT_PLAIN)
    @Stream
-   public Publisher<String> post(String s) {
-      return ReactiveStreams.of(buildArrayString(s, 3)).buildRs();
+   public PublisherBuilder<String> post(String s) {
+      return ReactiveStreams.of(buildArrayString(s, 3));
    }
 
    @POST
    @Path("post/thing")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<Thing> postThing(String s) {
-      return ReactiveStreams.of(buildArrayThing(s, 3)).buildRs();
+   public PublisherBuilder<Thing> postThing(String s) {
+      return ReactiveStreams.of(buildArrayThing(s, 3));
    }
 
    @POST
    @Path("post/thing/list")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<List<Thing>> postThingList(String s) {
-      return ReactiveStreams.of(buildArrayListThing(s, 3, 2)).buildRs();
+   public PublisherBuilder<List<Thing>> postThingList(String s) {
+      return ReactiveStreams.of(buildArrayListThing(s, 3, 2));
    }
 
    @POST
@@ -125,123 +126,123 @@ public class RSOPublisherResourceImpl {
    @Consumes(MediaType.TEXT_PLAIN)
    @Produces(MediaType.APPLICATION_OCTET_STREAM)
    @Stream
-   public Publisher<byte[]> postBytes(String s) {
-      return ReactiveStreams.of(buildArrayArrayBytes(Integer.valueOf(s))).buildRs();
+   public PublisherBuilder<byte[]> postBytes(String s) {
+      return ReactiveStreams.of(buildArrayArrayBytes(Integer.valueOf(s)));
    }
 
    @DELETE
    @Path("delete/string")
    @Produces(MediaType.TEXT_PLAIN)
    @Stream
-   public Publisher<String> delete() {
-      return ReactiveStreams.of(X_ARRAY).buildRs();
+   public PublisherBuilder<String> delete() {
+      return ReactiveStreams.of(X_ARRAY);
    }
 
    @DELETE
    @Path("delete/thing")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<Thing> deleteThing() {
-      return ReactiveStreams.of(THING_X_ARRAY).buildRs();
+   public PublisherBuilder<Thing> deleteThing() {
+      return ReactiveStreams.of(THING_X_ARRAY);
    }
 
    @DELETE
    @Path("delete/thing/list")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<List<Thing>> deleteThingList() {
-      return ReactiveStreams.of(LIST_THING_X_ARRAY).buildRs();
+   public PublisherBuilder<List<Thing>> deleteThingList() {
+      return ReactiveStreams.of(LIST_THING_X_ARRAY);
    }
 
    @DELETE
    @Path("delete/bytes")
    @Produces(MediaType.APPLICATION_OCTET_STREAM)
    @Stream
-   public Publisher<byte[]> deleteBytes() {
-      return ReactiveStreams.of(BYTE_ARRAY_ARRAY).buildRs();
+   public PublisherBuilder<byte[]> deleteBytes() {
+      return ReactiveStreams.of(BYTE_ARRAY_ARRAY);
    }
 
    @HEAD
    @Path("head/string")
    @Produces(MediaType.TEXT_PLAIN)
    @Stream
-   public Publisher<String> head() {
-      return ReactiveStreams.of(X_ARRAY).buildRs();
+   public PublisherBuilder<String> head() {
+      return ReactiveStreams.of(X_ARRAY);
    }
 
    @OPTIONS
    @Path("options/string")
    @Produces(MediaType.TEXT_PLAIN)
    @Stream
-   public Publisher<String> options() {
-      return ReactiveStreams.of(X_ARRAY).buildRs();
+   public PublisherBuilder<String> options() {
+      return ReactiveStreams.of(X_ARRAY);
    }
 
    @OPTIONS
    @Path("options/thing")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<Thing> optionsThing() {
-      return ReactiveStreams.of(THING_X_ARRAY).buildRs();
+   public PublisherBuilder<Thing> optionsThing() {
+      return ReactiveStreams.of(THING_X_ARRAY);
    }
 
    @OPTIONS
    @Path("options/thing/list")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<List<Thing>> optionsThingList() {
-      return ReactiveStreams.of(LIST_THING_X_ARRAY).buildRs();
+   public PublisherBuilder<List<Thing>> optionsThingList() {
+      return ReactiveStreams.of(LIST_THING_X_ARRAY);
    }
 
    @OPTIONS
    @Path("options/bytes")
    @Produces(MediaType.APPLICATION_OCTET_STREAM)
    @Stream
-   public Publisher<byte[]> optionsBytes() {
-      return ReactiveStreams.of(BYTE_ARRAY_ARRAY).buildRs();
+   public PublisherBuilder<byte[]> optionsBytes() {
+      return ReactiveStreams.of(BYTE_ARRAY_ARRAY);
    }
 
    @TRACE
    @Path("trace/string")
    @Produces(MediaType.TEXT_PLAIN)
    @Stream
-   public Publisher<String> trace() {
-      return ReactiveStreams.of(X_ARRAY).buildRs();
+   public PublisherBuilder<String> trace() {
+      return ReactiveStreams.of(X_ARRAY);
    }
 
    @TRACE
    @Path("trace/thing")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<Thing> traceThing() {
-      return ReactiveStreams.of(THING_X_ARRAY).buildRs();
+   public PublisherBuilder<Thing> traceThing() {
+      return ReactiveStreams.of(THING_X_ARRAY);
    }
 
    @TRACE
    @Path("trace/thing/list")
    @Produces(MediaType.APPLICATION_JSON)
    @Stream
-   public Publisher<List<Thing>> traceThingList() {
-      return ReactiveStreams.of(LIST_THING_X_ARRAY).buildRs();
+   public PublisherBuilder<List<Thing>> traceThingList() {
+      return ReactiveStreams.of(LIST_THING_X_ARRAY);
    }
 
    @TRACE
    @Path("trace/bytes")
    @Produces(MediaType.APPLICATION_OCTET_STREAM)
    @Stream
-   public Publisher<byte[]> traceBytes() {
-      return ReactiveStreams.of(BYTE_ARRAY_ARRAY).buildRs();
+   public PublisherBuilder<byte[]> traceBytes() {
+      return ReactiveStreams.of(BYTE_ARRAY_ARRAY);
    }
 
    @GET
    @Path("exception/unhandled")
-   public Publisher<Thing> exceptionUnhandled() throws Exception {
+   public PublisherBuilder<Thing> exceptionUnhandled() throws Exception {
       throw new Exception("unhandled");
    }
 
    @GET
    @Path("exception/handled")
-   public Publisher<Thing> exceptionHandled() throws Exception {
+   public PublisherBuilder<Thing> exceptionHandled() throws Exception {
       throw new TestException("handled");
    }
 
