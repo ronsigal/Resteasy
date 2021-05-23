@@ -22,7 +22,6 @@ import org.jboss.resteasy.test.rx.resource.Bytes;
 import org.jboss.resteasy.test.rx.resource.TRACE;
 import org.jboss.resteasy.test.rx.resource.TestException;
 import org.jboss.resteasy.test.rx.resource.Thing;
-import org.reactivestreams.Publisher;
 
 @Path("")
 public class RSOPublisherBuilderResourceImpl {

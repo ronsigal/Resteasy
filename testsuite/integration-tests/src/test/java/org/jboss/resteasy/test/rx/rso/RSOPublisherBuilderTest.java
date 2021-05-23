@@ -1,6 +1,5 @@
 package org.jboss.resteasy.test.rx.rso;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,23 +28,19 @@ import org.jboss.as.arquillian.api.ServerSetup;
 import org.jboss.as.test.shared.CLIServerSetupTask;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.rso.PublisherBuilderProvider;
 import org.jboss.resteasy.rso.PublisherRxInvoker;
 import org.jboss.resteasy.rso.PublisherRxInvokerProvider;
-import org.jboss.resteasy.spi.AsyncStreamProvider;
 import org.jboss.resteasy.test.rx.resource.Bytes;
 import org.jboss.resteasy.test.rx.resource.RxScheduledExecutorService;
 import org.jboss.resteasy.test.rx.resource.TRACE;
 import org.jboss.resteasy.test.rx.resource.TestException;
 import org.jboss.resteasy.test.rx.resource.TestExceptionMapper;
 import org.jboss.resteasy.test.rx.resource.Thing;
-import org.jboss.resteasy.test.rx.rso.resource.RSOPublisherBuilderResourceImpl;
 import org.jboss.resteasy.test.rx.rso.resource.RSOPublisherResourceImpl;
 import org.jboss.resteasy.utils.PortProviderUtil;
 import org.jboss.resteasy.utils.TestUtil;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
-import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -176,19 +171,13 @@ public class RSOPublisherBuilderTest {
    @Test
    public void testGet() throws Exception {
       PublisherRxInvoker invoker = client.target(generateURL("/get/string")).request().rx(PublisherRxInvoker.class);
-      System.out.println("invoker: " + invoker);
       Publisher<String> publisher = (Publisher<String>) invoker.get();
-      System.out.println("publisher: " + publisher);
       publisher.subscribe(new TestSubscriber<String>(
             (String o) -> stringList.add(o),
             (Throwable t) -> errors.incrementAndGet(),
             () -> latch.countDown()
             ));
-      System.out.println("stringList.size(): " + stringList.size());
       boolean waitResult = latch.await(5, TimeUnit.SECONDS);
-      for (int i = 0; i < stringList.size(); i++) {
-         System.out.println("i: " + i + "->" + stringList.get(i));
-      }
       Assert.assertTrue("Waiting for event to be delivered has timed out.", waitResult);
       Assert.assertEquals(0, errors.get());
       Assert.assertEquals(xStringList, stringList);
@@ -203,15 +192,10 @@ public class RSOPublisherBuilderTest {
             (String o) -> stringList.add(o),
             (Throwable t) -> errors.incrementAndGet(),
             () -> latch.countDown()));
-      System.out.println("stringList.size(): " + stringList.size());
       boolean waitResult = latch.await(5, TimeUnit.SECONDS);
-      for (int i = 0; i < stringList.size(); i++) {
-         System.out.println("i: " + i + "->" + stringList.get(i));
-      }
       Assert.assertTrue("Waiting for event to be delivered has timed out.", waitResult);
       Assert.assertEquals(0, errors.get());
       Assert.assertEquals(xStringList, stringList);
-      //      Assert.fail("ok");
    }
 
    @SuppressWarnings("unchecked")
@@ -936,7 +920,6 @@ public class RSOPublisherBuilderTest {
       @Override
       public void onNext(T t) {
          try {
-            System.out.println(this + ".onNext(" + t + ")");
             onNext.accept(t);
          } catch (Exception e) {
             onError(e);
@@ -946,7 +929,6 @@ public class RSOPublisherBuilderTest {
       @Override
       public void onError(Throwable t) {
          try {
-            System.out.println(this + ".onError(" + t + ")");
             onError.accept(t);
          } catch (Exception e) {
             throw new RuntimeException(t);
@@ -956,7 +938,6 @@ public class RSOPublisherBuilderTest {
       @Override
       public void onComplete() {
          try {
-            System.out.println(this + ".onComplete()");
             onComplete.run();
          } catch (Exception e) {
             throw new RuntimeException(e);

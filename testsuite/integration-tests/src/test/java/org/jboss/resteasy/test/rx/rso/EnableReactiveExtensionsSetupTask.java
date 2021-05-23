@@ -41,7 +41,7 @@ public class EnableReactiveExtensionsSetupTask extends CLIServerSetupTask {
     private static final String SUBSYSTEM_REACTIVE_STREAMS_OPERATORS = "microprofile-reactive-streams-operators-smallrye";
 
     public EnableReactiveExtensionsSetupTask() {
-    	System.setProperty("jboss.dist", "/home/rsigal/tmp/git.eap7-1661.kabir/Resteasy/testsuite/integration-tests/target/test-server/wildfly-23.0.2.Final");
+       System.setProperty("jboss.dist", "/home/rsigal/tmp/git.eap7-1661.kabir/Resteasy/testsuite/integration-tests/target/test-server/wildfly-23.0.2.Final");
     }
 
     @Override
