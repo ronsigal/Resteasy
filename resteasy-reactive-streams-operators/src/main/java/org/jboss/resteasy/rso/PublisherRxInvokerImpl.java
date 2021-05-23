@@ -206,12 +206,12 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
       protected SseEventSourceImpl sseEventSource;
       protected List<Subscriber<? super T>> subscribers = new ArrayList<Subscriber<? super T>>();
       protected Consumer<Throwable> onError = (Throwable t) -> {for (Subscriber<? super T> subscriber : subscribers) {subscriber.onError(t);}};
-      protected Runnable onComplete = () -> {for (Subscriber<? super T> subscriber : subscribers) {subscriber.onComplete();}; sseEventSource.close();};
+      protected Runnable onComplete = () -> {for (Subscriber<? super T> subscriber : subscribers) {subscriber.onComplete();} sseEventSource.close();};
       protected String verb;
       protected Entity<?> entity;
       protected MediaType[] mediaTypes;
 
-      SSEPublisherParent(final SseEventSourceImpl sseEventSource, String verb, Entity<?> entity, MediaType[] mediaTypes)
+      SSEPublisherParent(final SseEventSourceImpl sseEventSource, final String verb, final Entity<?> entity, final MediaType[] mediaTypes)
       {
          this.sseEventSource = sseEventSource;
          this.verb = verb;
@@ -222,15 +222,7 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
       @Override
       public void subscribe(Subscriber<? super T> s)
       {
-    	  System.out.println("adding subscriber: " + s);
-         System.out.println("subscribers.size(): (before)" + subscribers.size());
          subscribers.add(s);
-         System.out.println("subscribers.size(): (after)" + subscribers.size());
-
-         System.out.println(this + ": subscribers: ");
-         for (Subscriber sub : subscribers) {
-        	 System.out.println("  " + sub);
-         }
          synchronized (monitor)
          {
             if (!sseEventSource.isOpen())
@@ -251,7 +243,7 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
                for (Subscriber<? super T> subscriber : subscribers) {subscriber.onNext(o);}
             };
 
-      SSEPublisherType(final SseEventSourceImpl sseEventSource, final GenericType<T> genericType, String verb, Entity<?> entity, MediaType[] mediaTypes)
+      SSEPublisherType(final SseEventSourceImpl sseEventSource, final GenericType<T> genericType, final String verb, final Entity<?> entity, final MediaType[] mediaTypes)
       {
          super(sseEventSource, verb, entity, mediaTypes);
          this.genericType = genericType;
@@ -269,7 +261,7 @@ public class PublisherRxInvokerImpl implements PublisherRxInvoker
                for (Subscriber<? super T> subscriber : subscribers) {subscriber.onNext(o);}
             };
 
-      SSEPublisherClass(final SseEventSourceImpl sseEventSource, final Class<T> clazz, String verb, Entity<?> entity, MediaType[] mediaTypes)
+      SSEPublisherClass(final SseEventSourceImpl sseEventSource, final Class<T> clazz, final String verb, final Entity<?> entity, final MediaType[] mediaTypes)
       {
          super(sseEventSource, verb, entity, mediaTypes);
          this.clazz = clazz;
