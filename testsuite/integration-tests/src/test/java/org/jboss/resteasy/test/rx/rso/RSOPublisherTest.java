@@ -16,16 +16,12 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
-import org.eclipse.microprofile.reactive.streams.operators.PublisherBuilder;
-import org.eclipse.microprofile.reactive.streams.operators.ReactiveStreams;
-import org.eclipse.microprofile.reactive.streams.operators.ReactiveStreamsFactory;
-import org.eclipse.microprofile.reactive.streams.operators.core.ReactiveStreamsFactoryImpl;
-import org.eclipse.microprofile.reactive.streams.operators.spi.ReactiveStreamsFactoryResolver;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.as.arquillian.api.ServerSetup;
 import org.jboss.as.test.shared.CLIServerSetupTask;
+import org.jboss.resteasy.category.ExpectedFailingOnWildFly22;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.rso.PublisherRxInvoker;
@@ -48,6 +44,7 @@ import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.reactivestreams.Publisher;
@@ -68,6 +65,7 @@ import org.reactivestreams.Subscription;
 @RunAsClient
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @ServerSetup(EnableReactiveExtensionsSetupTask.class)
+@Category({ExpectedFailingOnWildFly22.class})
 public class RSOPublisherTest {
 
    private static ResteasyClient client;
@@ -108,13 +106,6 @@ public class RSOPublisherTest {
       war.addClass(TestException.class);
       war.addPackage("org.jboss.resteasy.rso");
       war.addClasses(EnableReactiveExtensionsSetupTask.class, CLIServerSetupTask.class);
-      war.addClass(Publisher.class);
-      war.addClass(PublisherBuilder.class);
-      war.addClass(ReactiveStreams.class);
-      war.addClass(ReactiveStreamsFactoryResolver.class);
-      war.addClass(ReactiveStreamsFactory.class);
-      war.addClass(ReactiveStreamsFactoryImpl.class);
-      war.addAsServiceProvider(ReactiveStreamsFactory.class, ReactiveStreamsFactoryImpl.class);
       return TestUtil.finishContainerPrepare(war, null, RSOPublisherResourceImpl.class, TestExceptionMapper.class);
    }
 
