@@ -28,7 +28,7 @@ import org.jboss.resteasy.test.rx.resource.TRACE;
 import org.jboss.resteasy.test.rx.resource.TestException;
 import org.jboss.resteasy.test.rx.resource.TestExceptionMapper;
 import org.jboss.resteasy.test.rx.resource.Thing;
-import org.jboss.resteasy.test.rx.rso.resource.RSOPublisherBuilderResourceImpl;
+import org.jboss.resteasy.test.rx.rso.resource.RSOPublisherResourceImpl;
 import org.jboss.resteasy.utils.PortProviderUtil;
 import org.jboss.resteasy.utils.TestUtil;
 import org.jboss.shrinkwrap.api.Archive;
@@ -51,15 +51,15 @@ import io.reactivex.Flowable;
  * @tpChapter Integration tests
  * @tpSince RESTEasy 3.6
  *
- * In these tests, the server uses PublisherBuilders to create results asynchronously and streams the elements
- * of the PublisherBuilders as they are created.
+ * In these tests, the server uses Publishers to create results asynchronously and streams the elements
+ * of the Publishers as they are created.
  *
  * The client makes invocations on a FlowableRxInvoker.
  */
 @RunWith(Arquillian.class)
 @RunAsClient
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class Rx2FlowablePublisherBuilderTest {
+public class Rx2FlowablePublisherTest {
 
    private static ResteasyClient client;
    private static CountDownLatch latch;
@@ -92,7 +92,7 @@ public class Rx2FlowablePublisherBuilderTest {
 
    @Deployment
    public static Archive<?> deploy() {
-      WebArchive war = TestUtil.prepareArchive(Rx2FlowablePublisherBuilderTest.class.getSimpleName());
+      WebArchive war = TestUtil.prepareArchive(Rx2FlowablePublisherTest.class.getSimpleName());
       war.addClass(Thing.class);
       war.addClass(TRACE.class);
       war.addClass(Bytes.class);
@@ -100,11 +100,11 @@ public class Rx2FlowablePublisherBuilderTest {
       war.addClass(TestException.class);
       war.setManifest(new StringAsset("Manifest-Version: 1.0\n"
          + "Dependencies: org.jboss.resteasy.resteasy-rxjava2 services, org.jboss.resteasy.resteasy-reactive-streams-operators services, org.reactivestreams\n"));
-      return TestUtil.finishContainerPrepare(war, null, RSOPublisherBuilderResourceImpl.class, TestExceptionMapper.class);
+      return TestUtil.finishContainerPrepare(war, null, RSOPublisherResourceImpl.class, TestExceptionMapper.class);
    }
 
    private static String generateURL(String path) {
-      return PortProviderUtil.generateURL(path, Rx2FlowablePublisherBuilderTest.class.getSimpleName());
+      return PortProviderUtil.generateURL(path, Rx2FlowablePublisherTest.class.getSimpleName());
    }
 
    //////////////////////////////////////////////////////////////////////////////
