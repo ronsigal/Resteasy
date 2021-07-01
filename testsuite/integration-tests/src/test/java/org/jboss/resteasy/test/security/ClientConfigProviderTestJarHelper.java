@@ -15,10 +15,16 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.test.asynch.resource.AsynchBasicResource;
+
 /**
  * Contains utility methods used for creating, running and getting results of jars meant to test ClientConfigProvider functionality.
  */
 class ClientConfigProviderTestJarHelper {
+	
+	   private static Logger logger = Logger.getLogger(ClientConfigProviderTestJarHelper.class);
+
 
     enum TestType {
         TEST_CREDENTIALS_ARE_USED_FOR_BASIC,
@@ -173,7 +179,7 @@ class ClientConfigProviderTestJarHelper {
             }
             newPath += list[i] + ":";
         }
-        System.out.println("newPath.length(): " + newPath.length());
+        logger.error("newPath.length(): " + newPath.length());
         return newPath;
     }
 }
