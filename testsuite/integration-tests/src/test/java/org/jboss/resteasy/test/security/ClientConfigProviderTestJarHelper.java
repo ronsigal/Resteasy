@@ -16,14 +16,13 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.test.asynch.resource.AsynchBasicResource;
 
 /**
  * Contains utility methods used for creating, running and getting results of jars meant to test ClientConfigProvider functionality.
  */
 class ClientConfigProviderTestJarHelper {
-	
-	   private static Logger logger = Logger.getLogger(ClientConfigProviderTestJarHelper.class);
+
+   private static Logger logger = Logger.getLogger(ClientConfigProviderTestJarHelper.class);
 
 
     enum TestType {
