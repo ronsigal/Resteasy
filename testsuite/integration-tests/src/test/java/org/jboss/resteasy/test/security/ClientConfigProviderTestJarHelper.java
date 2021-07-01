@@ -117,6 +117,7 @@ class ClientConfigProviderTestJarHelper {
     static Process runClientConfigProviderTestJar(String jarPath, String[] args) throws IOException {
         // use quotation marks for classpath on windows because folder names can have spaces
         String classPath = System.getProperty("os.name").contains("indows") ? "\"" + jarPath + ";" + System.getProperty("java.class.path") + "\"" : jarPath + ":" + System.getProperty("java.class.path");
+        classPath =  System.getProperty("os.name").contains("indows") ? compressClassPath(classPath) : classPath;
         return Runtime.getRuntime()
                 .exec("java -cp "  +  classPath + " " + ClientConfigProviderTestJarHelper.PACKAGE_NAME + "." + String.join(" ", args));
     }
@@ -156,5 +157,21 @@ class ClientConfigProviderTestJarHelper {
         } finally {
             jar.closeEntry();
         }
+    }
+
+    private static String[] omitList= new String[] {"arquillian", "github", "google", "maven", "shrinkwrap", "smallrye"};
+    private static String compressClassPath(String original)
+    {
+        String[] list = original.split(":");
+        String newPath = "";
+        outer: for (int i = 0; i < list.length; i++) {
+            for (int j = 0; j < omitList.length; j++) {
+                if (list[i].contains(omitList[j])) {
+                    continue outer;
+                }
+            }
+            newPath += list[i] + ":";
+        }
+        return newPath;
     }
 }
