@@ -14,6 +14,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -87,7 +88,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
     * Server/endpoint is secured with the same self-signed certificate.
     * @tpSince RESTEasy 3.7.0
     */
-   @Test
+   @Test @Ignore
    public void testTrustedServer() {
       resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
       resteasyClientBuilder.setIsTrustSelfSignedCertificates(false);
@@ -104,7 +105,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
     * Server/endpoint is secured with different self-signed certificate so exception should be thrown.
     * @tpSince RESTEasy 3.7.0
     */
-   @Test(expected = ProcessingException.class)
+   @Test @Ignore
    public void testUntrustedServer() {
       resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
       resteasyClientBuilder.setIsTrustSelfSignedCertificates(false);
@@ -119,7 +120,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
     * Client has no truststore so it does not trust the server.
     * @tpSince RESTEasy 3.7.0
     */
-   @Test(expected = ProcessingException.class)
+   @Test @Ignore
    public void testClientWithoutTruststore() {
       resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
       resteasyClientBuilder.setIsTrustSelfSignedCertificates(false);
@@ -134,7 +135,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
     * Server/endpoint is secured with the same self-signed certificate.
     * @tpSince RESTEasy 3.7.0
     */
-   @Test
+   @Test @Ignore
    public void testCustomSSLContext() throws Exception {
       resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
       resteasyClientBuilder.setIsTrustSelfSignedCertificates(false);
@@ -155,7 +156,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
     * HostnameVerificationPolicy is set to STRICT.
     * @tpSince RESTEasy 3.7.0
     */
-   @Test
+   @Test @Ignore
    public void testHostnameVerificationPolicyStrict() {
       resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
       resteasyClientBuilder.setIsTrustSelfSignedCertificates(false);
@@ -175,7 +176,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
     * HostnameVerificationPolicy is set to ANY but it doesn't matter when certificates doesn't match.
     * @tpSince RESTEasy 3.7.0
     */
-   @Test(expected = ProcessingException.class)
+   @Test @Ignore
    public void testHostnameVerificationPolicyAny() {
       resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
       resteasyClientBuilder.setIsTrustSelfSignedCertificates(false);
@@ -193,7 +194,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
     * However, disableTrustManager is used so client should trust this certificate (and all others).
     * @tpSince RESTEasy 3.7.0
     */
-   @Test
+   @Test @Ignore
    public void testDisableTrustManager() {
       resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
       resteasyClientBuilder.setIsTrustSelfSignedCertificates(false);
@@ -212,7 +213,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
     * Server/endpoint is secured with different self-signed certificate, but by default, all self-signed certificates should be trusted.
     * @tpSince RESTEasy 3.7.0
     */
-   @Test
+   @Test @Ignore
    public void testIsTrustSelfSignedCertificatesDefault() {
       resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
 
@@ -228,7 +229,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
     * Server/endpoint is secured with different self-signed certificate, but after setIsTrustSelfSignedCertificates(true), all self-signed certificates should be trusted.
     * @tpSince RESTEasy 3.7.0
     */
-   @Test
+   @Test @Ignore
    public void testIsTrustSelfSignedCertificatesTrue() {
       resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
       resteasyClientBuilder.setIsTrustSelfSignedCertificates(true);
@@ -249,6 +250,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
               new String[]{URL, clientTruststore.getAbsolutePath()});
       String line = ClientConfigProviderTestJarHelper.getResultOfProcess(process);
       // first request will succeed because SSLContext from ClientConfigProvider will be used. Second request will fail because user will set sslContext on RestEasyBuilder to SSLContext.getDefault()
+      System.out.println("line: " + line);
       Assert.assertEquals("200", line);
       process.destroy();
 
@@ -260,6 +262,7 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
       Assert.assertEquals("SSLHandshakeException", line);
       process.destroy();
       Assert.assertTrue(new File(jarPath).delete());
+      Assert.fail();
    }
 
    @After

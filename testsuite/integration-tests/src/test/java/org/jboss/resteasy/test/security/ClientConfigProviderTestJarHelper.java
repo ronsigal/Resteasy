@@ -137,6 +137,7 @@ class ClientConfigProviderTestJarHelper {
                     builder.append(line);
                 }
             }
+	System.out.println("helper line: '" + line + "'");
         }
         return builder.toString();
     }
@@ -179,7 +180,8 @@ class ClientConfigProviderTestJarHelper {
             newPath += list[i] + ":";
         }
         logger.error("newPath.length(): " + newPath.length());
-throw new RuntimeException("compressClassPath: original: " + list.length + ", newPath: " + newPath.split(":").length);
-        //return newPath;
+new RuntimeException("compressClassPath: original: " + list.length + ", newPath: " + newPath.split(":").length).printStackTrace();
+        return newPath;
+//	return original;
     }
 }

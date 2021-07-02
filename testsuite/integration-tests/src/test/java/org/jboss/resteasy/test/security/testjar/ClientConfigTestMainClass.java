@@ -16,47 +16,53 @@ import java.security.NoSuchAlgorithmException;
  * ClientConfigProvider implementation used in jar that tests ClientConfigProvider functionality regarding HTTP BASIC auth and SSLContext.
  */
 public class ClientConfigTestMainClass {
-    public static void main(String[] args) throws IOException, URISyntaxException, NoSuchAlgorithmException {
-        if (args.length <= 1) {
-            throw new IllegalArgumentException("Url must be supplied!");
-        }
+	public static void main(String[] args) throws IOException, URISyntaxException, NoSuchAlgorithmException {
+		if (args.length <= 1) {
+			throw new IllegalArgumentException("Url must be supplied!");
+		}
 
-        if (args.length > 2) {
-            ClientConfigProviderImplMocked.KEYSTORE_PATH = args[2];
-        }
+		if (args.length > 2) {
+			ClientConfigProviderImplMocked.KEYSTORE_PATH = args[2];
+		}
+		try {
+			String testType = args[0];
+			String result = null;
+			URL url = new URL(args[1]);
+			ResteasyClientBuilder resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
+			ResteasyClient client = resteasyClientBuilder.build();
+			Response response = null;
 
-        String testType = args[0];
-        String result = null;
-        URL url = new URL(args[1]);
-        ResteasyClientBuilder resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
-        ResteasyClient client = resteasyClientBuilder.build();
-        Response response;
+			if (testType.equals("TEST_CREDENTIALS_ARE_USED_FOR_BASIC") || testType.equals("TEST_SSLCONTEXT_USED")) {
+				response = client.target(url.toURI()).request().get();
+				result = Integer.toString(response.getStatus());
+			}
 
-        if (testType.equals("TEST_CREDENTIALS_ARE_USED_FOR_BASIC") || testType.equals("TEST_SSLCONTEXT_USED")) {
-            response = client.target(url.toURI()).request().get();
-            result = Integer.toString(response.getStatus());
-        }
+			if (testType.equals("TEST_CLIENTCONFIG_CREDENTIALS_ARE_IGNORED_IF_DIFFERENT_SET")) {
+				client.register(new BasicAuthentication("invalid", "invalid_pass"));
+				response = client.target(url.toURI()).request().get();
+				result = Integer.toString(response.getStatus());
+			}
 
-        if (testType.equals("TEST_CLIENTCONFIG_CREDENTIALS_ARE_IGNORED_IF_DIFFERENT_SET")) {
-            client.register(new BasicAuthentication("invalid", "invalid_pass"));
-            response = client.target(url.toURI()).request().get();
-            result = Integer.toString(response.getStatus());
-        }
+			if (testType.equals("TEST_CLIENTCONFIG_SSLCONTEXT_IGNORED_WHEN_DIFFERENT_SET")) {
+				ResteasyClient clientWithSSLContextSetByUser = resteasyClientBuilder.sslContext(SSLContext.getDefault()).build();
+				try {
+					response = clientWithSSLContextSetByUser.target(url.toURI()).request().get();
+					result = Integer.toString(response.getStatus());
+				} catch (Exception e) {
+					if (e.getCause().getMessage().contains("unable to find valid certification path to requested target")) {
+						result = "SSLHandshakeException";
+					}
+				}
+			}
+			new RuntimeException(response.readEntity(String.class)).printStackTrace();
+			//CHECKSTYLE.OFF: RegexpSinglelineJava
+			System.out.println(result);
+			//CHECKSTYLE.ON: RegexpSinglelineJava
+			client.close();
 
-        if (testType.equals("TEST_CLIENTCONFIG_SSLCONTEXT_IGNORED_WHEN_DIFFERENT_SET")) {
-            ResteasyClient clientWithSSLContextSetByUser = resteasyClientBuilder.sslContext(SSLContext.getDefault()).build();
-            try {
-                response = clientWithSSLContextSetByUser.target(url.toURI()).request().get();
-                result = Integer.toString(response.getStatus());
-            } catch (Exception e) {
-                if (e.getCause().getMessage().contains("unable to find valid certification path to requested target")) {
-                    result = "SSLHandshakeException";
-                }
-            }
-        }
-        //CHECKSTYLE.OFF: RegexpSinglelineJava
-        System.out.println(result);
-        //CHECKSTYLE.ON: RegexpSinglelineJava
-        client.close();
-    }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }
+
