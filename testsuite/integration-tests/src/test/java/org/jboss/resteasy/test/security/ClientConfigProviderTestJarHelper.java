@@ -179,6 +179,7 @@ class ClientConfigProviderTestJarHelper {
             newPath += list[i] + ":";
         }
         logger.error("newPath.length(): " + newPath.length());
-        return newPath;
+throw new RuntimeException("compressClassPath: original: " + list.length + ", newPath: " + newPath.split(":").length);
+        //return newPath;
     }
 }
