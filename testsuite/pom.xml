@@ -146,20 +146,7 @@
             </activation>
             <modules>
                 <module>arquillian-utils</module>
-                <module>unit-tests</module>
                 <module>integration-tests</module>
-                <module>integration-tests-spring</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>microprofile.on</id>
-            <activation>
-                <property>
-                    <name>!disable.microprofile.tests</name>
-                </property>
-            </activation>
-            <modules>
-                <module>microprofile-tck</module>
             </modules>
         </profile>
         <profile>
