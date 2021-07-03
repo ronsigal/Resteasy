@@ -32,15 +32,25 @@ public class ClientConfigTestMainClass {
 			ResteasyClient client = resteasyClientBuilder.build();
 			Response response = null;
 
+			try {
 			if (testType.equals("TEST_CREDENTIALS_ARE_USED_FOR_BASIC") || testType.equals("TEST_SSLCONTEXT_USED")) {
 				response = client.target(url.toURI()).request().get();
 				result = Integer.toString(response.getStatus());
 			}
+			} catch (Exception e) {
+				System.out.println("e1: " + e.getMessage());
+				System.out.println("response.readEntity(1): " + response.readEntity(String.class));
+			}
 
+			try {
 			if (testType.equals("TEST_CLIENTCONFIG_CREDENTIALS_ARE_IGNORED_IF_DIFFERENT_SET")) {
 				client.register(new BasicAuthentication("invalid", "invalid_pass"));
 				response = client.target(url.toURI()).request().get();
 				result = Integer.toString(response.getStatus());
+			}
+			} catch (Exception e) {
+				System.out.println("e2: " + e.getMessage());
+				System.out.println("response.readEntity(2): " + response.readEntity(String.class));
 			}
 
 			if (testType.equals("TEST_CLIENTCONFIG_SSLCONTEXT_IGNORED_WHEN_DIFFERENT_SET")) {
@@ -49,6 +59,8 @@ public class ClientConfigTestMainClass {
 					response = clientWithSSLContextSetByUser.target(url.toURI()).request().get();
 					result = Integer.toString(response.getStatus());
 				} catch (Exception e) {
+					System.out.println("e2: " + e.getMessage());
+					System.out.println("response.readEntity(2): " + response.readEntity(String.class));
 					if (e.getCause().getMessage().contains("unable to find valid certification path to requested target")) {
 						result = "SSLHandshakeException";
 					}
