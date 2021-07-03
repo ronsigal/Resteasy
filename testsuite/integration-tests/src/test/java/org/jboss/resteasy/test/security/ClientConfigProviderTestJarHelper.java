@@ -120,6 +120,10 @@ class ClientConfigProviderTestJarHelper {
     }
 
     static Process runClientConfigProviderTestJar(String jarPath, String[] args) throws IOException {
+    	System.out.println("runClientConfigProviderTestJar(): args: ");
+    	for (int i = 0; i < args.length; i++) {
+    		System.out.println("  " + i + ": " + args[i]);
+    	}
         // use quotation marks for classpath on windows because folder names can have spaces
         String classPath = System.getProperty("os.name").contains("indows") ? "\"" + jarPath + ";" + System.getProperty("java.class.path") + "\"" : jarPath + ":" + System.getProperty("java.class.path");
 //        classPath =  System.getProperty("os.name").contains("indows") ? compressClassPath(classPath) : classPath;
