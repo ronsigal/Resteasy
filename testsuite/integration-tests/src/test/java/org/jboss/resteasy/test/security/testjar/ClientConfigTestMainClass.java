@@ -31,7 +31,7 @@ public class ClientConfigTestMainClass {
 			ResteasyClientBuilder resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
 			ResteasyClient client = resteasyClientBuilder.build();
 			Response response = null;
-
+System.out.println("entered ClientConfigTestMainClass()");
 			try {
 			if (testType.equals("TEST_CREDENTIALS_ARE_USED_FOR_BASIC") || testType.equals("TEST_SSLCONTEXT_USED")) {
 				response = client.target(url.toURI()).request().get();
@@ -59,14 +59,14 @@ public class ClientConfigTestMainClass {
 					response = clientWithSSLContextSetByUser.target(url.toURI()).request().get();
 					result = Integer.toString(response.getStatus());
 				} catch (Exception e) {
-					System.out.println("e2: " + e.getMessage());
-					System.out.println("response.readEntity(2): " + response.readEntity(String.class));
+					System.out.println("e3: " + e.getMessage());
+					System.out.println("response.readEntity(3): " + response.readEntity(String.class));
 					if (e.getCause().getMessage().contains("unable to find valid certification path to requested target")) {
 						result = "SSLHandshakeException";
 					}
 				}
 			}
-			System.out.println("response.readEntity(): " + response.readEntity(String.class));
+			System.out.println("response.readEntity(4): " + response.readEntity(String.class));
 			//CHECKSTYLE.OFF: RegexpSinglelineJava
 			System.out.println("ClientConfigTestMainClass: result: " + result);
 			//CHECKSTYLE.ON: RegexpSinglelineJava
