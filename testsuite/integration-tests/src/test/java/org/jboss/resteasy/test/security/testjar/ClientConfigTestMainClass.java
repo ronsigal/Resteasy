@@ -54,9 +54,9 @@ public class ClientConfigTestMainClass {
 					}
 				}
 			}
-			new RuntimeException(response.readEntity(String.class)).printStackTrace();
+			new RuntimeException("response.readEntity(): " + response.readEntity(String.class)).printStackTrace();
 			//CHECKSTYLE.OFF: RegexpSinglelineJava
-			System.out.println(result);
+			System.out.println("result: " + result);
 			//CHECKSTYLE.ON: RegexpSinglelineJava
 			client.close();
 
