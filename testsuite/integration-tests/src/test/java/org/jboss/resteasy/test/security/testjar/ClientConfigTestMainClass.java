@@ -18,7 +18,7 @@ import java.security.NoSuchAlgorithmException;
 public class ClientConfigTestMainClass {
 	public static void main(String[] args) throws IOException, URISyntaxException, NoSuchAlgorithmException {
 		System.out.println("entering ClientConfigTestMainClass");
-		System.out.println("classpath: " + System.getProperty("java.class.path"));
+//		System.out.println("classpath: " + System.getProperty("java.class.path"));
 		if (args.length <= 1) {
 			throw new IllegalArgumentException("Url must be supplied!");
 		}
