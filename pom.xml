@@ -110,7 +110,7 @@
                 <module>resteasy-client-microprofile</module>
                 <module>resteasy-client-jetty</module>
                 <module>resteasy-client-vertx</module>
-                <module>resteasy-client-reactor-netty</module>
+                <!--module>resteasy-client-reactor-netty</module-->
                 <module>providers</module>
                 <module>resteasy-cache</module>
                 <module>resteasy-guice</module>
@@ -124,6 +124,7 @@
                 <module>resteasy-stats</module>
                 <module>resteasy-reactive-context</module>
                 <module>resteasy-rxjava2</module>
+                <module>resteasy-reactive-streams-operators</module>
                 <module>resteasy-reactor</module>
                 <module>server-adapters</module>
                 <module>jboss-modules</module>
