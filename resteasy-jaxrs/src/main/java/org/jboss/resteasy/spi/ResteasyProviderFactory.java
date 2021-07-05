@@ -1867,7 +1867,7 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
             newContracts.put(ExceptionMapper.class, getPriority(priorityOverride, contracts, ExceptionMapper.class, provider));
          }
          catch (Exception e)
-         {
+         {System.out.println("ExceptionMapper: " + provider);
             throw new RuntimeException(Messages.MESSAGES.unableToInstantiateExceptionMapper(), e);
          }
       }
@@ -1917,6 +1917,7 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
          }
          catch (Exception e)
          {
+        	 System.out.println("can't instantiate: " + provider);
             throw new RuntimeException(Messages.MESSAGES.unableToInstantiateAsyncStreamProvider(), e);
          }
       }

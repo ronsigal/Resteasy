@@ -365,7 +365,8 @@ public class BasicAuthTest {
             ExpectedFailingWithStandaloneMicroprofileConfiguration.class
     })
     public void testClientConfigProviderCredentials() throws IOException, InterruptedException {
-        String jarPath = ClientConfigProviderTestJarHelper.createClientConfigProviderTestJarWithBASIC();
+//        String jarPath = ClientConfigProviderTestJarHelper.createClientConfigProviderTestJarWithBASIC();
+ 	   String jarPath = System.getProperty("jboss.home") + "/bin/client/jboss-client.jar";
 
         Process process = ClientConfigProviderTestJarHelper.runClientConfigProviderTestJar(
                 ClientConfigProviderTestJarHelper.TestType.TEST_CREDENTIALS_ARE_USED_FOR_BASIC,

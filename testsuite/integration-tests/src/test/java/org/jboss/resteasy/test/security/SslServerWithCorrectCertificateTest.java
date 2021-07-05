@@ -26,6 +26,9 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.Map;
+import java.util.Properties;
+
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.ws.rs.ProcessingException;
@@ -240,9 +243,30 @@ public class SslServerWithCorrectCertificateTest extends SslTestBase {
       Assert.assertEquals(200, response.getStatus());
    }
 
+//   @Test
+   public void cp() {
+	   System.out.println("jboss.home" + System.getenv("jboss.home"));
+	   System.out.println("JBOSS_HOME" + System.getenv("JBOSS_HOME"));
+	   System.out.println("WILDFLY_HOME" + System.getenv("WILDFLY_HOME"));
+	   Map<String, String> map = System.getenv();
+	   for (Map.Entry<String, String> entry : map.entrySet()) {
+		   System.out.println("  " + entry.getKey() + "->" + entry.getValue());
+	   }
+	   System.out.println("============");
+	   Properties props = System.getProperties();
+	   for (Map.Entry<Object, Object> entry : props.entrySet()) {
+		   System.out.println("  " + entry.getKey() + "->" + entry.getValue());
+	   }
+	   String s = System.getProperty("jboss.home");
+	   System.out.println("s: " + s);
+	   Assert.fail();
+   }
+   
    @Test
    public void testTrustedServerWithClientConfigProvider() throws IOException, InterruptedException {
       String jarPath = ClientConfigProviderTestJarHelper.createClientConfigProviderTestJarWithSSL();
+//	   String jarPath = System.getProperty("jboss.home") + "/bin/client/jboss-client.jar";
+	   System.out.println("testTrustedServerWithClientConfigProvider(): jarPath: " + jarPath);
       File clientTruststore = new File(CLIENT_TRUSTSTORE_PATH);
       Process process = ClientConfigProviderTestJarHelper.runClientConfigProviderTestJar(
               ClientConfigProviderTestJarHelper.TestType.TEST_SSLCONTEXT_USED,
