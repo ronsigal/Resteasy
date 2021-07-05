@@ -21,7 +21,7 @@ import org.jboss.logging.Logger;
  * Contains utility methods used for creating, running and getting results of jars meant to test ClientConfigProvider functionality.
  */
 class ClientConfigProviderTestJarHelper {
-	   private static Logger logger = Logger.getLogger(ClientConfigProviderTestJarHelper2.class);
+	   private static Logger logger = Logger.getLogger(ClientConfigProviderTestJarHelper.class);
 
     enum TestType {
         TEST_CREDENTIALS_ARE_USED_FOR_BASIC,
