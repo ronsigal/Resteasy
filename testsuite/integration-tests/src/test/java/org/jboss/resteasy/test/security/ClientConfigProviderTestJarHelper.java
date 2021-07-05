@@ -21,9 +21,7 @@ import org.jboss.logging.Logger;
  * Contains utility methods used for creating, running and getting results of jars meant to test ClientConfigProvider functionality.
  */
 class ClientConfigProviderTestJarHelper {
-
-   private static Logger logger = Logger.getLogger(ClientConfigProviderTestJarHelper.class);
-
+	   private static Logger logger = Logger.getLogger(ClientConfigProviderTestJarHelper2.class);
 
     enum TestType {
         TEST_CREDENTIALS_ARE_USED_FOR_BASIC,
@@ -120,42 +118,11 @@ class ClientConfigProviderTestJarHelper {
     }
 
     static Process runClientConfigProviderTestJar(String jarPath, String[] args) throws IOException {
-    	System.out.println("runClientConfigProviderTestJar(): args: ");
-    	for (int i = 0; i < args.length; i++) {
-    		System.out.println("  " + i + ": " + args[i]);
-    	}
-    	System.out.println("runClientConfigProviderTestJar(): jarPath: " + jarPath);
-    	String classPath = System.getProperty("jboss.home") + "/bin/client/jboss-client.jar" + ":" + jarPath;
-    	System.out.println("runClientConfigProviderTestJar(): classPath: " + classPath);
-    	String root = System.getProperty("jboss.home") + "/../../test-classes/";
-    	System.out.println("f: " + root);
-    	File dir = new File(root);
-    	classPath += traverseFiles(new StringBuilder(), dir, ".class");
-    	root = System.getProperty("jboss.home") + "/../../../src/test/resources";
-    	File resources = new File(root);
-    	System.out.println("resources dir: " + resources.getAbsolutePath());
-    	String r = traverseFiles(new StringBuilder(), resources, null);
-    	System.out.println("resources: " + r);
-    	classPath += r;
-    	String s = System.getProperty("jboss.home") + "/modules/system/layers/base/";
-    	System.out.println("modules s: " + s);
-    	File modules = new File(s);
-    	System.out.println("modules: " + modules);
-    	System.out.println("modules directory? " + modules.isDirectory());
-//    	classPath += getResteasyJars(modules);
-//    	classPath += getJars(modules);
-    	System.out.println("extended classPath: " + classPath);
         // use quotation marks for classpath on windows because folder names can have spaces
-//        String classPath = System.getProperty("os.name").contains("indows") ? "\"" + jarPath + ";" + System.getProperty("java.class.path") + "\"" : jarPath + ":" + System.getProperty("java.class.path");
-//        classPath =  System.getProperty("os.name").contains("indows") ? compressClassPath(classPath) : classPath;
+        String classPath = System.getProperty("os.name").contains("indows") ? "\"" + jarPath + ";" + System.getProperty("java.class.path") + "\"" : jarPath + ":" + System.getProperty("java.class.path");
         classPath =  compressClassPath(classPath);
-        System.out.println("executing RunTime");
-        String call = "java -cp "  +  classPath + " " + ClientConfigProviderTestJarHelper.PACKAGE_NAME + "." + String.join(" ", args);
-System.out.println("call.length(): " + call.length());
-        Process process = Runtime.getRuntime()
-                .exec("java -cp "  +  classPath + " " + ClientConfigProviderTestJarHelper.PACKAGE_NAME + "." + String.join(" ", args));
-        System.out.println("back from executing RunTime");
-        return process;
+        return Runtime.getRuntime()
+                .exec("java -cp "  +  classPath + " " + ClientConfigProviderTestJarHelper.PACKAGE_NAME + "." + String.join(" ", args) );
     }
 
     static String getResultOfProcess(Process proc) throws IOException {
@@ -166,9 +133,7 @@ System.out.println("call.length(): " + call.length());
                 if (!line.contains("WARN")) {
                     builder.append(line);
                 }
-                System.out.println("  result: " + line);
             }
-	System.out.println("helper line: '" + line + "'");
         }
         return builder.toString();
     }
@@ -211,70 +176,8 @@ System.out.println("call.length(): " + call.length());
             newPath += list[i] + ":";
         }
         logger.error("newPath.length(): " + newPath.length());
-new RuntimeException("compressClassPath: original: " + list.length + ", newPath: " + newPath.split(":").length).printStackTrace();
+        logger.error("compressClassPath: original: " + list.length + ", newPath: " + newPath.split(":").length);
         return newPath;
 //	return original;
-    }
-    
-    private static String[] includeList = new String[] {"apache", "jboss", "glassfish", "fasterxml"};//, "security"};
-    static String traverseFiles(StringBuilder sb, File root, String suffix) {
-//    	System.out.println(root + " directory? " + root.isDirectory());
-    	if (root.isDirectory()) {
-    		File[] files = root.listFiles();
-//    		System.out.println("files.length: " + files.length);
-    		for (int i = 0; i < files.length; i++) {
-//    			System.out.println("files[" + i + "]: " + files[i]);
-    			if (files[i].isDirectory()) {
-    				traverseFiles(sb, files[i], suffix);
-    			} else if (suffix == null || (files[i].getName().endsWith(suffix)) && includes(root.getAbsolutePath() + files[i].getName())) {
-    				sb.append(":").append(root).append("/").append(files[i].getName());
-    			}
-    		}
-    	} else {
-    		sb.append(":").append(root.getName());
-    	}
-    	return sb.toString();
-    }
-
-    private static boolean includes(String s) {
-    	System.out.print("s: " + s + ": ");
-    	for (int i = 0; i < includeList.length; i++) {
-    		if (s.contains(includeList[i])) {
-//    			System.out.println("true");
-    			return true;
-    		}
-    	}
-//    	System.out.println("false");
-    	return false;
-    }
-    static String getJars(File root) {
-    	System.out.println("root: " + root);
-    	StringBuilder sb = new StringBuilder();
-//    	String[] jars = root.list();
-//    	for (int i = 0; i < jars.length; i++) {
-//    		if (jars[i].endsWith(".jar")) {
-//    			sb.append(":").append(root.getAbsolutePath()).append("/").append(jars[i]);
-//    		}
-//    	}
-//    	File resteasyRoot = new File(root.getAbsolutePath() + "/org/jboss/resteasy");
-    	String s = traverseFiles(sb, root, ".jar");
-    	System.out.println("resteasy jars: " + s);
-    	return s;
-    }
-   
-    static String getResteasyJars(File root) {
-    	System.out.println("resteasy root: " + root);
-    	StringBuilder sb = new StringBuilder();
-    	File jaxrsDir = new File(root.getAbsolutePath() + "/javax/ws/rs/api/main/");
-    	String[] jaxrsJars = jaxrsDir.list();
-    	for (int i = 0; i < jaxrsJars.length; i++) {
-    		if (jaxrsJars[i].endsWith(".jar")) {
-    			sb.append(":").append(jaxrsDir.getAbsolutePath()).append("/").append(jaxrsJars[i]);
-    		}
-    	}
-    	File resteasyRoot = new File(root.getAbsolutePath() + "/org/jboss/resteasy");
-    	String s = traverseFiles(sb, resteasyRoot, ".jar");
-    	System.out.println("resteasy jars: " + s);
-    	return s;
     }
 }
