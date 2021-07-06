@@ -163,7 +163,7 @@ class ClientConfigProviderTestJarHelper {
     
 //  private static String[] omitList= new String[] {"arquillian", "github", "google", "maven", "shrinkwrap", "smallrye"};
 //  private static String[] omitList= new String[] {};
-    private static String[] omitList= new String[] {"arquillian", "github", "google", "jackson", "maven", "shrinkwrap", "cxf", "ws"};
+    private static String[] omitList= new String[] {"arquillian", "github", "google", "jackson", "maven", "shrinkwrap", "cxf", "plexus"};
   private static String compressClassPath(String original)
   {
       String[] list = original.split(":");
