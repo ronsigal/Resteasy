@@ -17,47 +17,47 @@ import java.security.NoSuchAlgorithmException;
  */
 public class ClientConfigTestMainClass {
    public static void main(String[] args) throws IOException, URISyntaxException, NoSuchAlgorithmException {
-      System.out.println("entering ClientConfigTestMainClass");
+//      System.out.println("entering ClientConfigTestMainClass");
 //    System.out.println("classpath: " + System.getProperty("java.class.path"));
       if (args.length <= 1) {
          throw new IllegalArgumentException("Url must be supplied!");
       }
-      System.out.println("ClientConfigTestMainClass: checking args");
+//      System.out.println("ClientConfigTestMainClass: checking args");
       try {
       if (args.length > 2) {
-         System.out.println("ClientConfigTestMainClass(): copying args[2]");
-         System.out.println("ClientConfigProviderImplMocked: ");
+//         System.out.println("ClientConfigTestMainClass(): copying args[2]");
+//         System.out.println("ClientConfigProviderImplMocked: ");
          try {
-         System.out.println(ClientConfigProviderImplMocked.KEYSTORE_PATH);
+//         System.out.println(ClientConfigProviderImplMocked.KEYSTORE_PATH);
          } catch (Exception e) {
             System.out.println("trying to access ClientConfigProviderImplMocked: " + e.getMessage());
          }
          ClientConfigProviderImplMocked.KEYSTORE_PATH = args[2];
-         System.out.println("ClientConfigTestMainClass(): copied args[2]");
+//         System.out.println("ClientConfigTestMainClass(): copied args[2]");
       }
       } catch (Throwable e) {
          System.out.println("exception: " + e.getClass());
          System.out.println("Exception.getMessage(): " + e.getMessage());
 //       e.printStackTrace();
       }
-      System.out.println("ClientConfigTestMainClass: checked args");    
+//      System.out.println("ClientConfigTestMainClass: checked args");    
       for (int i = 0; i < args.length; i++) {
-         System.out.println(" arg[" + i + "]: " + args[i]);
+//         System.out.println(" arg[" + i + "]: " + args[i]);
       }
-      System.out.println("ClientConfigTestMainClass: printed args");
+//      System.out.println("ClientConfigTestMainClass: printed args");
       
       try {
          String testType = args[0];
          String result = null;
          URL url = new URL(args[1]);
-         System.out.println("getting Builder");
+//         System.out.println("getting Builder");
          ResteasyClientBuilder resteasyClientBuilder = null;
          try {
             resteasyClientBuilder = (ResteasyClientBuilder) ClientBuilder.newBuilder();
          } catch (Throwable e) {
             System.out.println("builder e: " + e);
          }
-         System.out.println("got Builder");
+//         System.out.println("got Builder");
          
          ResteasyClient client = null;
          try {
@@ -65,10 +65,10 @@ public class ClientConfigTestMainClass {
          } catch (Throwable e) {
             System.out.println("build error: " + e.getMessage());
          }
-         System.out.println("got client");
+//         System.out.println("got client");
 //       if (true) return;
          Response response = null;
-System.out.println("entered ClientConfigTestMainClass()");
+//System.out.println("entered ClientConfigTestMainClass()");
          try {
          if (testType.equals("TEST_CREDENTIALS_ARE_USED_FOR_BASIC") || testType.equals("TEST_SSLCONTEXT_USED")) {
             response = client.target(url.toURI()).request().get();
@@ -103,9 +103,9 @@ System.out.println("entered ClientConfigTestMainClass()");
                }
             }
          }
-         System.out.println("response.readEntity(4): '" + response.readEntity(String.class) + "'");
+//         System.out.println("response.readEntity(4): '" + response.readEntity(String.class) + "'");
          //CHECKSTYLE.OFF: RegexpSinglelineJava
-         System.out.println("ClientConfigTestMainClass: result: '" + result + "'");
+//         System.out.println("ClientConfigTestMainClass: result: '" + result + "'");
          //CHECKSTYLE.ON: RegexpSinglelineJava
          client.close();
 
