@@ -14,11 +14,13 @@ import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import org.jboss.logging.Logger;
 
 /**
  * Contains utility methods used for creating, running and getting results of jars meant to test ClientConfigProvider functionality.
  */
 class ClientConfigProviderTestJarHelper {
+   private static Logger logger = Logger.getLogger(ClientConfigProviderTestJarHelper.class);
 
     enum TestType {
         TEST_CREDENTIALS_ARE_USED_FOR_BASIC,
@@ -117,6 +119,7 @@ class ClientConfigProviderTestJarHelper {
     static Process runClientConfigProviderTestJar(String jarPath, String[] args) throws IOException {
         // use quotation marks for classpath on windows because folder names can have spaces
         String classPath = System.getProperty("os.name").contains("indows") ? "\"" + jarPath + ";" + System.getProperty("java.class.path") + "\"" : jarPath + ":" + System.getProperty("java.class.path");
+        classPath =  compressClassPath(classPath);
         return Runtime.getRuntime()
                 .exec("java -cp "  +  classPath + " " + ClientConfigProviderTestJarHelper.PACKAGE_NAME + "." + String.join(" ", args) );
     }
@@ -157,4 +160,24 @@ class ClientConfigProviderTestJarHelper {
             jar.closeEntry();
         }
     }
+    
+  private static String[] omitList= new String[] {"arquillian", "github", "google", "maven", "shrinkwrap", "smallrye"};
+//  private static String[] omitList= new String[] {};
+  private static String compressClassPath(String original)
+  {
+      String[] list = original.split(":");
+      String newPath = "";
+      outer: for (int i = 0; i < list.length; i++) {
+          for (int j = 0; j < omitList.length; j++) {
+              if (list[i].contains(omitList[j])) {
+                  continue outer;
+              }
+          }
+          newPath += list[i] + ":";
+      }
+      logger.error("newPath.length(): " + newPath.length());
+      logger.error("compressClassPath: original: " + list.length + ", newPath: " + newPath.split(":").length);
+      return newPath;
+//return original;
+  }
 }
