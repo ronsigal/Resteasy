@@ -163,10 +163,11 @@ class ClientConfigProviderTestJarHelper {
     
 //  private static String[] omitList= new String[] {"arquillian", "github", "google", "maven", "shrinkwrap", "smallrye"};
 //  private static String[] omitList= new String[] {};
-    private static String[] omitList= new String[] {"arquillian", "github", "google", "jackson", "maven", "shrinkwrap", "cxf", "plexus", "testenricher",
+    private static String[] omitList= new String[] {"github", "google", "jackson", "maven", "shrinkwrap", "cxf", "plexus", "testenricher",
           "infinispan"};
   private static String compressClassPath(String original)
   {
+     logger.error("original.length(): " + original.length());
       String[] list = original.split(":");
       String newPath = "";
       outer: for (int i = 0; i < list.length; i++) {
@@ -178,7 +179,6 @@ class ClientConfigProviderTestJarHelper {
           newPath += list[i] + ":";
       }
       logger.error("newPath.length(): " + newPath.length());
-      logger.error("original.length(): " + original.length());
       logger.error("compressClassPath: original: " + list.length + ", newPath: " + newPath.split(":").length);
       return newPath;
 //return original;
