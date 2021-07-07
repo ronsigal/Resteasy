@@ -108,7 +108,7 @@ public class ClientConfigTestMainClass {
 //         System.out.println("ClientConfigTestMainClass: result: '" + result + "'");
          //CHECKSTYLE.ON: RegexpSinglelineJava
          client.close();
-System.out.println("done");
+//System.out.println("done");
       } catch (Exception e) {
 System.out.println("e message: " + e.getMessage());      }
    }
