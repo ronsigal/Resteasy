@@ -205,7 +205,7 @@ public class JavabufTranslatorGenerator {
    {
       Class<?>[] classes = wrapperClass.getClasses();
       privateVariables(sb);
-      constructor(translatorClass, wrapperClass, classes, sb);
+      staticInit(translatorClass, wrapperClass, classes, sb);
       publicMethod(sb);
       privateMethods(sb);
       for (Class<?> clazz: classes)
@@ -225,10 +225,11 @@ public class JavabufTranslatorGenerator {
    toJavabufMap.put(C3.class, toJavabuf(C3.class, new io_grpc_examples_classes_C3_ToJavabuf()));
     */
 
-   private static void constructor(String translatorClass, Class<?> wrapperClass, Class<?>[] classes, StringBuilder sb) {
-      sb.append("   public ")
-        .append(translatorClass)
-        .append("() {\n");
+   private static void staticInit(String translatorClass, Class<?> wrapperClass, Class<?>[] classes, StringBuilder sb) {
+//      sb.append("   public ")
+//        .append(translatorClass)
+//        .append("() {\n");
+      sb.append("   static {\n");
       for (Class<?> clazz: classes) {
          if (clazz.isInterface()) {
             continue;
