@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.BodyDeclaration;
@@ -44,7 +46,7 @@ import com.github.javaparser.utils.SourceRoot;
 /**
  * Some code that uses JavaParser.
  */
-public class JavaToProtobufGenerator {
+public class JavaToProtobufGenerator2 {
 
 	private static Map<String, String> TYPE_MAP = new HashMap<String, String>();
 	private static Set<String> ANNOTATIONS = new HashSet<String>();
@@ -107,7 +109,7 @@ public class JavaToProtobufGenerator {
 	{
 		if (args.length != 5) {
 			System.out.println("need five args");
-			System.out.println("  arg[0]: root directory");
+         System.out.println("  arg[0]: root directory");
 			System.out.println("  arg[1]: java file");
 			System.out.println("  arg[2]: package to be used in .proto file");
 			System.out.println("  arg[3]: java package to be used in .proto file");
@@ -116,7 +118,7 @@ public class JavaToProtobufGenerator {
 		}
 		StringBuilder sb = new StringBuilder();
 		protobufHeader(args, sb);
-		new JavaToProtobufGenerator().processClasses(args, sb);
+		new JavaToProtobufGenerator2().processClasses(args, sb);
 		while (!resolvedTypes.isEmpty()) {
 			for (ResolvedReferenceTypeDeclaration rrtd : resolvedTypes) {
 				classVisitor.visit(rrtd, sb);
@@ -124,6 +126,7 @@ public class JavaToProtobufGenerator {
 		}
 		finishProto(sb);
 		writeProtoFile(args, sb);
+		createProtobufDirectory(args);
 	}
 
 	private static void protobufHeader(String[] args, StringBuilder sb)
@@ -150,30 +153,54 @@ public class JavaToProtobufGenerator {
 		// SourceRoot is a tool that read and writes Java files from packages on a certain root directory.
 		// In this case the root directory is found by taking the root from the current Maven module,
 		// with src/main/resources appended.
-		SourceRoot sourceRoot = new SourceRoot(CodeGenerationUtils.mavenModuleRoot(JavaToProtobufGenerator.class).resolve("src/main/java"));
+//		Path path = Path.of(args[0], "/target/generatedSources/protobuf/idl/", args[4] + ".proto");
+		Path path = Path.of(args[0], "/src/main/java/", dirify(args[2]));
+//      Path path = Path.of(args[0], "/src/main/java/");
+		//		SourceRoot sourceRoot = new SourceRoot(CodeGenerationUtils.mavenModuleRoot(JavaToProtobufGenerator2.class).resolve("src/main/java/" + dirify(args[2])));
+		SourceRoot sourceRoot = new SourceRoot(path);
 		TypeSolver reflectionTypeSolver = new ReflectionTypeSolver();
-		TypeSolver javaParserTypeSolver = new JavaParserTypeSolver("src/main/java");
+//		TypeSolver javaParserTypeSolver = new JavaParserTypeSolver(args[0] + "/src/main/java/" + dirify(args[2]));
+	    TypeSolver javaParserTypeSolver = new JavaParserTypeSolver(path);
 		CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
 		combinedTypeSolver.add(reflectionTypeSolver);
 		combinedTypeSolver.add(javaParserTypeSolver);
 		symbolSolver = new JavaSymbolSolver(combinedTypeSolver);
 		sourceRoot.getParserConfiguration().setSymbolResolver(symbolSolver);
-//		CompilationUnit cu = sourceRoot.parse(dirify(args[1]), args[0]);
-		sourceRoot.tryToParseParallelized();
-//		classVisitor.visit(cu, sb);
+		List<ParseResult<CompilationUnit>> list = sourceRoot.tryToParseParallelized();
+		for (ParseResult<CompilationUnit> p : list) {
+			System.out.println("cu: " + p.getResult().get());
+			classVisitor.visit(p.getResult().get(), sb);
+		}
 	}
 
 	static private void writeProtoFile(String[] args, StringBuilder sb) throws IOException {
-		File dir = new File(args[0] + "/target/generatedSources/");
-		if(!dir.exists()){
-			dir.mkdir();
-		} 
-		File file = new File("target/generatedSources/" + args[4] + ".proto");
+	   String target = args[0] + "/target";
+	   String generatedSources = "generatedSources/protobuf/idl";
+	   String path = target;
+	   for (String s : generatedSources.split("/")) {
+	      path += "/" + s;
+	      File dir = new File(path);
+	      if(!dir.exists()){
+	         dir.mkdir();
+	      } 
+	   }
+		File file = new File(path + "/" + args[4] + ".proto");
 		file.createNewFile();
 		FileWriter fw = new FileWriter(file.getAbsoluteFile());
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(sb.toString());
 		bw.close();
+	}
+	
+	static private void createProtobufDirectory(String[] args) {
+	   String path = args[0] + "/target/generatedSources";
+	   for (String s : args[2].split("\\.")) {
+	        path += "/" + s;
+	         File dir = new File(path);
+	         if(!dir.exists()){
+	            dir.mkdir();
+	         } 
+	   }
 	}
 
 	static class ClassVisitor extends VoidVisitorAdapter<StringBuilder> {
@@ -187,16 +214,19 @@ public class JavaToProtobufGenerator {
 			//			if (subClass.isInterface()) {
 			//				return;
 			//			}
+			System.out.println("class: " + subClass.getNameAsString());
+         if (subClass.getNameAsString().endsWith("_proto")) {
+            return;
+         }
 			ResolvedReferenceTypeDeclaration rrtd = subClass.resolve();
 			String fqn = rrtd.getPackageName() + "." + rrtd.getClassName();
 			if (visited.contains(fqn)) {
 				return;
 			}
 			visited.add(fqn);
-			System.out.println("class: " + subClass.getNameAsString());
 			
 			// Begin protobuf message definition.
-			sb.append("\nmessage ").append(fqnify(fqn)).append(" {\n");
+			sb.append("\nmessage ").append(fqnify(rrtd.getPackageName() + ".___" + rrtd.getClassName())).append(" {\n");
 			
 			// Scan all variables in class.
 			for (BodyDeclaration<?> bd: subClass.getMembers()) {
@@ -239,10 +269,10 @@ public class JavaToProtobufGenerator {
 						ClassOrInterfaceDeclaration superClass = jpcd.getWrappedNode();
 						String packageName = fqnify(jpcd.getPackageName());
 						String superClassName = superClass.getNameAsString();
-						String superClassVariableName = Character.toString(Character.toLowerCase(superClassName.charAt(0))).concat(superClassName.substring(1)).concat("$$$super");
+						String superClassVariableName = Character.toString(Character.toLowerCase(superClassName.charAt(0))).concat(superClassName.substring(1)).concat("___super");
 						sb.append("  ")
 						.append(packageName)
-						.append("_")
+						.append("____")
 						.append(superClassName)
 						.append(" ")
 						.append(superClassVariableName)
@@ -290,9 +320,6 @@ public class JavaToProtobufGenerator {
 			String fqn = clazz.getPackageName() + "." + clazz.getClassName();
 			if (visited.contains(fqn)) {
 				return;
-			}
-			if (clazz.getClassName().endsWith("_proto")) {
-			   return;
 			}
 			visited.add(fqn);
 
@@ -437,6 +464,7 @@ public class JavaToProtobufGenerator {
 	static private String fqnify(String s) {
 		return s.replace(".", "_");
 	}
+	
 	
 	static private String dirify(String s) {
 		return s.replace(".", "/");

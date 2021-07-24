@@ -1,0 +1,42 @@
+#!/bin/bash
+
+if [ $# -ne 5 ]
+then
+   echo "illegal number of parameters"
+   exit 1
+fi
+
+root=$1
+echo root is $root
+main=$2
+echo main is $main
+package=$3
+echo package is $package
+java_package=$4
+echo java_package is $java_package
+outer_class=$5
+echo outer_class is $outer_class
+
+echo 
+#echo === compiling ===
+#mvn compile -D checkstyle.skip
+
+echo
+echo === creating ${outer_class}.proto file ===
+mvn exec:java -Dexec.mainClass="${main}" -Dexec.cleanupDaemonThreads=false -Dexec.args="${root} abc ${package} ${java_package} ${outer_class} "
+
+echo
+echo === protoc ${outer_class}.proto file ===
+protoc --java_out=target/generatedSources target/generatedSources/protobuf/idl/${outer_class}.proto
+
+echo 
+echo === compiling ${outer_class}_proto.java ===
+mvn install -Dproto -Dcheckstyle.skip
+
+echo
+echo === generating javabuf translator ${outer_class}__JavabufTranslator.java ===
+mvn exec:java -Dexec.mainClass=org.jboss.resteasy.plugins.protobuf.JavabufTranslatorGenerator -Dexec.args="${root}/target/generatedSources ${java_package}.${outer_class}"
+
+
+#/home/rsigal/tmp/git.protobuf2/protoTest/target/generatedSources
+#io.grpc.examples.classes2.C

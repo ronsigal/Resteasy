@@ -1,0 +1,54 @@
+import io.grpc.examples.classes.C;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.protobuf.Descriptors.Descriptor;
+import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.DynamicMessage;
+import com.google.protobuf.Message;
+import org.jboss.resteasy.plugins.protobuf.AssignFromJavabuf;
+import org.jboss.resteasy.plugins.protobuf.AssignToJavabuf;
+import io.grpc.examples.classes.C_proto;
+import io.grpc.examples.classes.C_proto.Boolean;
+import io.grpc.examples.classes.C_proto.Char;
+import io.grpc.examples.classes.C_proto.Double;
+import io.grpc.examples.classes.C_proto.Float;
+import io.grpc.examples.classes.C_proto.Integer;
+import io.grpc.examples.classes.C_proto.Long;
+import io.grpc.examples.classes.C_proto.Short;
+import io.grpc.examples.classes.C_proto.String;
+import io.grpc.examples.classes.C_proto.io_grpc_examples_classes_C1;
+import io.grpc.examples.classes.C_proto.io_grpc_examples_classes_C10;
+import io.grpc.examples.classes.C_proto.io_grpc_examples_classes_C3;
+import io.grpc.examples.classes.C_proto.io_grpc_examples_classes_sub_C20;
+
+public class C_JavabufTranslator {
+   toJavabufMap.put(C1.class, toJavabuf(C1.class, new io_grpc_examples_classes_C_proto_ToJavabuf()));
+   toJavabufMap.put(C10.class, toJavabuf(C10.class, new io_grpc_examples_classes_C_proto_ToJavabuf()));
+   toJavabufMap.put(C3.class, toJavabuf(C3.class, new io_grpc_examples_classes_C_proto_ToJavabuf()));
+   toJavabufMap.put(C20.class, toJavabuf(C20.class, new io_grpc_examples_classes_C_proto_ToJavabuf()));
+}
+
+private static AssignTo toJavabuf(Class<?> javaClass, FieldDescriptor fd) {
+   final Field field = javaClass.getDeclaredField(fd.getName());
+   field.setAccessible(true);
+   AssignTo assignTo = (obj, messageBuilder) -> {
+      try {
+         if (isSuperClass(fd.getName()) {
+            toJavabufMap.get(fd.getType()).assign(obj, messageBuilder);
+         } else if toJavabufMap.keySet().contains(fd.getType()) {
+            toJavabufMap.get(fd.getType().assign(field.get(obj, messageBuilder);
+         } else {
+            messageBuilder.setField(fd, field.get(obj));
+         }
+      } catch (Exception e) {
+         \/\/
+      }
+   };
+   return assignTo;
+}
+
+private static boolean isSuperClass(String className) {
+   return className.endsWith("$$$super");
+}
+}
