@@ -281,32 +281,36 @@ public class JavabufTranslatorGenerator {
 
    private static void privateMethods(StringBuilder sb) {
       sb.append(
-            "   private static AssignToJavabuf toJavabuf(Class<?> javaClass, FieldDescriptor fd) {\n" + 
+            "   private static AssignToJavabuf toJavabuf(Class<?> javaClass, FieldDescriptor fd) {\n" +
             "      try {\n" +
-            "         final Field field = javaClass.getDeclaredField(fd.getName());\n" + 
-            "         field.setAccessible(true);\n" + 
-            "         AssignToJavabuf assignToJavabuf = (obj, messageBuilder) -> {\n" + 
-            "            try {\n" + 
-            "               if (isSuperClass(fd.getName())) {\n" + 
-            "                  toJavabufMap.get(obj.getClass()).assignToJavabuf(obj);\n" + 
-            "               } else if (toJavabufMap.keySet().contains(field.getType())) {\n" + 
-            "                  toJavabufMap.get(obj.getClass()).assignToJavabuf(field.get(obj));\n" + 
-            "               } else {\n" + 
-            "                  messageBuilder.setField(fd, field.get(obj));\n" + 
-            "               }\n" + 
-            "            } catch (Exception e) {\n" + 
-            "               //\n" + 
-            "            }\n" + 
-            "         };\n" + 
+            "         AssignToJavabuf assignToJavabuf = (obj, messageBuilder) -> {\n" +
+            "            try {\n" +
+            "               if (isSuperClass(fd.getName())) {\n" +
+            "                  Message message = toJavabufMap.get(obj.getClass().getSuperclass()).assignToJavabuf(obj);\n" +
+            "                  messageBuilder.setField(fd, message);\n" +
+            "               } else {\n" +
+            "                  final Field field = javaClass.getDeclaredField(fd.getName());\n" +
+            "                  field.setAccessible(true);\n" +
+            "                  if (toJavabufMap.keySet().contains(field.getType())) {\n" +
+            "                     Message message = toJavabufMap.get(field.getType()).assignToJavabuf(field.get(obj));\n" +
+            "                     messageBuilder.setField(fd, message);\n" +
+            "                  } else {\n" +
+            "                     messageBuilder.setField(fd, field.get(obj));\n" +
+            "                  }\n" +
+            "               }\n" +
+            "            } catch (Exception e) {\n" +
+            "               //\n" +
+            "            }\n" +
+            "         };\n" +
             "         return assignToJavabuf;\n" +
             "      } catch (Exception e) {\n" +
             "         throw new RuntimeException(e);\n" +
             "      }\n" +
-            "   }\n\n" 
+            "   }\n\n"
       );
       sb.append(
            "   private static boolean isSuperClass(String fieldName) {\n" +
-           "      return fieldName.endsWith(\"$$$super\");\n" +
+           "      return fieldName.endsWith(\"___super\");\n" +
            "   }\n\n"
       );
    }

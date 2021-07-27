@@ -26,6 +26,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.github.javaparser.resolution.declarations.ResolvedClassDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.github.javaparser.resolution.types.ResolvedArrayType;
@@ -72,6 +73,7 @@ public class JavaToProtobufGenerator3 {
       TYPE_MAP.put("boolean", "bool");
       TYPE_MAP.put("char", "int32");
       TYPE_MAP.put("String", "string");
+      TYPE_MAP.put("java.lang.String", "string");
 
       ANNOTATIONS.add("Context");
       ANNOTATIONS.add("CookieParam");
@@ -209,6 +211,7 @@ public class JavaToProtobufGenerator3 {
    static class JaxrsResourceVisitor extends VoidVisitorAdapter<StringBuilder> {
 
       public void visit(final ClassOrInterfaceDeclaration subClass, StringBuilder sb) {
+         boolean started = false;
          for (BodyDeclaration<?> bd : subClass.getMembers()) {
             if (bd instanceof MethodDeclaration) {
                MethodDeclaration md = (MethodDeclaration) bd;
@@ -216,19 +219,19 @@ public class JavaToProtobufGenerator3 {
                   continue;
                }
                // Add service with a method for each resource method in class.
-//               boolean started = false;
-               sb.append("\nservice ")
-                 .append(fqnify(subClass.getNameAsString()))
-                 .append("Service {\n");
-//               started = true;
+               if (!started) {
+                  sb.append("\nservice ")
+                  .append(fqnify(subClass.getNameAsString()))
+                  .append("Service {\n");
+                  started = true;
+               }
                sb.append("  rpc ")
                  .append(md.getNameAsString())
                  .append(" (")
                  .append(getEntityParameter(md))
                  .append(") returns (")
                  .append(getReturnType(md))
-                 .append(");\n")
-                 .append("}\n");
+                 .append(");\n");
                
                for (Parameter p : md.getParameters()) {
                   ReferenceTypeImpl rt = (ReferenceTypeImpl) p.getType().resolve();
@@ -239,6 +242,9 @@ public class JavaToProtobufGenerator3 {
                   }
                }
             }
+         }
+         if (started) {
+            sb.append("}\n");
          }
       }
    }
@@ -357,6 +363,9 @@ public class JavaToProtobufGenerator3 {
        */
       public void visit(ResolvedReferenceTypeDeclaration clazz, StringBuilder sb) {
          resolvedTypes.remove(clazz);
+         if (PRIMITIVE_WRAPPERS.containsKey(clazz.getClassName())) {
+            return;
+         }
          String fqn = clazz.getPackageName() + "___" + clazz.getClassName();
          if (visited.contains(fqn)) {
             return;
@@ -373,7 +382,8 @@ public class JavaToProtobufGenerator3 {
          // Scan all variables in class.
          for (ResolvedFieldDeclaration rfd: clazz.getDeclaredFields()) {
             String type = null;
-            if (rfd.getType().isPrimitive()) { // Built-in type
+//            String s = rfd.getType().asReferenceType().getQualifiedName();
+            if (rfd.getType().isPrimitive() || rfd.getType().isReferenceType() && String.class.getName().equals(rfd.getType().asReferenceType().getQualifiedName())) {//String.class.equals(rfd.asType().asClass())) { // Built-in type
                type = TYPE_MAP.get(rfd.getType().describe());
             }  else if (rfd.getType() instanceof ResolvedArrayType) {
                ResolvedArrayType rat = (ResolvedArrayType) rfd.getType();
@@ -382,6 +392,9 @@ public class JavaToProtobufGenerator3 {
                   type = "repeated " + TYPE_MAP.get(removeTypeVariables(ct.describe()));
                } else {
                   fqn = removeTypeVariables(ct.describe());
+                  if (!ct.isReferenceType()) {
+                     continue;
+                  }
                   if (!visited.contains(fqn)) {
                      resolvedTypes.add(ct.asReferenceType().getTypeDeclaration().get());
                   }
@@ -394,7 +407,7 @@ public class JavaToProtobufGenerator3 {
                   if (!visited.contains(fqn)) {
                      resolvedTypes.add(rrtd);
                   }
-                  type = fqnify(fqn);
+                  type = fqnifyClass(fqn);
                } else if (rfd.getType().isTypeVariable()) {
                   type = "bytes ";
                }
@@ -422,7 +435,7 @@ public class JavaToProtobufGenerator3 {
                   resolvedTypes.add(rcd);
                }
                String superClassName = rcd.getName();
-               String superClassVariableName = Character.toString(Character.toLowerCase(superClassName.charAt(0))).concat(superClassName.substring(1));
+               String superClassVariableName = Character.toString(Character.toLowerCase(superClassName.charAt(0))).concat(superClassName.substring(1)) + "___super";
                sb.append("  ")
                .append(fqn)
                .append(" ")
@@ -431,6 +444,27 @@ public class JavaToProtobufGenerator3 {
                .append(counter++)
                .append(";\n");
                break;
+            } else if (rrt.getTypeDeclaration().get() instanceof JavaParserClassDeclaration) {
+               JavaParserClassDeclaration jpcd = (JavaParserClassDeclaration) rrt.getTypeDeclaration().get();
+               ResolvedClassDeclaration rcd = jpcd.asClass();
+               if (Object.class.getName().equals(rcd.getClassName())) {
+                  continue;
+               }
+               fqn = fqnifyClass(rcd.getPackageName() + "." + rcd.getName());
+               if (!visited.contains(fqn)) {
+                  resolvedTypes.add(rcd);
+               }
+               String superClassName = rcd.getName();
+               String superClassVariableName = Character.toString(Character.toLowerCase(superClassName.charAt(0))).concat(superClassName.substring(1)) + "___super";
+               sb.append("  ")
+               .append(fqn)
+               .append(" ")
+               .append(superClassVariableName)
+               .append(" = ")
+               .append(counter++)
+               .append(";\n");
+               break;
+               
             }
          }
          sb.append("}\n");
@@ -509,6 +543,18 @@ public class JavaToProtobufGenerator3 {
       return s.replace(".", "_");
    }
    
+   static private String fqnifyClass(String s) {
+      String t = s.replace(".", "_");
+      int i = t.lastIndexOf("_");
+      return t.substring(0, i) + "__" + t.substring(i);
+   }
+   
+   
+   static private String fqnifySuperClass(String s) {
+      String t = s.replace(".", "_");
+      int i = t.lastIndexOf("_");
+      return t.substring(0, i) + "__" + t.substring(i);
+   }
    
    static private String dirify(String s) {
       return s.replace(".", "/");

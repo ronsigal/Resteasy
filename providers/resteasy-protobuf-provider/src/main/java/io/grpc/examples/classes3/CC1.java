@@ -11,7 +11,14 @@ public class CC1 {
       return "x";
    }
 
+   @Path("m2")
    String m2(String s) {
+      return "x";
+   }
+   
+   @Path("m3")
+   @GET
+   String m3(CC4 cc4) {
       return "x";
    }
 }

@@ -12,7 +12,7 @@ public class CC_test {
    
    @Test
    public void testCC2() {
-      CC2 cc2 = new CC2(3);
+//      CC2 cc2 = new CC2("abc");
 //      CC_JavabufTranslator translator = new CC_JavabufTranslator();
 //      Message message = translator.translateToJavabuf(cc1);
 //      System.out.println("CC1 message:\n" + message.toString());
