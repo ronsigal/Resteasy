@@ -44,7 +44,128 @@ import com.github.javaparser.utils.Log;
 import com.github.javaparser.utils.SourceRoot;
 
 /**
- * Some code that uses JavaParser.
+ * Traverses a set of JAX-RS resources and creates a protobuf representation.
+ * <p/>
+ * <ol>
+ *    <li>Find all JAX-RS resource methods and resource locators and create an rpc entry for each</li>
+ *    <li>Find the transitive closure of the classes mentioned in the resource methods and locators
+ *         and create a message entry for each.</li>
+ * </ol>
+ * <p/>
+ * </pre>
+ * For example,
+ * <p/>
+ * <pre>
+ * public class CC1 {
+ *  
+ *    &#064;Path("m1")
+ *    &#064;GET
+ *    String m1(CC2 cc2) {
+ *       return "x";
+ *    }
+ *
+ *    String m2(String s) {
+ *       return "x";
+ *    }
+ *
+ *    &#064;Path("m3")
+ *    &#064;GET
+ *    String m3(CC4 cc4) {
+ *       return "x";
+ *    }
+ * }
+ * </pre>
+ * together with the class definitions
+ * <p/>
+ * <pre>
+ * package io.grpc.classes;
+ *
+ * public class CC2 extends CC3 {
+ *    int j;
+ *
+ *    public CC2(String s, int j) {
+ *       super(s);
+ *       this.j = j;
+ *    }
+ *
+ *    public CC2() {}
+ * }
+ * 
+ * public class CC3 {
+ *    String s;
+ *  
+ *    public CC3(String s) {
+ *       this.s = s;
+ *    }
+ *
+ *    public CC3() {}
+ * }
+ * 
+ * package io.grpc.classes;
+ *
+ * public class CC4 {
+ *    private String s;
+ *    private CC5 cc5;
+ *
+ *    public CC4(String s, CC5 cc5) {
+ *       this.s = s;
+ *       this.cc5 = cc5;
+ *    }
+ *
+ *    public CC4() {}
+ * }
+ * 
+ * package io.grpc.classes;
+ *
+ * public class CC5 {
+ *    int k;
+ *
+ *    public CC5(int k) {
+ *       this.k = k;
+ *    }
+ *
+ *    public CC5() {}
+ * }
+ * </pre>
+ * is translated to CC1.proto:
+ * <p/>
+ * <pre>
+ * syntax = "proto3";
+ * package io.grpc.classes;
+ * option java_package = "io.grpc.classes";
+ * option java_outer_classname = "CC1_proto";
+ *
+ * service CC1Service {
+ *    rpc m1 (io_grpc_classes___CC2) returns (String);
+ *    rpc m3 (io_grpc_classes___CC4) returns (String);
+ * }
+ *
+ * message io_grpc_classes___CC2 {
+ *    int32 j = 1;
+ *    io_grpc_classes___CC3 cC3___super = 2;
+ * }
+ *
+ * message io_grpc_classes___CC4 {
+ *    string s = 3;
+ *    io_grpc_classes___CC5 cc5 = 4;
+ * }
+ *
+ * message io_grpc_classes___CC3 {
+ *    string s = 5;
+ * }
+ *
+ * message io_grpc_classes___CC5 {
+ *    int32 k = 6;
+ * }
+ * </pre>
+ * <p/>
+ * <b>Notes.</b>
+ * <ol>
+ *    <li>{@code CC1.m2()} is not a resource method, so it does not appear in CC1.proto.
+ *    <li>As of now, {@code JavaToProtobufGenerator} requires classes to have a no-arg constructor.
+ *    <li>Protobuf syntax does not support inheritance, so {@code JavaToProtobufGenerator}
+ *        treats a superclass as a special field. For example, {@code CC2}  is a subclass of {@code CC3},
+ *        so each instance of {@code CC2} has a field named {@code cC3___super} of {@code type io_grpc_classes___CC3}.
  */
 public class JavaToProtobufGenerator {
 
