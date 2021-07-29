@@ -95,6 +95,7 @@ public class JavabufTranslatorGenerator {
         .append("import com.google.protobuf.Message;\n")
         .append("import ").append(AssignFromJavabuf.class.getCanonicalName()).append(";\n")
         .append("import ").append(AssignToJavabuf.class.getCanonicalName()).append(";\n")
+        .append("import ").append(TranslateFromJavabuf.class.getCanonicalName()).append(";\n")
         .append("import ").append(TranslateToJavabuf.class.getCanonicalName()).append(";\n")
         .append("import ").append(wrapperClass.getCanonicalName()).append(";\n");
       for (Class<?> clazz : wrapperClass.getClasses())
@@ -119,7 +120,7 @@ public class JavabufTranslatorGenerator {
       Class<?>[] classes = wrapperClass.getClasses();
       privateVariables(sb);
       staticInit(translatorClass, wrapperClass, classes, sb);
-      publicMethod(sb);
+      publicMethods(sb);
       privateMethods(sb);
       for (Class<?> clazz: classes)
       {
@@ -151,19 +152,37 @@ public class JavabufTranslatorGenerator {
            .append(".class, new ")
            .append(simpleName)
            .append("_ToJavabuf());\n");
+         sb.append("      fromJavabufMap.put(")
+           .append("\"" + simpleName + "\"")
+           .append(", new ")
+           .append(simpleName)
+           .append("_FromJavabuf());\n");
       }
       sb.append("   }\n\n");
    }
 
-   private static void publicMethod(StringBuilder sb) {
-      sb.append("\n")
-         .append("   public static Message translateToJavabuf(Object o) {\n")
-         .append("      TranslateToJavabuf ttj = toJavabufMap.get(o.getClass());\n"
-              + "       if (ttj == null) {\n"
-              + "          throw new RuntimeException(o.getClass() + \" is not recognized\");\n"
-              + "       }\n"
-              + "       return ttj.assignToJavabuf(o);\n"
-              + "    }\n");
+   private static void publicMethods(StringBuilder sb) {
+      sb.append("   public static Message translateToJavabuf(Object o) {\n")
+        .append("      TranslateToJavabuf ttj = toJavabufMap.get(o.getClass());\n")
+        .append("      if (ttj == null) {\n")
+        .append("         throw new RuntimeException(o.getClass() + \" is not recognized\");\n")
+        .append("      }\n")
+        .append("      return ttj.assignToJavabuf(o);\n")
+        .append("   }\n\n")
+        .append("   public static Object translateFromJavabuf(Message message) {\n")
+        .append("      String s = null;\n")
+        .append("      try {\n")
+        .append("         s = message.getDescriptorForType().getFullName();\n")
+        .append("         s = s.substring(s.lastIndexOf(\".\") + 1);\n")
+        .append("         TranslateFromJavabuf tfj = fromJavabufMap.get(s);\n")
+        .append("         if (tfj == null) {\n")
+        .append("            throw new RuntimeException(message.getClass() + \" is not recognized\");\n")
+        .append("         }\n")
+        .append("         return tfj.assignFromJavabuf(message);\n")
+        .append("      } catch (Exception e) {\n")
+        .append("         throw new RuntimeException(e);\n")
+        .append("      }\n")
+        .append("   }\n\n");
    }
 
    private static void createTranslator(Class<?> clazz, StringBuilder sb) throws Exception
@@ -173,7 +192,8 @@ public class JavabufTranslatorGenerator {
    }
 
    private static void privateVariables(StringBuilder sb) {
-      sb.append("   private static Map<Class<?>, TranslateToJavabuf> toJavabufMap = new HashMap<Class<?>, TranslateToJavabuf>();\n\n");
+      sb.append("   private static Map<Class<?>, TranslateToJavabuf> toJavabufMap = new HashMap<Class<?>, TranslateToJavabuf>();\n");
+      sb.append("   private static Map<String, TranslateFromJavabuf> fromJavabufMap = new HashMap<String, TranslateFromJavabuf>();\n\n");
    }
 
    private static void privateMethods(StringBuilder sb) {
@@ -205,6 +225,58 @@ public class JavabufTranslatorGenerator {
             "      }\n" +
             "   }\n\n"
       );
+      sb.append(
+            "   private static AssignFromJavabuf fromJavabuf(Class<?> javaClass, FieldDescriptor fd) {\n" +
+            "      try {\n" +
+            "         AssignFromJavabuf assignFromJavabuf = (message, object) -> {\n" +
+            "            try {\n" +
+            "               if (isSuperClass(fd.getName())) {\n" +
+            "                  String superClassName = javaClassToJavabufClass(javaClass.getSuperclass().getName());\n" +
+            "                  TranslateFromJavabuf t = fromJavabufMap.get(superClassName);\n" +
+            "                  FieldDescriptor sfd = getSuperField(message);\n" +
+            "                  Message superMessage = (Message) message.getField(sfd);\n" +
+            "                  t.assignExistingFromJavabuf(superMessage, object);\n" +
+            "               } else {\n" +
+            "                  final Field field = javaClass.getDeclaredField(fd.getName());\n" +
+            "                  field.setAccessible(true);\n"+
+            "                  if (fromJavabufMap.keySet().contains(field.getType())) {\n" +
+            "                     Object obj = fromJavabufMap.get(field.getType()).assignFromJavabuf(message);\n" +
+            "                     field.set(object, obj);\n" +
+            "                  } else {\n" +
+            "                     field.set(object, message.getField(fd));\n" +
+            "                  }\n" +
+            "               }\n" +
+            "            } catch (Exception e) {\n" +
+            "               throw new RuntimeException(e);\n" +
+            "            }\n" +
+            "         };\n" +
+            "         return assignFromJavabuf;\n" +
+            "      } catch (Exception e) {\n" +
+            "         throw new RuntimeException(e);\n" +
+            "      }\n" +
+            "   }\n\n"
+      );
+      sb.append("   private static String javaClassToJavabufClass(String javaClassName) {\n")
+        .append("      String javabufClassName = javaClassName.replace(\".\", \"_\");\n")
+        .append("      int i = javabufClassName.lastIndexOf(\"_\");\n")
+        .append("      javabufClassName = javabufClassName.substring(0, i) + \"___\" + javabufClassName.substring(i + 1);\n")
+        .append("      return javabufClassName;\n")
+        .append("   }\n\n");
+      sb.append("   private static FieldDescriptor getSuperField(Message message) {\n")
+        .append("      Map<FieldDescriptor, Object> map = message.getAllFields();\n")
+        .append("      for (FieldDescriptor fd : map.keySet()) {\n")
+        .append("         if (fd.getName().endsWith(\"___super\")) {\n")
+        .append("            return fd;\n")
+        .append("         }\n")
+        .append("      }\n")
+        .append("      return null;\n")
+        .append("   }\n");
+      sb.append("   private static Object messageToObject(Message message) throws ClassNotFoundException {\n")
+        .append("      String messageClassName = message.getClass().getName();\n")
+        .append("      int i = messageClassName.indexOf(\"___\");\n")
+        .append("      String classname = messageClassName.substring(0, i).replaceAll(\"_\", \".\") + \".\" + messageClassName.substring(i + 2);\n")
+        .append("      return Class.forName(classname);\n")
+        .append("   }\n\n");
       sb.append(
            "   private static boolean isSuperClass(String fieldName) {\n" +
            "      return fieldName.endsWith(\"___super\");\n" +
@@ -242,10 +314,48 @@ public class JavabufTranslatorGenerator {
         .append("         return builder.build();\n")
         .append("      }\n")
         .append("   }\n\n");
-      }
+   }
+
    private static void createTranslatorFromJavabuf(Class<?> clazz, StringBuilder sb)
    {
-
+      String originalName = originalSimpleName(clazz.getName());
+      sb.append("   static class ")
+      .append(fqnify(clazz.getSimpleName())).append("_FromJavabuf implements TranslateFromJavabuf {\n")
+      .append("      private static Descriptor descriptor = ").append(clazz.getCanonicalName()).append(".getDescriptor();\n")
+      .append("      private static List<AssignFromJavabuf> assignList = new ArrayList<AssignFromJavabuf>();\n\n")
+      .append("      static {\n")
+      .append("         for (FieldDescriptor f : descriptor.getFields()) {\n")
+      .append("            String name = f.getName();\n")
+      .append("            if (name.endsWith(\"_\")) {\n")
+      .append("               name = name.substring(0, name.length() - 1);\n")
+      .append("            }\n")
+      .append("            if (descriptor.findFieldByName(name) == null) {\n")
+      .append("               continue;\n")
+      .append("            }\n")
+      .append("            assignList.add(fromJavabuf(").append(originalName).append(".class, descriptor.findFieldByName(name)));\n")
+      .append("         }\n")
+      .append("      }\n\n")
+      .append("      public ").append(originalName).append(" assignFromJavabuf(Message message) {\n")
+      .append("         ").append(originalName).append(" obj = new ").append(originalName).append("();\n")
+      .append("         for (AssignFromJavabuf assignFrom : assignList) {\n")
+      .append("            try {\n")
+      .append("               assignFrom.assign(message, obj);\n")
+      .append("            } catch (Exception e) {\n")
+      .append("               throw new RuntimeException(e);\n")
+      .append("            }\n")
+      .append("         }\n")
+      .append("         return obj;\n")
+      .append("      }\n\n")
+      .append("      public void assignExistingFromJavabuf(Message message, Object obj) {\n")
+      .append("         for (AssignFromJavabuf assignFrom : assignList) {\n")
+      .append("            try {\n")
+      .append("               assignFrom.assign(message, obj);\n")
+      .append("            } catch (Exception e) {\n")
+      .append("               throw new RuntimeException(e);\n")
+      .append("            }\n")
+      .append("         }\n")
+      .append("      }\n")
+      .append("   }\n\n");
    }
 
    private static void finishClass(StringBuilder sb) {

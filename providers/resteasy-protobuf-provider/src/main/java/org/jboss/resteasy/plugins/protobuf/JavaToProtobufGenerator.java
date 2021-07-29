@@ -40,7 +40,6 @@ import com.github.javaparser.symbolsolver.reflectionmodel.ReflectionClassDeclara
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
-import com.github.javaparser.utils.CodeGenerationUtils;
 import com.github.javaparser.utils.Log;
 import com.github.javaparser.utils.SourceRoot;
 
@@ -60,7 +59,6 @@ public class JavaToProtobufGenerator {
    private static JavaSymbolSolver symbolSolver;
    private static ClassVisitor classVisitor = new ClassVisitor();
    private static JaxrsResourceVisitor jaxrsResourceVisitor = new JaxrsResourceVisitor();
-   private static Set<ClassOrInterfaceType> classes = new HashSet<ClassOrInterfaceType>();
    private static int counter = 1;
 
    static {
