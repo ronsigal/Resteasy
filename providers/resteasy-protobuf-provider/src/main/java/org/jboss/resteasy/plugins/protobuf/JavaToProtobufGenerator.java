@@ -17,12 +17,9 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
-import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AnnotationExpr;
-import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
@@ -217,7 +214,7 @@ public class JavaToProtobufGenerator {
       PRIMITIVE_WRAPPER_TYPES.put("boolean", "Boolean");
       PRIMITIVE_WRAPPER_TYPES.put("char",    "Char");
       PRIMITIVE_WRAPPER_TYPES.put("string",  "String");
-      
+
       PRIMITIVE_WRAPPERS.put("Short",   "message Short   {int32  value = $V$;}");
       PRIMITIVE_WRAPPERS.put("Integer", "message Integer {int32  value = $V$;}");
       PRIMITIVE_WRAPPERS.put("Long",    "message Long    {int64  value = $V$;}");
@@ -259,31 +256,21 @@ public class JavaToProtobufGenerator {
       sb.append("option java_package = \"" + args[3] + "\";\n");
       sb.append("option java_outer_classname = \"" + args[4] + "_proto\";\n");
    }
-   
-   private static void finishProto(StringBuilder sb) {
-      if (needEmpty) {
-         sb.append("\nmessage Empty {}");
-      }
-      
-      for (String wrapper : PRIMITIVE_WRAPPERS.values()) {
-         sb.append("\n").append(wrapper.replace("$V$", String.valueOf(counter++)));
-      }
-   }
 
+   /**
+    * Visit all JAX-RS resource classes discovered in project's src/main/java
+    */
    private void processClasses(String[] args, StringBuilder sb) throws IOException {
       Log.setAdapter(new Log.StandardOutStandardErrorAdapter());
 
       // SourceRoot is a tool that read and writes Java files from packages on a certain root directory.
+      Path path = Path.of(args[0], "/src/main/java/");
       // In this case the root directory is found by taking the root from the current Maven module,
       // with src/main/resources appended.
-//      Path path = Path.of(args[0], "/target/generatedSources/protobuf/idl/", args[4] + ".proto");
-//      Path path = Path.of(args[0], "/src/main/java/", dirify(args[2]));
-      Path path = Path.of(args[0], "/src/main/java/");
       //      SourceRoot sourceRoot = new SourceRoot(CodeGenerationUtils.mavenModuleRoot(JavaToProtobufGenerator2.class).resolve("src/main/java/" + dirify(args[2])));
       SourceRoot sourceRoot = new SourceRoot(path);
       TypeSolver reflectionTypeSolver = new ReflectionTypeSolver();
-//      TypeSolver javaParserTypeSolver = new JavaParserTypeSolver(args[0] + "/src/main/java/" + dirify(args[2]));
-       TypeSolver javaParserTypeSolver = new JavaParserTypeSolver(path);
+      TypeSolver javaParserTypeSolver = new JavaParserTypeSolver(path);
       CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
       combinedTypeSolver.add(reflectionTypeSolver);
       combinedTypeSolver.add(javaParserTypeSolver);
@@ -291,9 +278,20 @@ public class JavaToProtobufGenerator {
       sourceRoot.getParserConfiguration().setSymbolResolver(symbolSolver);
       List<ParseResult<CompilationUnit>> list = sourceRoot.tryToParseParallelized();
       for (ParseResult<CompilationUnit> p : list) {
-//         System.out.println("cu: " + p.getResult());
-//         System.out.println("cu: " + p.getResult().get());
          jaxrsResourceVisitor.visit(p.getResult().get(), sb);
+      }
+   }
+
+   /****************************************************************************/
+   /****************************** primary methods *****************************
+   /****************************************************************************/
+   private static void finishProto(StringBuilder sb) {
+      if (needEmpty) {
+         sb.append("\nmessage Empty {}");
+      }
+      
+      for (String wrapper : PRIMITIVE_WRAPPERS.values()) {
+         sb.append("\n").append(wrapper.replace("$V$", String.valueOf(counter++)));
       }
    }
 
@@ -315,7 +313,7 @@ public class JavaToProtobufGenerator {
       bw.write(sb.toString());
       bw.close();
    }
-   
+
    static private void createProtobufDirectory(String[] args) {
       String path = args[0] + "/target/generatedSources";
       for (String s : args[2].split("\\.")) {
@@ -326,7 +324,16 @@ public class JavaToProtobufGenerator {
             } 
       }
    }
-   
+
+   /****************************************************************************/
+   /******************************** classes ***********************************
+   /****************************************************************************/
+
+   /**
+    * Visits each class in the transitive closure of all classes referenced in the
+    * signatures of resource methods. Creates a service with an rpc declaration for
+    * each resource method or locator.
+    */
    static class JaxrsResourceVisitor extends VoidVisitorAdapter<StringBuilder> {
 
       public void visit(final ClassOrInterfaceDeclaration subClass, StringBuilder sb) {
@@ -351,8 +358,12 @@ public class JavaToProtobufGenerator {
                  .append(") returns (")
                  .append(getReturnType(md))
                  .append(");\n");
-               
+
+               // Add each parameter and return type to resolvedTypes for further processing.
                for (Parameter p : md.getParameters()) {
+                  if (p.getType().resolve().isPrimitive()) {
+                     continue;
+                  }
                   ReferenceTypeImpl rt = (ReferenceTypeImpl) p.getType().resolve();
                   ResolvedReferenceTypeDeclaration rrtd = rt.getTypeDeclaration().get();
                   String type = fqnify(removeTypeVariables(rt.asReferenceType().getQualifiedName()));
@@ -368,117 +379,13 @@ public class JavaToProtobufGenerator {
       }
    }
 
+   /**
+    * Visit all classes discovered by JaxrsResourceVisitor in the process of visiting all JAX-RS resources
+    */
    static class ClassVisitor extends VoidVisitorAdapter<StringBuilder> {
 
-      @Override
-      /*
-       * Visit classes in configured files.
-       */
-      public void visit(final ClassOrInterfaceDeclaration subClass, StringBuilder sb)
-      {
-         //         if (subClass.isInterface()) {
-         //            return;
-         //         }
-         System.out.println("class: " + subClass.getNameAsString());
-         if (subClass.getNameAsString().endsWith("_proto")) {
-            return;
-         }
-         ResolvedReferenceTypeDeclaration rrtd = subClass.resolve();
-         String fqn = rrtd.getPackageName() + "." + rrtd.getClassName();
-         if (visited.contains(fqn)) {
-            return;
-         }
-         visited.add(fqn);
-         
-         // Begin protobuf message definition.
-         sb.append("\nmessage ").append(fqnify(rrtd.getPackageName() + ".___" + rrtd.getClassName())).append(" {\n");
-         
-         // Scan all variables in class.
-         for (BodyDeclaration<?> bd: subClass.getMembers()) {
-            if (bd instanceof FieldDeclaration) {
-               FieldDeclaration fd = (FieldDeclaration) bd;
-               for (VariableDeclarator vd : fd.getVariables()) {
-                  String type = TYPE_MAP.get(vd.getType().getElementType().asString());
-                  if (type != null) { // built-in type
-                     if (vd.getType().isArrayType()) {
-                        type = "repeated " + TYPE_MAP.get(vd.getType().getElementType().asString());
-                     } else {
-                        type = TYPE_MAP.get(vd.getType().asString());
-                     }
-                  } else { // Defined message type
-                     ReferenceTypeImpl rt = (ReferenceTypeImpl) vd.getType().resolve();
-                     rrtd = rt.getTypeDeclaration().get();
-                     type = fqnify(removeTypeVariables(rt.asReferenceType().getQualifiedName()));
-                     if (!visited.contains(type)) {
-                        resolvedTypes.add(rrtd);
-                     }
-                  }
-                  sb.append("  ")
-                  .append(type)
-                  .append(" ")
-                  .append(vd.getNameAsString())
-                  .append(" = ")
-                  .append(counter++)
-                  .append(";\n");
-               }
-            }
-         }
-         // Add field for superclass.
-         for (Node node : subClass.getExtendedTypes()) {
-            if (node instanceof ClassOrInterfaceType) {
-               ClassOrInterfaceType coit = (ClassOrInterfaceType) node;
-               ResolvedReferenceType rrt = coit.resolve();
-               rrtd = rrt.getTypeDeclaration().get();
-               if (rrtd instanceof JavaParserClassDeclaration) {
-                  JavaParserClassDeclaration jpcd = (JavaParserClassDeclaration) rrtd;
-                  ClassOrInterfaceDeclaration superClass = jpcd.getWrappedNode();
-                  String packageName = fqnify(jpcd.getPackageName());
-                  String superClassName = superClass.getNameAsString();
-                  String superClassVariableName = Character.toString(Character.toLowerCase(superClassName.charAt(0))).concat(superClassName.substring(1)).concat("___super");
-                  sb.append("  ")
-                  .append(packageName)
-                  .append("____")
-                  .append(superClassName)
-                  .append(" ")
-                  .append(superClassVariableName)
-                  .append(" = ")
-                  .append(counter++)
-                  .append(";\n");
-               }
-            }
-         }
-         sb.append("}\n");
-         
-         // Add service with a method for each resource method in class.
-         boolean started = false;
-         for (BodyDeclaration<?> bd : subClass.getMembers()) {
-            if (bd instanceof MethodDeclaration) {
-               MethodDeclaration md = (MethodDeclaration) bd;
-               if (!isResourceMethod(md)) {
-                  continue;
-               }
-               if (!started) {
-                  sb.append("\nservice ")
-                  .append(fqnify(subClass.getNameAsString()))
-                  .append("Service {\n");
-                  started = true;
-               }
-               sb.append("  rpc ")
-               .append(md.getNameAsString())
-               .append(" (")
-               .append(getEntityParameter(md))
-               .append(") returns (")
-               .append(getReturnType(md))
-               .append(");\n");
-            }
-         }
-         if (started) {
-            sb.append("}\n");
-         }
-      }
-      
-      /*
-       * Visit classes discovered by JavaParserTypeSolver.
+      /**
+       * For each class, create a message type with a field for each variable in the class. 
        */
       public void visit(ResolvedReferenceTypeDeclaration clazz, StringBuilder sb) {
          resolvedTypes.remove(clazz);
@@ -497,12 +404,11 @@ public class JavaToProtobufGenerator {
          
          // Begin protobuf message definition.
          sb.append("\nmessage ").append(fqnify(fqn)).append(" {\n");
-         
+
          // Scan all variables in class.
          for (ResolvedFieldDeclaration rfd: clazz.getDeclaredFields()) {
             String type = null;
-//            String s = rfd.getType().asReferenceType().getQualifiedName();
-            if (rfd.getType().isPrimitive() || rfd.getType().isReferenceType() && String.class.getName().equals(rfd.getType().asReferenceType().getQualifiedName())) {//String.class.equals(rfd.asType().asClass())) { // Built-in type
+            if (rfd.getType().isPrimitive()|| rfd.getType().isReferenceType() && String.class.getName().equals(rfd.getType().asReferenceType().getQualifiedName())) {
                type = TYPE_MAP.get(rfd.getType().describe());
             }  else if (rfd.getType() instanceof ResolvedArrayType) {
                ResolvedArrayType rat = (ResolvedArrayType) rfd.getType();
@@ -590,6 +496,10 @@ public class JavaToProtobufGenerator {
       }
    }
 
+
+   /****************************************************************************/
+   /****************************** utility methods *****************************
+   /****************************************************************************/
    static private String getEntityParameter(MethodDeclaration md) {
       for (Parameter p : md.getParameters()) {
          boolean isEntity = true;
@@ -641,6 +551,7 @@ public class JavaToProtobufGenerator {
       return "Empty";
    }
 
+   // @Path() ???
    static private boolean isResourceMethod(MethodDeclaration md) {
       for (AnnotationExpr ae : md.getAnnotations()) {
          if (HTTP_VERBS.contains(ae.getNameAsString().toUpperCase())) {
@@ -649,7 +560,7 @@ public class JavaToProtobufGenerator {
       }
       return false;
    }
-   
+
    static private String removeTypeVariables(String classType) {
       int left = classType.indexOf('<');
       if (left < 0) {
@@ -657,25 +568,14 @@ public class JavaToProtobufGenerator {
       }
       return classType.substring(0, left);
    }
-   
+
    static private String fqnify(String s) {
       return s.replace(".", "_");
    }
-   
+
    static private String fqnifyClass(String s) {
       String t = s.replace(".", "_");
       int i = t.lastIndexOf("_");
       return t.substring(0, i) + "__" + t.substring(i);
-   }
-   
-   
-   static private String fqnifySuperClass(String s) {
-      String t = s.replace(".", "_");
-      int i = t.lastIndexOf("_");
-      return t.substring(0, i) + "__" + t.substring(i);
-   }
-   
-   static private String dirify(String s) {
-      return s.replace(".", "/");
    }
 }
