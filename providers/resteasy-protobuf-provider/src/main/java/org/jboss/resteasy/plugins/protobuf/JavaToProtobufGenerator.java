@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.jboss.logging.Logger;
+
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
@@ -54,7 +56,7 @@ import com.github.javaparser.utils.SourceRoot;
  * <p/>
  * <pre>
  * public class CC1 {
- *  
+ *
  *    &#064;Path("m1")
  *    &#064;GET
  *    String m1(CC2 cc2) {
@@ -87,17 +89,17 @@ import com.github.javaparser.utils.SourceRoot;
  *
  *    public CC2() {}
  * }
- * 
+ *
  * public class CC3 {
  *    String s;
- *  
+ *
  *    public CC3(String s) {
  *       this.s = s;
  *    }
  *
  *    public CC3() {}
  * }
- * 
+ *
  * package io.grpc.classes;
  *
  * public class CC4 {
@@ -111,7 +113,7 @@ import com.github.javaparser.utils.SourceRoot;
  *
  *    public CC4() {}
  * }
- * 
+ *
  * package io.grpc.classes;
  *
  * public class CC5 {
@@ -166,11 +168,12 @@ import com.github.javaparser.utils.SourceRoot;
  */
 public class JavaToProtobufGenerator {
 
+   private static Logger logger = Logger.getLogger(JavabufTranslatorGenerator.class);
    private static Map<String, String> TYPE_MAP = new HashMap<String, String>();
+   private static Map<String, String> PRIMITIVE_WRAPPER_TYPES = new HashMap<String, String>();
+   private static Map<String, String> PRIMITIVE_WRAPPER_DEFINITIONS = new HashMap<String, String>();
    private static Set<String> ANNOTATIONS = new HashSet<String>();
    private static Set<String> HTTP_VERBS = new HashSet<String>();
-   private static Map<String, String> PRIMITIVE_WRAPPERS = new HashMap<String, String>();
-   private static Map<String, String> PRIMITIVE_WRAPPER_TYPES = new HashMap<String, String>();
    private static boolean needEmpty = false;
    private static List<ResolvedReferenceTypeDeclaration> resolvedTypes = new CopyOnWriteArrayList<ResolvedReferenceTypeDeclaration>();
    private static Set<String> visited = new HashSet<String>();
@@ -191,6 +194,24 @@ public class JavaToProtobufGenerator {
       TYPE_MAP.put("String", "string");
       TYPE_MAP.put("java.lang.String", "string");
 
+      PRIMITIVE_WRAPPER_TYPES.put("short",   "Short");
+      PRIMITIVE_WRAPPER_TYPES.put("int",     "Integer");
+      PRIMITIVE_WRAPPER_TYPES.put("long",    "Long");
+      PRIMITIVE_WRAPPER_TYPES.put("float",   "Float");
+      PRIMITIVE_WRAPPER_TYPES.put("double",  "Double");
+      PRIMITIVE_WRAPPER_TYPES.put("boolean", "Boolean");
+      PRIMITIVE_WRAPPER_TYPES.put("char",    "Char");
+      PRIMITIVE_WRAPPER_TYPES.put("string",  "String");
+
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Short",   "message Short   {int32  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Integer", "message Integer {int32  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Long",    "message Long    {int64  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Float",   "message Float   {float  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Double",  "message Double  {double value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Boolean", "message Boolean {bool   value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Char",    "message Char    {int32  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("String",  "message String  {string value = $V$;}");
+
       ANNOTATIONS.add("Context");
       ANNOTATIONS.add("CookieParam");
       ANNOTATIONS.add("HeaderParam");
@@ -205,35 +226,16 @@ public class JavaToProtobufGenerator {
       HTTP_VERBS.add("PATCH");
       HTTP_VERBS.add("POST");
       HTTP_VERBS.add("PUT");
-
-      PRIMITIVE_WRAPPER_TYPES.put("short",   "Short");
-      PRIMITIVE_WRAPPER_TYPES.put("int",     "Integer");
-      PRIMITIVE_WRAPPER_TYPES.put("long",    "Long");
-      PRIMITIVE_WRAPPER_TYPES.put("float",   "Float");
-      PRIMITIVE_WRAPPER_TYPES.put("double",  "Double");
-      PRIMITIVE_WRAPPER_TYPES.put("boolean", "Boolean");
-      PRIMITIVE_WRAPPER_TYPES.put("char",    "Char");
-      PRIMITIVE_WRAPPER_TYPES.put("string",  "String");
-
-      PRIMITIVE_WRAPPERS.put("Short",   "message Short   {int32  value = $V$;}");
-      PRIMITIVE_WRAPPERS.put("Integer", "message Integer {int32  value = $V$;}");
-      PRIMITIVE_WRAPPERS.put("Long",    "message Long    {int64  value = $V$;}");
-      PRIMITIVE_WRAPPERS.put("Float",   "message Float   {float  value = $V$;}");
-      PRIMITIVE_WRAPPERS.put("Double",  "message Double  {double value = $V$;}");
-      PRIMITIVE_WRAPPERS.put("Boolean", "message Boolean {bool   value = $V$;}");
-      PRIMITIVE_WRAPPERS.put("Char",    "message Char    {int32  value = $V$;}");
-      PRIMITIVE_WRAPPERS.put("String",  "message String  {string value = $V$;}");
    }
 
    public static void main(String[] args) throws IOException
    {
-      if (args.length != 5) {
-         System.out.println("need five args");
-         System.out.println("  arg[0]: root directory");
-         System.out.println("  arg[1]: java file");
-         System.out.println("  arg[2]: package to be used in .proto file");
-         System.out.println("  arg[3]: java package to be used in .proto file");
-         System.out.println("  arg[4]: java outer classname to be generated from .proto file");
+      if (args.length != 4) {
+         logger.info("need five args");
+         logger.info("  arg[0]: root directory");
+         logger.info("  arg[1]: package to be used in .proto file");
+         logger.info("  arg[2]: java package to be used in .proto file");
+         logger.info("  arg[3]: java outer classname to be generated from .proto file");
          return;
       }
       StringBuilder sb = new StringBuilder();
@@ -252,9 +254,9 @@ public class JavaToProtobufGenerator {
    private static void protobufHeader(String[] args, StringBuilder sb)
    {
       sb.append("syntax = \"proto3\";\n");
-      sb.append("package " + args[2] + ";\n");
-      sb.append("option java_package = \"" + args[3] + "\";\n");
-      sb.append("option java_outer_classname = \"" + args[4] + "_proto\";\n");
+      sb.append("package " + args[1] + ";\n");
+      sb.append("option java_package = \"" + args[2] + "\";\n");
+      sb.append("option java_outer_classname = \"" + args[3] + "_proto\";\n");
    }
 
    /**
@@ -289,24 +291,23 @@ public class JavaToProtobufGenerator {
       if (needEmpty) {
          sb.append("\nmessage Empty {}");
       }
-      
-      for (String wrapper : PRIMITIVE_WRAPPERS.values()) {
+
+      for (String wrapper : PRIMITIVE_WRAPPER_DEFINITIONS.values()) {
          sb.append("\n").append(wrapper.replace("$V$", String.valueOf(counter++)));
       }
    }
 
-   static private void writeProtoFile(String[] args, StringBuilder sb) throws IOException {
+   private static void writeProtoFile(String[] args, StringBuilder sb) throws IOException {
       String path = args[0];
       String generatedSources = "target/generatedSources/protobuf/idl";
       for (String s : generatedSources.split("/")) {
          path += "/" + s;
          File dir = new File(path);
-         System.out.println("path: " + path + ": " + dir.exists());
          if(!dir.exists()){
             dir.mkdir();
-         } 
+         }
       }
-      File file = new File(path + "/" + args[4] + ".proto");
+      File file = new File(path + "/" + args[3] + ".proto");
       file.createNewFile();
       FileWriter fw = new FileWriter(file.getAbsoluteFile());
       BufferedWriter bw = new BufferedWriter(fw);
@@ -314,14 +315,14 @@ public class JavaToProtobufGenerator {
       bw.close();
    }
 
-   static private void createProtobufDirectory(String[] args) {
+   private static void createProtobufDirectory(String[] args) {
       String path = args[0] + "/target/generatedSources";
-      for (String s : args[2].split("\\.")) {
-           path += "/" + s;
-            File dir = new File(path);
-            if(!dir.exists()){
-               dir.mkdir();
-            } 
+      for (String s : args[1].split("\\.")) {
+         path += "/" + s;
+         File dir = new File(path);
+         if(!dir.exists()) {
+            dir.mkdir();
+         }
       }
    }
 
@@ -352,12 +353,12 @@ public class JavaToProtobufGenerator {
                   started = true;
                }
                sb.append("  rpc ")
-                 .append(md.getNameAsString())
-                 .append(" (")
-                 .append(getEntityParameter(md))
-                 .append(") returns (")
-                 .append(getReturnType(md))
-                 .append(");\n");
+               .append(md.getNameAsString())
+               .append(" (")
+               .append(getEntityParameter(md))
+               .append(") returns (")
+               .append(getReturnType(md))
+               .append(");\n");
 
                // Add each parameter and return type to resolvedTypes for further processing.
                for (Parameter p : md.getParameters()) {
@@ -385,11 +386,11 @@ public class JavaToProtobufGenerator {
    static class ClassVisitor extends VoidVisitorAdapter<StringBuilder> {
 
       /**
-       * For each class, create a message type with a field for each variable in the class. 
+       * For each class, create a message type with a field for each variable in the class.
        */
       public void visit(ResolvedReferenceTypeDeclaration clazz, StringBuilder sb) {
          resolvedTypes.remove(clazz);
-         if (PRIMITIVE_WRAPPERS.containsKey(clazz.getClassName())) {
+         if (PRIMITIVE_WRAPPER_DEFINITIONS.containsKey(clazz.getClassName())) {
             return;
          }
          String fqn = clazz.getPackageName() + "___" + clazz.getClassName();
@@ -401,7 +402,7 @@ public class JavaToProtobufGenerator {
          //         if (subClass.isInterface()) {
          //            return;
          //         }
-         
+
          // Begin protobuf message definition.
          sb.append("\nmessage ").append(fqnify(fqn)).append(" {\n");
 
@@ -489,7 +490,7 @@ public class JavaToProtobufGenerator {
                .append(counter++)
                .append(";\n");
                break;
-               
+
             }
          }
          sb.append("}\n");
@@ -500,7 +501,7 @@ public class JavaToProtobufGenerator {
    /****************************************************************************/
    /****************************** utility methods *****************************
    /****************************************************************************/
-   static private String getEntityParameter(MethodDeclaration md) {
+   private static String getEntityParameter(MethodDeclaration md) {
       for (Parameter p : md.getParameters()) {
          boolean isEntity = true;
          for (AnnotationExpr ae : p.getAnnotations()) {
@@ -511,7 +512,7 @@ public class JavaToProtobufGenerator {
          }
          if (isEntity) {
             String rawType = p.getTypeAsString();
-            String type = TYPE_MAP.get(rawType);
+            String type = TYPE_MAP.get(rawType.toLowerCase());
             if (type != null) {
                return PRIMITIVE_WRAPPER_TYPES.get(rawType);
             }
@@ -527,7 +528,7 @@ public class JavaToProtobufGenerator {
       return "Empty";
    }
 
-   static private String getReturnType(MethodDeclaration md) {
+   private static String getReturnType(MethodDeclaration md) {
       for (Node node : md.getChildNodes()) {
          if (node instanceof Type) {
             if (node instanceof VoidType) {
@@ -552,7 +553,7 @@ public class JavaToProtobufGenerator {
    }
 
    // @Path() ???
-   static private boolean isResourceMethod(MethodDeclaration md) {
+   private static boolean isResourceMethod(MethodDeclaration md) {
       for (AnnotationExpr ae : md.getAnnotations()) {
          if (HTTP_VERBS.contains(ae.getNameAsString().toUpperCase())) {
             return true;
@@ -561,7 +562,7 @@ public class JavaToProtobufGenerator {
       return false;
    }
 
-   static private String removeTypeVariables(String classType) {
+   private static String removeTypeVariables(String classType) {
       int left = classType.indexOf('<');
       if (left < 0) {
          return classType;
@@ -569,11 +570,11 @@ public class JavaToProtobufGenerator {
       return classType.substring(0, left);
    }
 
-   static private String fqnify(String s) {
+   private static String fqnify(String s) {
       return s.replace(".", "_");
    }
 
-   static private String fqnifyClass(String s) {
+   private static String fqnifyClass(String s) {
       String t = s.replace(".", "_");
       int i = t.lastIndexOf("_");
       return t.substring(0, i) + "__" + t.substring(i);

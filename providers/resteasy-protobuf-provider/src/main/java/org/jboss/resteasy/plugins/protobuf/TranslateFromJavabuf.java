@@ -9,7 +9,7 @@ import com.google.protobuf.Message;
  * corresponding Java class.
  * <p/>
  * For example, let Java class {@code a.b.C} be transformed to protobuf message type
- * {@code a_b___C} by {@link JavaToProtobufGenerator}, which is then compiled by {@code protoc} 
+ * {@code a_b___C} by {@link JavaToProtobufGenerator}, which is then compiled by {@code protoc}
  * to a {@code com.google.protobuf.Message}, called, say (depending on configuration parameters),
  * {@code a.b.Outer_proto$a_b____C}. Then {@link JavabufTranslatorGenerator} can create
  * a class {@code Outer_JavabufTranslator} with an instance {@code a_b___CC_FromJavabuf}
@@ -25,7 +25,7 @@ public interface TranslateFromJavabuf {
     * Copies the contents of a {@code com.google.protobuf.Message} into a new instance of the target class.
     */
    Object assignFromJavabuf(Message message);
-   
+
    /**
     * Copies the contents of a {@code com.google.protobuf.Message} into {@code obj}, an instance of the target class.
     */
