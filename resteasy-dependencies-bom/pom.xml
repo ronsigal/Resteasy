@@ -102,6 +102,10 @@
         <version.io.projectreactor>Dysprosium-SR2</version.io.projectreactor>
 
         <version.asyncutil>0.1.0</version.asyncutil>
+        
+        <!-- protobuf and gRPC -->
+        <version.com.google.protobuf>3.17.3</version.com.google.protobuf>
+        <version.io.grpc>1.39.0</version.io.grpc>
     </properties>
 
     <distributionManagement>
@@ -995,6 +999,37 @@
                 <groupId>com.ibm.async</groupId>
                 <artifactId>asyncutil</artifactId>
                 <version>${version.asyncutil}</version>
+            </dependency>
+            
+            <!-- protobuf and gRPC -->
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${version.com.google.protobuf}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-api</artifactId>
+                <version>${version.io.grpc}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-core</artifactId>
+                <version>${version.io.grpc}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-netty</artifactId>
+                <version>${version.io.grpc}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-netty-shaded</artifactId>
+                <version>${version.io.grpc}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

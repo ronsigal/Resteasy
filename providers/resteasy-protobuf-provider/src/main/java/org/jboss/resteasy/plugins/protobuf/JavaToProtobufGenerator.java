@@ -299,7 +299,8 @@ public class JavaToProtobufGenerator {
 
    private static void writeProtoFile(String[] args, StringBuilder sb) throws IOException {
       String path = args[0];
-      String generatedSources = "target/generatedSources/protobuf/idl";
+//      String generatedSources = "target/generatedSources/protobuf/idl";
+      String generatedSources = "src/main/proto";
       for (String s : generatedSources.split("/")) {
          path += "/" + s;
          File dir = new File(path);

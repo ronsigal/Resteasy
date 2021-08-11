@@ -1,20 +1,6 @@
-/*
- * Copyright 2015 The gRPC Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package org.jboss.resteasy.grpc;
 
-package org.jboss.resteasy.test.grpc.resource;
+import static io.grpc.stub.ServerCalls.asyncUnaryCall;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,21 +25,41 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.jboss.resteasy.core.ResteasyContext;
+import org.jboss.resteasy.plugins.protobuf.GRPCProvider;
+import org.jboss.resteasy.test.grpc.resource.HelloReply;
+import org.jboss.resteasy.test.grpc.resource.HelloRequest;
+import org.jboss.resteasy.test.grpc.resource.GreeterGrpc.MethodHandlers;
 
 import com.google.protobuf.Message;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerServiceDefinition;
 import io.grpc.stub.StreamObserver;
 
 /**
  * Server that manages startup/shutdown of a {@code Greeter} server.
  */
-public class HelloWorldServer_gRPC {
-   private static final Logger logger = Logger.getLogger(HelloWorldServer_gRPC.class.getName());
+public class JaxrsService implements io.grpc.BindableService {
+
+   private static final Logger logger = Logger.getLogger(JaxrsService.class.getName());
 
    private Server server;
-   
+
+   @Override
+   public ServerServiceDefinition bindService()
+   {
+      return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
+            .addMethod(
+                  getSayHelloMethod(),
+                  asyncUnaryCall(
+                        new MethodHandlers<
+                        HelloRequest,
+                        HelloReply>(
+                              this, METHODID_SAY_HELLO)))
+            .build();
+   }
+
    /**
     * Start gRPC server.
     */
@@ -148,7 +154,7 @@ public class HelloWorldServer_gRPC {
       private String path;
       private Message message;
       private Map<String, Object> attributes = new HashMap<String, Object>();
-      
+
       public HttpServletRequestHandler(String path, Message message) {
          this.path = path;
          this.message = message;
@@ -156,34 +162,34 @@ public class HelloWorldServer_gRPC {
 
       @Override
       public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if ("getMethod".equals(method.getName())) {
-           return "POST";
-        }
-        if ("getHeaderNames".equals(method.getName())) {
-           return Collections.enumeration(new ArrayList<String>());
-        }
-        if ("getContentType".equals(method.getName())) {
-           return "application/grpc";
-        }
-        if ("getRequestURL".equals(method.getName())) {
-           return new StringBuffer("http://localhost:8081/" + path);
-        }
-        if ("getInputStream".equals(method.getName())) {
-           ByteArrayOutputStream baos = new ByteArrayOutputStream();
-           message.writeTo(baos);
-           return new MockServletInputStream(new ByteArrayInputStream(baos.toByteArray()));
-        }
-        if ("setAttribute".equals(method.getName())) {
-           attributes.put((String) args[0], args[1]);
-           return null;
-        }
-        if ("getAttribute".equals(method.getName())) {
-           return attributes.get(args[0]);
-        }
-        return null;
+         if ("getMethod".equals(method.getName())) {
+            return "POST";
+         }
+         if ("getHeaderNames".equals(method.getName())) {
+            return Collections.enumeration(new ArrayList<String>());
+         }
+         if ("getContentType".equals(method.getName())) {
+            return "application/grpc";
+         }
+         if ("getRequestURL".equals(method.getName())) {
+            return new StringBuffer("http://localhost:8081/" + path);
+         }
+         if ("getInputStream".equals(method.getName())) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            message.writeTo(baos);
+            return new MockServletInputStream(new ByteArrayInputStream(baos.toByteArray()));
+         }
+         if ("setAttribute".equals(method.getName())) {
+            attributes.put((String) args[0], args[1]);
+            return null;
+         }
+         if ("getAttribute".equals(method.getName())) {
+            return attributes.get(args[0]);
+         }
+         return null;
       }
    }
-   
+
    /**
     * Generate HttpServletResponse proxy.
     */
@@ -200,7 +206,7 @@ public class HelloWorldServer_gRPC {
     */
    static  class HttpServletResponseHandler implements InvocationHandler {
       private MockServletOutputStream msos = new MockServletOutputStream();
-      
+
       @Override
       public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
          if ("isCommitted".equals(method.getName())) {
@@ -212,17 +218,17 @@ public class HelloWorldServer_gRPC {
          return null;
       }
    }
-   
+
    /**
     * ServletInputStream for HttpServletRequest proxy.
     */
    static class MockServletInputStream extends ServletInputStream {
       private InputStream is;
-      
+
       public MockServletInputStream(InputStream is) {
          this.is = is;
       }
-      
+
       @Override
       public boolean isFinished()
       {
@@ -253,13 +259,13 @@ public class HelloWorldServer_gRPC {
          return is.read();
       }
    }
-   
+
    /**
     * ServletOutputStream for HttpServletResponse proxy
     */
    static class MockServletOutputStream extends ServletOutputStream {
       private ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      
+
       @Override
       public boolean isReady()
       {
@@ -276,9 +282,10 @@ public class HelloWorldServer_gRPC {
       {
          baos.write(b);
       }
-      
+
       public ByteArrayOutputStream getDelegate() {
          return baos;
       }
    }
 }
+

@@ -115,7 +115,7 @@ public class JavabufTranslatorGenerator {
          Class<?> wrapperClass = Class.forName(args[1] + "_proto", true, Thread.currentThread().getContextClassLoader());
          StringBuilder sb = new StringBuilder();
          classHeader(args, translatorClass, wrapperClass, sb);
-         classBody(translatorClass, wrapperClass, sb);
+         classBody(wrapperClass, sb);
          finishClass(sb);
          writeTranslatorClass(args, translatorClass, sb);
       } catch (Exception e) {
@@ -125,13 +125,13 @@ public class JavabufTranslatorGenerator {
 
    private static void classHeader(String[] args, String translatorClass, Class<?> wrapperClass, StringBuilder sb) {
       sb.append("package ").append(wrapperClass.getPackage().getName()).append(";\n\n");
-      imports(wrapperClass, sb);
+      imports(sb);
       sb.append(   "public class ")
        .append(translatorClass)
        .append(" {\n");
    }
 
-   private static void imports(Class<?> wrapperClass, StringBuilder sb) {
+   private static void imports(StringBuilder sb) {
       sb.append("import java.lang.reflect.Field;\n")
         .append("import java.util.ArrayList;\n")
         .append("import java.util.HashMap;\n")
@@ -148,10 +148,10 @@ public class JavabufTranslatorGenerator {
         .append("\n");
    }
 
-   private static void classBody(String translatorClass, Class<?> wrapperClass, StringBuilder sb) throws Exception {
+   private static void classBody(Class<?> wrapperClass, StringBuilder sb) throws Exception {
       Class<?>[] classes = wrapperClass.getClasses();
       privateVariables(sb);
-      staticInit(translatorClass, wrapperClass, classes, sb);
+      staticInit(classes, sb);
       publicMethods(sb);
       privateMethods(sb);
       for (Class<?> clazz: classes) {
@@ -166,7 +166,7 @@ public class JavabufTranslatorGenerator {
       }
    }
 
-   private static void staticInit(String translatorClass, Class<?> wrapperClass, Class<?>[] classes, StringBuilder sb) {
+   private static void staticInit(Class<?>[] classes, StringBuilder sb) {
       sb.append("   static {\n");
       for (Class<?> clazz: classes) {
          if (clazz.isInterface()) {
