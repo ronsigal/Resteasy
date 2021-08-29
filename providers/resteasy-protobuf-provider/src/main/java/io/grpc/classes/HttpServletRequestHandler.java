@@ -1,7 +1,6 @@
 package io.grpc.classes;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -9,25 +8,31 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.protobuf.Message;
-
 public class HttpServletRequestHandler implements InvocationHandler {
    private String path;
-   private Message message;
+   private String method;
+   private InputStream is;
    private Map<String, Object> attributes = new HashMap<String, Object>();
+   private Map<String, String> headers = new HashMap<String, String>();
+   
 
-   public HttpServletRequestHandler(String path, Message message) {
+   public HttpServletRequestHandler(String path, String method, InputStream message, Map<String, String> headers) {
       this.path = path;
-      this.message = message;
+      this.method = method;
+      this.is = message;
+      this.headers = headers;
    }
 
    @Override
    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       if ("getMethod".equals(method.getName())) {
-         return "POST";
+         return method;
       }
       if ("getHeaderNames".equals(method.getName())) {
          return Collections.enumeration(new ArrayList<String>());
+      }
+      if ("getHeader".equals(method.getName())) {
+         return headers.get(args[0]);
       }
       if ("getContentType".equals(method.getName())) {
          return "application/grpc";
@@ -36,9 +41,7 @@ public class HttpServletRequestHandler implements InvocationHandler {
          return new StringBuffer("http://localhost:8081/" + path);
       }
       if ("getInputStream".equals(method.getName())) {
-         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-         message.writeTo(baos);
-         return new MockServletInputStream(new ByteArrayInputStream(baos.toByteArray()));
+         return is;
       }
       if ("setAttribute".equals(method.getName())) {
          attributes.put((String) args[0], args[1]);

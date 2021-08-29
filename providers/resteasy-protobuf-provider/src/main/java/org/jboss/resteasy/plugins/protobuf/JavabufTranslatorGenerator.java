@@ -99,6 +99,7 @@ public class JavabufTranslatorGenerator {
       PRIMITIVE_WRAPPER_TYPES.add("Boolean");
       PRIMITIVE_WRAPPER_TYPES.add("Char");
       PRIMITIVE_WRAPPER_TYPES.add("String");
+      PRIMITIVE_WRAPPER_TYPES.add("Empty");
    }
 
    public static void main(String[] args) {
@@ -193,7 +194,14 @@ public class JavabufTranslatorGenerator {
    }
 
    private static void publicMethods(StringBuilder sb) {
-      sb.append("   public static Message translateToJavabuf(Object o) {\n")
+      
+      sb.append("   public static boolean handlesToJavabuf(Class<?> clazz) {\n")
+        .append("      return toJavabufMap.containsKey(clazz);\n")
+        .append("   }\n\n")
+        .append("   public static boolean handlesFromJavabuf(Class<?> clazz) {\n")
+        .append("      return toJavabufMap.containsKey(clazz);\n")
+        .append("   }\n\n")
+        .append("   public static Message translateToJavabuf(Object o) {\n")
         .append("      TranslateToJavabuf ttj = toJavabufMap.get(o.getClass());\n")
         .append("      if (ttj == null) {\n")
         .append("         throw new RuntimeException(o.getClass() + \" is not recognized\");\n")

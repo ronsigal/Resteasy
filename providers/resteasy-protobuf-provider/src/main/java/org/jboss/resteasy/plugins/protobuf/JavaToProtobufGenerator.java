@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -22,6 +23,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
@@ -340,12 +342,27 @@ public class JavaToProtobufGenerator {
 
       public void visit(final ClassOrInterfaceDeclaration subClass, StringBuilder sb) {
          boolean started = false;
+         Optional<AnnotationExpr> opt = subClass.getAnnotationByName("Path");
+         SingleMemberAnnotationExpr annotationExpr = opt.isPresent() ? (SingleMemberAnnotationExpr) opt.get() : null;
+         String classPath = "";
+         if (annotationExpr != null) {
+            classPath = annotationExpr.getMemberValue().toString();
+            classPath = classPath.substring(1, classPath.length() - 1);
+         }
          for (BodyDeclaration<?> bd : subClass.getMembers()) {
             if (bd instanceof MethodDeclaration) {
                MethodDeclaration md = (MethodDeclaration) bd;
                if (!isResourceMethod(md)) {
                   continue;
                }
+               String methodPath = "";
+               opt = md.getAnnotationByName("Path");
+               annotationExpr = opt.isPresent() ? (SingleMemberAnnotationExpr) opt.get() : null;
+               if (annotationExpr != null) {
+                  methodPath = annotationExpr.getMemberValue().toString();
+                  methodPath = methodPath.substring(1, methodPath.length() - 1);  
+               }
+               String httpMethod = getHttpMethod(md);
                // Add service with a method for each resource method in class.
                if (!started) {
                   sb.append("\nservice ")
@@ -353,6 +370,7 @@ public class JavaToProtobufGenerator {
                   .append("Service {\n");
                   started = true;
                }
+               sb.append("// ").append(classPath).append("/").append(methodPath).append(" ").append(httpMethod).append("\n");
                sb.append("  rpc ")
                .append(md.getNameAsString())
                .append(" (")
@@ -579,5 +597,24 @@ public class JavaToProtobufGenerator {
       String t = s.replace(".", "_");
       int i = t.lastIndexOf("_");
       return t.substring(0, i) + "__" + t.substring(i);
+   }
+   
+   private static String getHttpMethod(MethodDeclaration md) {
+      if (!md.getAnnotationByName("DELETE").isEmpty()) {
+         return "DELETE";
+      }
+      if (!md.getAnnotationByName("GET").isEmpty()) {
+         return "GET";
+      }
+      if (!md.getAnnotationByName("HEAD").isEmpty()) {
+         return "HEAD";
+      }
+      if (!md.getAnnotationByName("POST").isEmpty()) {
+         return "POST";
+      }
+      if (!md.getAnnotationByName("PUT").isEmpty()) {
+         return "PUT";
+      }
+      return "";
    }
 }

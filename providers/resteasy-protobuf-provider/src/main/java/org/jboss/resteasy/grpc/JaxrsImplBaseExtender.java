@@ -94,14 +94,19 @@ public class JaxrsImplBaseExtender {
         .append("import io.grpc.stub.StreamObserver;\n")
         .append("import java.io.ByteArrayInputStream;\n")
         .append("import java.io.ByteArrayOutputStream;\n")
+        .append("import java.io.InputStream;\n")
         .append("import java.lang.reflect.Proxy;\n")
+        .append("import java.util.HashMap;\n")
+        .append("import java.util.Map;\n")
         .append("import javax.servlet.Servlet;\n")
         .append("import javax.servlet.http.HttpServletRequest;\n")
         .append("import javax.servlet.http.HttpServletResponse;\n")
         .append("import org.jboss.resteasy.core.ResteasyContext;\n")
+        .append("import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;\n")
         .append("import io.grpc.classes.HttpServletRequestHandler;\n")
         .append("import io.grpc.classes.HttpServletResponseHandler;\n")
-        .append("import io.grpc.classes.MockServletOutputStream;\n");
+        .append("import io.grpc.classes.MockServletInputStream;\n\n")
+        .append("import io.grpc.classes.MockServletOutputStream;\n\n");
    }
 
    private void service(Scanner scanner, StringBuilder sbHeader, StringBuilder sbBody) {
@@ -110,14 +115,24 @@ public class JaxrsImplBaseExtender {
             .append("GrpcImpl extends ")
             .append(serviceName)
             .append("ImplBase {\n");
+      scanner.nextLine();
+      scanner.skip("//");
+      String path = scanner.next();
+      String httpMethod = scanner.next();
       String rpc = scanner.findWithinHorizon(" rpc ", 0);
       while (rpc != null) {
-         rpc(scanner, sbHeader, sbBody);
+         rpc(scanner, path, httpMethod, sbHeader, sbBody);
+         scanner.nextLine();
+         if (!scanner.hasNext("//")) {
+            break;
+         }
+         scanner.skip("//");
+         path = scanner.next();
          rpc = scanner.findWithinHorizon(" rpc ", 0);
       }
    }
 
-   private void rpc(Scanner scanner, StringBuilder sbHeader, StringBuilder sbBody) {
+   private void rpc(Scanner scanner, String path, String httpMethod, StringBuilder sbHeader, StringBuilder sbBody) {
       sbBody.append("\n   @java.lang.Override\n");
       String method = scanner.next();
       scanner.findWithinHorizon("\\(", 0);
@@ -130,19 +145,21 @@ public class JaxrsImplBaseExtender {
       .append(method).append("(")
       .append(param).append(" param, ")
       .append("StreamObserver<").append(retn).append("> responseObserver) {\n");
-      rpcBody(scanner, sbBody, retn);
+      rpcBody(scanner, path, httpMethod, sbBody, retn);
       sbBody.append("   }\n");
       scanner.reset();
    }
 
-   private void rpcBody(Scanner scanner, StringBuilder sb, String retn) {
+   private void rpcBody(Scanner scanner, String path, String method, StringBuilder sb, String retn) {
       sb.append("      try {\n")
         .append("         HttpServletResponse response = getHttpServletResponse();\n")
-        .append("         Servlet servlet = ResteasyContext.getServlet(\"").append(servletName).append("\");\n") // plug in correct servlet
-        .append("         servlet.service(getHttpServletRequest(param), response);\n")
+        .append("         HttpServletDispatcher servlet = (HttpServletDispatcher) ResteasyContext.getServlet(\"").append(servletName).append("\");\n") // plug in correct servlet
+        .append("         ByteArrayInputStream bais = new ByteArrayInputStream(param.toByteArray());\n")
+        .append("         MockServletInputStream msis = new MockServletInputStream(bais);\n")
+        .append("         HttpServletRequest request = getHttpServletRequest(\"").append(path).append("\", \"").append(method).append("\", msis, param.getClass().getName());\n")
+        .append("         servlet.service(\"").append(method).append("\", request, response);\n")
         .append("         MockServletOutputStream msos = (MockServletOutputStream) response.getOutputStream();\n")
         .append("         ByteArrayOutputStream baos = msos.getDelegate();\n")
-        .append("         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());\n")
         .append("         ").append(retn).append(" reply = ").append(retn).append(".parseFrom(bais);\n")
         .append("         responseObserver.onNext(reply);\n")
         .append("      } catch (Exception e) {\n")
@@ -154,11 +171,13 @@ public class JaxrsImplBaseExtender {
 
    private static void staticMethods(StringBuilder sb) {
       sb.append("\n")
-        .append("   private static HttpServletRequest getHttpServletRequest(GeneratedMessageV3 message) {\n")
+        .append("   private static HttpServletRequest getHttpServletRequest(String path, String method, InputStream is, String className) {\n")
+        .append("      Map<String, String> headers = new HashMap<String, String>();\n")
+        .append("      headers.put(\"javabuf-name\", className);\n")
         .append("      return (HttpServletRequest) Proxy.newProxyInstance(\n")
         .append("         HttpServletRequest.class.getClassLoader(),\n")
         .append("         new Class[] { HttpServletRequest.class },\n")
-        .append("         new HttpServletRequestHandler(\"HelloWorldProto.Greeter/sayHello\", message));\n")
+        .append("         new HttpServletRequestHandler(path, method, is, headers));\n")
         .append("   }\n\n");
       sb.append("   private static HttpServletResponse getHttpServletResponse() {\n")
         .append("      return (HttpServletResponse) Proxy.newProxyInstance(\n")
