@@ -160,6 +160,7 @@ public class JaxrsImplBaseExtender {
         .append("         servlet.service(\"").append(method).append("\", request, response);\n")
         .append("         MockServletOutputStream msos = (MockServletOutputStream) response.getOutputStream();\n")
         .append("         ByteArrayOutputStream baos = msos.getDelegate();\n")
+        .append("         bais = new ByteArrayInputStream(baos.toByteArray());\n")
         .append("         ").append(retn).append(" reply = ").append(retn).append(".parseFrom(bais);\n")
         .append("         responseObserver.onNext(reply);\n")
         .append("      } catch (Exception e) {\n")

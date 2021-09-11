@@ -126,13 +126,13 @@ public class JavabufTranslatorGenerator {
 
    private static void classHeader(String[] args, String translatorClass, Class<?> wrapperClass, StringBuilder sb) {
       sb.append("package ").append(wrapperClass.getPackage().getName()).append(";\n\n");
-      imports(sb);
+      imports(wrapperClass, sb);
       sb.append(   "public class ")
        .append(translatorClass)
        .append(" {\n");
    }
 
-   private static void imports(StringBuilder sb) {
+   private static void imports(Class<?> wrapperClass, StringBuilder sb) {
       sb.append("import java.lang.reflect.Field;\n")
         .append("import java.util.ArrayList;\n")
         .append("import java.util.HashMap;\n")
@@ -145,8 +145,22 @@ public class JavabufTranslatorGenerator {
         .append("import ").append(AssignFromJavabuf.class.getCanonicalName()).append(";\n")
         .append("import ").append(AssignToJavabuf.class.getCanonicalName()).append(";\n")
         .append("import ").append(TranslateFromJavabuf.class.getCanonicalName()).append(";\n")
-        .append("import ").append(TranslateToJavabuf.class.getCanonicalName()).append(";\n")
-        .append("\n");
+        .append("import ").append(TranslateToJavabuf.class.getCanonicalName()).append(";\n");
+      Class<?>[] classes = wrapperClass.getClasses();
+      for (Class<?> clazz: classes) {
+         if (clazz.isInterface()) {
+            continue;
+         }
+         String simpleName = clazz.getSimpleName();
+         if (PRIMITIVE_WRAPPER_TYPES.contains(simpleName)) {
+            continue;
+         }
+         sb.append("import ")
+           .append(getOriginalPackage(clazz.getName()))
+           .append(".")
+           .append(originalSimpleName(clazz.getName())).append(";\n");
+      }
+      sb.append("\n");
    }
 
    private static void classBody(Class<?> wrapperClass, StringBuilder sb) throws Exception {
@@ -427,5 +441,11 @@ public class JavabufTranslatorGenerator {
    private static String originalSimpleName(String s) {
       int i = s.lastIndexOf("___");
       return i < 0 ? s : s.substring(i + 3);
+   }
+
+   private static String getOriginalPackage(String s) {
+      int i = s.lastIndexOf("___");
+      String pkg = s.substring(0, i);
+      return pkg.replace('_', '.');
    }
 }

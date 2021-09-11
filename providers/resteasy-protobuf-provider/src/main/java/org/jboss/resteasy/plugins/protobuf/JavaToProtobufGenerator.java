@@ -563,7 +563,7 @@ public class JavaToProtobufGenerator {
                ResolvedType rt = ((Type) node).resolve();
                resolvedTypes.add(rt.asReferenceType().getTypeDeclaration().get());
                type = ((Type) node).resolve().describe();
-               return fqnify(type);
+               return fqnifyClass(type);
             }
          }
       }
