@@ -155,10 +155,12 @@ public class JavabufTranslatorGenerator {
          if (PRIMITIVE_WRAPPER_TYPES.contains(simpleName)) {
             continue;
          }
+         System.out.println("clazz: " + clazz.getName());
+         System.out.println("original class name: " + originalClassName(clazz.getName()));
+         System.out.println("original simple name: " + originalSimpleName(clazz.getName()));
          sb.append("import ")
-           .append(getOriginalPackage(clazz.getName()))
-           .append(".")
-           .append(originalSimpleName(clazz.getName())).append(";\n");
+           .append(originalClassName(clazz.getName()))
+           .append(";\n");
       }
       sb.append("\n");
    }
@@ -443,9 +445,10 @@ public class JavabufTranslatorGenerator {
       return i < 0 ? s : s.substring(i + 3);
    }
 
-   private static String getOriginalPackage(String s) {
-      int i = s.lastIndexOf("___");
-      String pkg = s.substring(0, i);
-      return pkg.replace('_', '.');
+   private static String originalClassName(String s) {
+      int i = s.indexOf("$");
+      int j = s.lastIndexOf("___");
+      String pkg = s.substring(i + 1, j).replace('_', '.');
+      return pkg + "." + originalSimpleName(s);
    }
 }

@@ -4,11 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.jboss.logging.Logger;
 
@@ -52,13 +49,10 @@ public class ReaderWriterGenerator {
 
    private static void classHeader(String[] args, String readerWriterClass, Class<?> wrapperClass, StringBuilder sb) {
       sb.append("package ").append(wrapperClass.getPackage().getName()).append(";\n\n");
-      imports(wrapperClass, sb);
-//      sb.append(   "public class ")
-//        .append(readerWriterClass)
-//        .append(" {\n");
+      imports(wrapperClass, args[1], sb);
    }
 
-   private static void imports(Class<?> wrapperClass, StringBuilder sb) {
+   private static void imports(Class<?> wrapperClass, String rootClass, StringBuilder sb) {
       sb.append("import java.io.IOException;\n")
         .append("import java.io.InputStream;\n")
         .append("import java.io.OutputStream;\n")
@@ -73,12 +67,14 @@ public class ReaderWriterGenerator {
         .append("import javax.ws.rs.ext.MessageBodyWriter;\n")
         .append("import javax.ws.rs.ext.Provider;\n")
         .append("import com.google.protobuf.GeneratedMessageV3;\n")
-        .append("import com.google.protobuf.Message;\n");
+        .append("import com.google.protobuf.Message;\n")
+        .append("import ").append(wrapperClass.getPackageName()).append(".").append(rootClass).append("_JavabufTranslator;\n");
       for (Class<?> clazz : wrapperClass.getClasses()) {
          if (clazz.isInterface() || primitives.contains(clazz.getSimpleName())) {
             continue;
          }
          sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
+         sb.append("import ").append(originalClassName(clazz.getName())).append(";\n");
       }
       sb.append("\n\n");
    }
@@ -185,5 +181,17 @@ public class ReaderWriterGenerator {
    private static String javabufToJavaClass(String classname) {
       int i = classname.indexOf("___");
       return classname.substring(i + 3);
+   }
+
+   private static String originalSimpleName(String s) {
+      int i = s.lastIndexOf("___");
+      return i < 0 ? s : s.substring(i + 3);
+   }
+
+   private static String originalClassName(String s) {
+      int i = s.indexOf("$");
+      int j = s.lastIndexOf("___");
+      String pkg = s.substring(i + 1, j).replace('_', '.');
+      return pkg + "." + originalSimpleName(s);
    }
 }
