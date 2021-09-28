@@ -4,8 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jboss.logging.Logger;
 
@@ -88,19 +88,29 @@ public class JavabufTranslatorGenerator {
       void assign(Message message, Object object);
    }
 
-   private static Set<String> PRIMITIVE_WRAPPER_TYPES = new HashSet<String>();
+   private static Map<String, Class<?>> PRIMITIVE_WRAPPER_TYPES = new HashMap<String, Class<?>>();
+//   private static Set<Class<?>> primitiveClasses = new HashSet<Class<?>>();
 
    static {
-      PRIMITIVE_WRAPPER_TYPES.add("Short");
-      PRIMITIVE_WRAPPER_TYPES.add("Integer");
-      PRIMITIVE_WRAPPER_TYPES.add("Long");
-      PRIMITIVE_WRAPPER_TYPES.add("Float");
-      PRIMITIVE_WRAPPER_TYPES.add("Double");
-      PRIMITIVE_WRAPPER_TYPES.add("Boolean");
-      PRIMITIVE_WRAPPER_TYPES.add("Char");
-      PRIMITIVE_WRAPPER_TYPES.add("String");
-      PRIMITIVE_WRAPPER_TYPES.add("Empty");
+      PRIMITIVE_WRAPPER_TYPES.put("Short",     short.class);
+      PRIMITIVE_WRAPPER_TYPES.put("Integer",   int.class);
+      PRIMITIVE_WRAPPER_TYPES.put("Long",      long.class);
+      PRIMITIVE_WRAPPER_TYPES.put("Float",     float.class);
+      PRIMITIVE_WRAPPER_TYPES.put("Double",    double.class);
+      PRIMITIVE_WRAPPER_TYPES.put("Boolean",   boolean.class);
+      PRIMITIVE_WRAPPER_TYPES.put("Character", char.class);
+      PRIMITIVE_WRAPPER_TYPES.put("String",    String.class);
+      PRIMITIVE_WRAPPER_TYPES.put("Empty",     void.class);
+      
+//      primitiveClasses.add(short.class);
+//      primitiveClasses.add(int.class);
+//      primitiveClasses.add(long.class);
+//      primitiveClasses.add(float.class);
+//      primitiveClasses.add(double.class);
+//      primitiveClasses.add(boolean.class);
+//      primitiveClasses.add(char.class);
    }
+   
 
    public static void main(String[] args) {
       if (args.length != 2) {
@@ -120,6 +130,7 @@ public class JavabufTranslatorGenerator {
          finishClass(sb);
          writeTranslatorClass(args, translatorClass, sb);
       } catch (Exception e) {
+         e.printStackTrace();
          logger.error(e);
       }
    }
@@ -152,12 +163,9 @@ public class JavabufTranslatorGenerator {
             continue;
          }
          String simpleName = clazz.getSimpleName();
-         if (PRIMITIVE_WRAPPER_TYPES.contains(simpleName)) {
+         if (PRIMITIVE_WRAPPER_TYPES.containsKey(simpleName)) {
             continue;
          }
-         System.out.println("clazz: " + clazz.getName());
-         System.out.println("original class name: " + originalClassName(clazz.getName()));
-         System.out.println("original simple name: " + originalSimpleName(clazz.getName()));
          sb.append("import ")
            .append(originalClassName(clazz.getName()))
            .append(";\n");
@@ -175,10 +183,10 @@ public class JavabufTranslatorGenerator {
          if (clazz.isInterface()) {
             continue;
          }
-         String simpleName = clazz.getSimpleName();
-         if (PRIMITIVE_WRAPPER_TYPES.contains(simpleName)) {
-            continue;
-         }
+//         String simpleName = clazz.getSimpleName();
+//         if (PRIMITIVE_WRAPPER_TYPES.contains(simpleName)) {
+//            continue;
+//         }
          createTranslator(clazz, sb);
       }
    }
@@ -190,7 +198,10 @@ public class JavabufTranslatorGenerator {
             continue;
          }
          String simpleName = clazz.getSimpleName();
-         if (PRIMITIVE_WRAPPER_TYPES.contains(simpleName)) {
+//         if (PRIMITIVE_WRAPPER_TYPES.contains(simpleName)) {
+//            continue;
+//         }
+         if ("Empty".equals(simpleName)) {
             continue;
          }
          int i = simpleName.lastIndexOf("___");
@@ -212,10 +223,10 @@ public class JavabufTranslatorGenerator {
    private static void publicMethods(StringBuilder sb) {
       
       sb.append("   public static boolean handlesToJavabuf(Class<?> clazz) {\n")
-        .append("      return toJavabufMap.containsKey(clazz);\n")
+        .append("      return clazz.isPrimitive() || toJavabufMap.containsKey(clazz);\n")
         .append("   }\n\n")
         .append("   public static boolean handlesFromJavabuf(Class<?> clazz) {\n")
-        .append("      return toJavabufMap.containsKey(clazz);\n")
+        .append("      return clazz.isPrimitive() || toJavabufMap.containsKey(clazz);\n")
         .append("   }\n\n")
         .append("   public static Message translateToJavabuf(Object o) {\n")
         .append("      TranslateToJavabuf ttj = toJavabufMap.get(o.getClass());\n")
@@ -337,75 +348,99 @@ public class JavabufTranslatorGenerator {
    }
 
    private static void createTranslatorToJavabuf(Class<?> clazz, StringBuilder sb) throws Exception {
+      if ("Empty".equals(clazz.getSimpleName())) {
+         return;
+      }
       sb.append("   static class ")
         .append(fqnify(clazz.getSimpleName())).append("_ToJavabuf implements TranslateToJavabuf {\n")
         .append("      private static Descriptor descriptor = ").append(clazz.getCanonicalName()).append(".getDescriptor();\n")
-        .append("      private static DynamicMessage.Builder builder = DynamicMessage.newBuilder(descriptor);\n")
-        .append("      private static List<AssignToJavabuf> assignList = new ArrayList<AssignToJavabuf>();\n\n")
-        .append("      static {\n")
-        .append("         for (FieldDescriptor f : descriptor.getFields()) {\n")
-        .append("            String name = f.getName();\n")
-        .append("            if (name.endsWith(\"_\")) {\n")
-        .append("               name = name.substring(0, name.length() - 1);\n")
-        .append("            }\n")
-        .append("            if (descriptor.findFieldByName(name) == null) {\n")
-        .append("               continue;\n")
-        .append("            }\n")
-        .append("            assignList.add(toJavabuf(").append(originalSimpleName(clazz.getSimpleName())).append(".class, descriptor.findFieldByName(name)));\n")
-        .append("         }\n")
-        .append("      }\n\n")
-        .append("      public Message assignToJavabuf(Object c1) {\n")
-        .append("         for (AssignToJavabuf assignTo : assignList) {\n")
-        .append("            try {\n")
-        .append("               assignTo.assign(c1, builder);\n")
-        .append("            } catch (Exception e) {\n")
-        .append("               throw new RuntimeException(e);\n")
-        .append("            }\n")
-        .append("         }\n")
-        .append("         return builder.build();\n")
-        .append("      }\n")
-        .append("   }\n\n");
+        .append("      private static DynamicMessage.Builder builder = DynamicMessage.newBuilder(descriptor);\n");
+      if (PRIMITIVE_WRAPPER_TYPES.containsKey(clazz.getSimpleName())) {
+         String simpleName = clazz.getSimpleName();
+         sb.append("\n")
+         .append("      public Message assignToJavabuf(Object x) {\n")
+         .append("         ").append(simpleName).append(" p = (").append(simpleName).append(") x;\n")
+         .append("         ").append(clazz.getCanonicalName()).append(".Builder builder = ").append(clazz.getCanonicalName()).append(".newBuilder();\n")
+         .append("         return builder.setValue(p).build();\n")
+         .append("      }\n");
+      } else {
+         sb.append("      private static List<AssignToJavabuf> assignList = new ArrayList<AssignToJavabuf>();\n\n")
+           .append("      static {\n")
+           .append("         for (FieldDescriptor f : descriptor.getFields()) {\n")
+           .append("            String name = f.getName();\n")
+           .append("            if (name.endsWith(\"_\")) {\n")
+           .append("               name = name.substring(0, name.length() - 1);\n")
+           .append("            }\n")
+           .append("            if (descriptor.findFieldByName(name) == null) {\n")
+           .append("               continue;\n")
+           .append("            }\n")
+           .append("            assignList.add(toJavabuf(").append(originalSimpleName(clazz.getSimpleName())).append(".class, descriptor.findFieldByName(name)));\n")
+           .append("         }\n")
+           .append("      }\n\n")
+           .append("      public Message assignToJavabuf(Object c1) {\n")
+           .append("         for (AssignToJavabuf assignTo : assignList) {\n")
+           .append("            try {\n")
+           .append("               assignTo.assign(c1, builder);\n")
+           .append("            } catch (Exception e) {\n")
+           .append("               throw new RuntimeException(e);\n")
+           .append("            }\n")
+           .append("         }\n")
+           .append("         return builder.build();\n")
+           .append("      }\n");
+      }
+      sb.append("   }\n\n");
    }
 
    private static void createTranslatorFromJavabuf(Class<?> clazz, StringBuilder sb) {
       String originalName = originalSimpleName(clazz.getName());
+      if ("Empty".equals(originalName)) {
+         return;
+      }
       sb.append("   static class ")
-      .append(fqnify(clazz.getSimpleName())).append("_FromJavabuf implements TranslateFromJavabuf {\n")
-      .append("      private static Descriptor descriptor = ").append(clazz.getCanonicalName()).append(".getDescriptor();\n")
-      .append("      private static List<AssignFromJavabuf> assignList = new ArrayList<AssignFromJavabuf>();\n\n")
-      .append("      static {\n")
-      .append("         for (FieldDescriptor f : descriptor.getFields()) {\n")
-      .append("            String name = f.getName();\n")
-      .append("            if (name.endsWith(\"_\")) {\n")
-      .append("               name = name.substring(0, name.length() - 1);\n")
-      .append("            }\n")
-      .append("            if (descriptor.findFieldByName(name) == null) {\n")
-      .append("               continue;\n")
-      .append("            }\n")
-      .append("            assignList.add(fromJavabuf(").append(originalName).append(".class, descriptor.findFieldByName(name)));\n")
-      .append("         }\n")
-      .append("      }\n\n")
-      .append("      public ").append(originalName).append(" assignFromJavabuf(Message message) {\n")
-      .append("         ").append(originalName).append(" obj = new ").append(originalName).append("();\n")
-      .append("         for (AssignFromJavabuf assignFrom : assignList) {\n")
-      .append("            try {\n")
-      .append("               assignFrom.assign(message, obj);\n")
-      .append("            } catch (Exception e) {\n")
-      .append("               throw new RuntimeException(e);\n")
-      .append("            }\n")
-      .append("         }\n")
-      .append("         return obj;\n")
-      .append("      }\n\n")
-      .append("      public void assignExistingFromJavabuf(Message message, Object obj) {\n")
-      .append("         for (AssignFromJavabuf assignFrom : assignList) {\n")
-      .append("            try {\n")
-      .append("               assignFrom.assign(message, obj);\n")
-      .append("            } catch (Exception e) {\n")
-      .append("               throw new RuntimeException(e);\n")
-      .append("            }\n")
-      .append("         }\n")
-      .append("      }\n")
-      .append("   }\n\n");
+        .append(fqnify(clazz.getSimpleName())).append("_FromJavabuf implements TranslateFromJavabuf {\n")
+        .append("      private static Descriptor descriptor = ").append(clazz.getCanonicalName()).append(".getDescriptor();\n");
+      if (PRIMITIVE_WRAPPER_TYPES.containsKey(originalName)) {
+         sb.append("      public ").append(originalName).append(" assignFromJavabuf(Message message) {\n")
+           .append("         FieldDescriptor fd = descriptor.getFields().get(0);\n")
+           .append("         return ").append(originalName).append(".valueOf((").append(originalName).append(") message.getField(fd));\n")
+           .append("      }\n\n")
+           .append("      public void assignExistingFromJavabuf(Message message, Object obj) { }\n");
+      } else {
+         sb.append("      private static List<AssignFromJavabuf> assignList = new ArrayList<AssignFromJavabuf>();\n\n")
+           .append("      static {\n")
+           .append("         for (FieldDescriptor f : descriptor.getFields()) {\n")
+           .append("            String name = f.getName();\n")
+           .append("            if (name.endsWith(\"_\")) {\n")
+           .append("               name = name.substring(0, name.length() - 1);\n")
+           .append("            }\n")
+           .append("            if (descriptor.findFieldByName(name) == null) {\n")
+           .append("               continue;\n")
+           .append("            }\n")
+           .append("            assignList.add(fromJavabuf(").append(originalName).append(".class, descriptor.findFieldByName(name)));\n")
+           .append("         }\n")
+           .append("      }\n\n")
+           .append("      public ").append(originalName).append(" assignFromJavabuf(Message message) {\n")
+           .append("         ").append(originalName).append(" obj = new ").append(originalName).append("();\n")
+           .append("         for (AssignFromJavabuf assignFrom : assignList) {\n")
+           .append("            try {\n")
+           .append("               assignFrom.assign(message, obj);\n")
+           .append("            } catch (Exception e) {\n")
+           .append("               throw new RuntimeException(e);\n")
+           .append("            }\n")
+           .append("         }\n")
+           .append("         return obj;\n")
+           .append("      }\n\n")
+           .append("      public void assignExistingFromJavabuf(Message message, Object obj) {\n")
+           .append("         for (AssignFromJavabuf assignFrom : assignList) {\n")
+           .append("            try {\n")
+           .append("               assignFrom.assign(message, obj);\n")
+           .append("            } catch (Exception e) {\n")
+           .append("               throw new RuntimeException(e);\n")
+           .append("            }\n")
+           .append("         }\n")
+           .append("      }\n");
+      }
+      sb.append("   }\n\n");
    }
 
    private static void finishClass(StringBuilder sb) {
@@ -413,7 +448,7 @@ public class JavabufTranslatorGenerator {
    }
 
    private static void writeTranslatorClass(String[] args, String translatorClass, StringBuilder sb) throws IOException {
-      StringBuilder root = new StringBuilder("target/generatedSources");
+      StringBuilder root = new StringBuilder("target/generated-sources/protobuf/grpc-java/");
       File dir = new File(root.toString());
       if(!dir.exists()) {
          dir.mkdir();
@@ -442,12 +477,19 @@ public class JavabufTranslatorGenerator {
 
    private static String originalSimpleName(String s) {
       int i = s.lastIndexOf("___");
-      return i < 0 ? s : s.substring(i + 3);
+      if (i >= 0) {
+         return s.substring(i + 3).replace('$', '.');
+      }
+      // primitive class
+      i = s.lastIndexOf("$");
+      return (i < 0 ? s : s.substring(i + 1));
    }
 
    private static String originalClassName(String s) {
+      System.out.println("originalClassName(): " + s);
       int i = s.indexOf("$");
       int j = s.lastIndexOf("___");
+      j = j < 0 ? s.length() : j;
       String pkg = s.substring(i + 1, j).replace('_', '.');
       return pkg + "." + originalSimpleName(s);
    }

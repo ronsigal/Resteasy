@@ -8,11 +8,16 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Scanner;
 
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.CDI;
+
 import org.jboss.logging.Logger;
+import org.jboss.weld.manager.BeanManagerImpl;
 
 public class JaxrsImplBaseExtender {
 
    private static Logger logger = Logger.getLogger(JaxrsImplBaseExtender.class);
+   private static String contextPath = "";
 
    private String packageName = "";
    private String outerClassName = "";
@@ -20,12 +25,14 @@ public class JaxrsImplBaseExtender {
    private String servletName = "";
 
    public static void main(String[] args) {
-      if (args.length != 2) {
+      if (args.length != 3) {
          logger.info("need two args:");
          logger.info("  arg[0]: .proto file prefix");
          logger.info("  arg[1]: servlet name");
+         logger.info("  arg[2]: context path");
          return;
       }
+      contextPath = args[2];
       new JaxrsImplBaseExtender(args);
    }
 
@@ -103,10 +110,19 @@ public class JaxrsImplBaseExtender {
         .append("import javax.servlet.http.HttpServletResponse;\n")
         .append("import org.jboss.resteasy.core.ResteasyContext;\n")
         .append("import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;\n")
+        .append("import org.jboss.resteasy.plugins.server.servlet.HttpServlet30Dispatcher;\n")
         .append("import io.grpc.classes.HttpServletRequestHandler;\n")
         .append("import io.grpc.classes.HttpServletResponseHandler;\n")
-        .append("import io.grpc.classes.MockServletInputStream;\n\n")
-        .append("import io.grpc.classes.MockServletOutputStream;\n\n");
+        .append("import io.grpc.classes.MockServletInputStream;\n")
+        .append("import io.grpc.classes.MockServletOutputStream;\n")
+        .append("import javax.inject.Inject;\n")
+        .append("import javax.enterprise.inject.spi.CDI;\n")
+        .append("import javax.enterprise.context.RequestScoped;\n")
+        .append("import javax.enterprise.context.ContextNotActiveException;\n")
+        .append("import org.jboss.weld.module.web.context.http.HttpRequestContextImpl;\n")
+        .append("import org.jboss.weld.manager.BeanManagerImpl;\n")
+        .append("import org.jboss.weld.bean.builtin.BeanManagerProxy;\n")
+        .append("import javax.enterprise.inject.spi.BeanManager;\n\n");
    }
 
    private void service(Scanner scanner, StringBuilder sbHeader, StringBuilder sbBody) {
@@ -114,7 +130,8 @@ public class JaxrsImplBaseExtender {
             .append(serviceName)
             .append("GrpcImpl extends ")
             .append(serviceName)
-            .append("ImplBase {\n");
+            .append("ImplBase {\n\n")
+            .append("   BeanManager manager = CDI.current().getBeanManager();\n\n");
       scanner.nextLine();
       scanner.skip("//");
       String path = scanner.next();
@@ -142,28 +159,52 @@ public class JaxrsImplBaseExtender {
       scanner.findWithinHorizon("\\(", 0);
       String retn = getType(packageName, outerClassName, scanner.next());
       sbBody.append("   public void ")
-      .append(method).append("(")
-      .append(param).append(" param, ")
-      .append("StreamObserver<").append(retn).append("> responseObserver) {\n");
+            .append(method).append("(")
+            .append(param).append(" param, ")
+            .append("StreamObserver<").append(retn).append("> responseObserver) {\n");
       rpcBody(scanner, path, httpMethod, sbBody, retn);
       sbBody.append("   }\n");
       scanner.reset();
    }
 
+   /*
+          BeanManager bm = CDI.current().getBeanManager();
+         try {
+          bm.getContext(RequestScoped.class);
+         } catch (ContextNotActiveException e) {
+             BeanManagerProxy bmp = (BeanManagerProxy) bm;
+             BeanManagerImpl bmi = bmp.delegate();
+             bmi.addContext(context); 
+         }
+    */
    private void rpcBody(Scanner scanner, String path, String method, StringBuilder sb, String retn) {
       sb.append("      try {\n")
         .append("         HttpServletResponse response = getHttpServletResponse();\n")
         .append("         HttpServletDispatcher servlet = (HttpServletDispatcher) ResteasyContext.getServlet(\"").append(servletName).append("\");\n") // plug in correct servlet
+        .append("         HttpServlet30Dispatcher hs30d = new HttpServlet30Dispatcher();\n")
+        .append("         hs30d.init(servlet.getServletConfig());\n")
         .append("         ByteArrayInputStream bais = new ByteArrayInputStream(param.toByteArray());\n")
         .append("         MockServletInputStream msis = new MockServletInputStream(bais);\n")
         .append("         HttpServletRequest request = getHttpServletRequest(\"").append(path).append("\", \"").append(method).append("\", msis, param.getClass().getName());\n")
-        .append("         servlet.service(\"").append(method).append("\", request, response);\n")
+        .append("         HttpRequestContextImpl context = new HttpRequestContextImpl(\"jaxrs.example.grpc-0.0.1-SNAPSHOT.war\");\n")
+        .append("         context.associate(request);\n")
+        .append("         context.activate();\n")
+        .append("         BeanManager bm = CDI.current().getBeanManager();\n")
+        .append("         try {\n")
+        .append("            bm.getContext(RequestScoped.class);\n")
+        .append("         } catch (ContextNotActiveException e) {\n")
+        .append("            BeanManagerProxy bmp = (BeanManagerProxy) bm;\n")
+        .append("            BeanManagerImpl bmi = bmp.delegate();\n")
+        .append("            bmi.addContext(context);\n")
+        .append("         }\n")
+        .append("         hs30d.service(\"").append(method).append("\", request, response);\n")
         .append("         MockServletOutputStream msos = (MockServletOutputStream) response.getOutputStream();\n")
         .append("         ByteArrayOutputStream baos = msos.getDelegate();\n")
         .append("         bais = new ByteArrayInputStream(baos.toByteArray());\n")
         .append("         ").append(retn).append(" reply = ").append(retn).append(".parseFrom(bais);\n")
         .append("         responseObserver.onNext(reply);\n")
         .append("      } catch (Exception e) {\n")
+        .append("         e.printStackTrace();\n")
         .append("         responseObserver.onError(e);\n")
         .append("         return;\n")
         .append("      }\n")
@@ -178,7 +219,7 @@ public class JaxrsImplBaseExtender {
         .append("      return (HttpServletRequest) Proxy.newProxyInstance(\n")
         .append("         HttpServletRequest.class.getClassLoader(),\n")
         .append("         new Class[] { HttpServletRequest.class },\n")
-        .append("         new HttpServletRequestHandler(path, method, is, headers));\n")
+        .append("         new HttpServletRequestHandler(\"").append(contextPath).append("\", path, method, is, headers));\n")
         .append("   }\n\n");
       sb.append("   private static HttpServletResponse getHttpServletResponse() {\n")
         .append("      return (HttpServletResponse) Proxy.newProxyInstance(\n")

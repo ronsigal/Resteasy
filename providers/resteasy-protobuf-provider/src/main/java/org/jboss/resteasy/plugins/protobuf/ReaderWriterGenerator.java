@@ -4,7 +4,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.logging.Logger;
@@ -12,18 +14,18 @@ import org.jboss.logging.Logger;
 public class ReaderWriterGenerator {
 
    private static Logger logger = Logger.getLogger(ReaderWriterGenerator.class);
-   private static Set<String> primitives = new HashSet<String>();
+   private static Map<String, String> primitives = new HashMap<String, String>();
 
    static {
-      primitives.add("Boolean");
-      primitives.add("Char");
-      primitives.add("Double");
-      primitives.add("Empty");
-      primitives.add("Float");
-      primitives.add("Integer");
-      primitives.add("Long");
-      primitives.add("Short");
-      primitives.add("String");
+      primitives.put("Boolean",   "boolean");
+      primitives.put("Character", "char");
+      primitives.put("Double",    "double");
+      primitives.put("Empty",     "ignore");
+      primitives.put("Float",     "float");
+      primitives.put("Integer",   "int");
+      primitives.put("Long",      "long");
+      primitives.put("Short",     "short");
+      primitives.put("String",    "ignore");
    }
 
    public static void main(String[] args) {
@@ -43,6 +45,7 @@ public class ReaderWriterGenerator {
          finishClass(sbBody);
          writeClass(wrapperClass, args[1], sbHeader, sbBody);
       } catch (Exception e) {
+         e.printStackTrace();
          logger.error(e);
       }
    }
@@ -70,21 +73,26 @@ public class ReaderWriterGenerator {
         .append("import com.google.protobuf.Message;\n")
         .append("import ").append(wrapperClass.getPackageName()).append(".").append(rootClass).append("_JavabufTranslator;\n");
       for (Class<?> clazz : wrapperClass.getClasses()) {
-         if (clazz.isInterface() || primitives.contains(clazz.getSimpleName())) {
+         if (clazz.isInterface()) {
             continue;
          }
-         sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
-         sb.append("import ").append(originalClassName(clazz.getName())).append(";\n");
+         if (primitives.containsKey(clazz.getSimpleName())) {
+            sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
+//            continue;
+         } else {
+            sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
+            sb.append("import ").append(originalClassName(clazz.getName())).append(";\n");
+         }
       }
       sb.append("\n\n");
    }
 
    private static void classBody(String[] args, Class<?> wrapperClass, StringBuilder sb) {
       sb.append("@Provider\n")
-        .append("@Consumes(\"*/*\")\n")
-        .append("@Produces(\"*/*\")\n")
+        .append("@Consumes(\"application/grpc-jaxrs\")\n")
+        .append("@Produces(\"application/grpc-jaxrs\")\n")
         .append("@SuppressWarnings(\"rawtypes\")\n")
-        .append("public class ").append(args[1]).append("MessageBodyReaderWriter implements MessageBodyReader, MessageBodyWriter {\n\n")
+        .append("public class ").append(args[1]).append("MessageBodyReaderWriter implements MessageBodyReader<Object>, MessageBodyWriter<Object> {\n\n")
         .append("   @Override\n")
         .append("   public boolean isReadable(Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {\n")
         .append("      return ").append(args[1]).append("_JavabufTranslator.handlesFromJavabuf(type);\n")
@@ -113,12 +121,12 @@ public class ReaderWriterGenerator {
         .append("   private static GeneratedMessageV3 getMessage(Class<?> clazz, InputStream is) throws IOException {\n");
       Class<?>[] subclasses = wrapperClass.getClasses();
       boolean startElse = false;
-      if (subclasses.length > 0 && !subclasses[0].isInterface() && !primitives.contains(subclasses[0].getSimpleName())) {
-         startElse = true;
-         sb.append("         if (").append(javabufToJavaClass(subclasses[0].getSimpleName())).append(".class.equals(clazz)) {\n")
-           .append("            return ").append(subclasses[0].getSimpleName()).append(".parseFrom(is);\n")
-           .append("      }");
-      }
+//      if (subclasses.length > 0 && !subclasses[0].isInterface()) {
+//         startElse = true;
+//         sb.append("         if (").append(javabufToJavaClass(subclasses[0].getSimpleName())).append(".class.equals(clazz)) {\n")
+//           .append("            return ").append(subclasses[0].getSimpleName()).append(".parseFrom(is);\n")
+//           .append("      }");
+//      }
       /*
        if (CC5.class.equals(clazz)) {
          return org_jboss_resteasy_test_grpc___CC5.parseFrom(is);
@@ -133,7 +141,7 @@ public class ReaderWriterGenerator {
       }
        */
       for (int i = 1; i < subclasses.length; i++) {
-         if (subclasses[i].isInterface() || primitives.contains(subclasses[i].getSimpleName())) {
+         if (subclasses[i].isInterface()) {
             continue;
          }
          if (startElse) {
@@ -142,8 +150,13 @@ public class ReaderWriterGenerator {
 //            sb.append("   ");
             startElse = true;
          }
-         sb.append("      if (").append(javabufToJavaClass(subclasses[i].getSimpleName())).append(".class.equals(clazz)) {\n")
-           .append("         return ").append(subclasses[i].getSimpleName()).append(".parseFrom(is);\n")
+         String simpleName = subclasses[i].getSimpleName();
+         String insert = "";
+         if (primitives.containsKey(simpleName) && !primitives.get(simpleName).equals("ignore")) {
+            insert = " || " + primitives.get(simpleName) + ".class.equals(clazz)";
+         }
+         sb.append("      if (").append(javabufToJavaClass(simpleName)).append(".class.equals(clazz)").append(insert).append(") {\n")
+           .append("         return ").append(simpleName).append(".parseFrom(is);\n")
            .append("      } ");
       }
       if (subclasses.length > 0) {
@@ -180,7 +193,12 @@ public class ReaderWriterGenerator {
    
    private static String javabufToJavaClass(String classname) {
       int i = classname.indexOf("___");
-      return classname.substring(i + 3);
+      String simpleName = i < 0 ? classname : classname.substring(i + 3);
+      if (primitives.containsKey(simpleName) && !"Empty".equals(simpleName)) {
+         return "java.lang." + simpleName; 
+      }
+      return simpleName;      
+      //      return "java.lang." + (i < 0 ? classname : classname.substring(i + 3));
    }
 
    private static String originalSimpleName(String s) {
@@ -188,9 +206,18 @@ public class ReaderWriterGenerator {
       return i < 0 ? s : s.substring(i + 3);
    }
 
+//   private static String originalClassName(String s) {
+//      int i = s.indexOf("$");
+//      int j = s.lastIndexOf("___");
+//      String pkg = s.substring(i + 1, j).replace('_', '.');
+//      return pkg + "." + originalSimpleName(s);
+//   }
+   
    private static String originalClassName(String s) {
+      System.out.println("originalClassName(): " + s);
       int i = s.indexOf("$");
       int j = s.lastIndexOf("___");
+      j = j < 0 ? s.length() : j;
       String pkg = s.substring(i + 1, j).replace('_', '.');
       return pkg + "." + originalSimpleName(s);
    }

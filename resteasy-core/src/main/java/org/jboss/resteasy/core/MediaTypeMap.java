@@ -1,5 +1,6 @@
 package org.jboss.resteasy.core;
 
+import org.jboss.resteasy.core.providerfactory.SortedKey;
 import org.jboss.resteasy.plugins.delegates.MediaTypeHeaderDelegate;
 import org.jboss.resteasy.util.MediaTypeHelper;
 
@@ -24,6 +25,8 @@ import java.util.regex.Pattern;
  */
 public class MediaTypeMap<T>
 {
+   private static MediaType GRPC_JAXRS_MEDIA_TYPE = new MediaType("application", "grpc-jaxrs");
+   
    public interface Typed
    {
       Class<?> getType();
@@ -85,11 +88,22 @@ public class MediaTypeMap<T>
 
       }
 
+      private int checkGrpcJaxrs(Entry<?> entry, Entry<?> entry1) {
+         if (GRPC_JAXRS_MEDIA_TYPE.equals(entry.mediaType)) {
+            return 1;
+         } else if (GRPC_JAXRS_MEDIA_TYPE.equals(entry1.mediaType)) {
+            return -1;
+         } else {
+            return 0;
+         }
+      }
+
       public int compare(Entry<?> entry, Entry<?> entry1)
       {
-         int val = compareTypes(entry, entry1);
+         int val = checkGrpcJaxrs(entry, entry1);
+         if (val == 0) compareTypes(entry, entry1);
          if (val == 0) val = entry.compareTo(entry1);
-         return val;
+         return -val;
       }
    }
 

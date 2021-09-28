@@ -202,17 +202,17 @@ public class JavaToProtobufGenerator {
       PRIMITIVE_WRAPPER_TYPES.put("float",   "Float");
       PRIMITIVE_WRAPPER_TYPES.put("double",  "Double");
       PRIMITIVE_WRAPPER_TYPES.put("boolean", "Boolean");
-      PRIMITIVE_WRAPPER_TYPES.put("char",    "Char");
+      PRIMITIVE_WRAPPER_TYPES.put("char",    "Character");
       PRIMITIVE_WRAPPER_TYPES.put("string",  "String");
 
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Short",   "message Short   {int32  value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Integer", "message Integer {int32  value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Long",    "message Long    {int64  value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Float",   "message Float   {float  value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Double",  "message Double  {double value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Boolean", "message Boolean {bool   value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Char",    "message Char    {int32  value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("String",  "message String  {string value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Short",     "message Short     {int32  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Integer",   "message Integer   {int32  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Long",      "message Long      {int64  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Float",     "message Float     {float  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Double",    "message Double    {double value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Boolean",   "message Boolean   {bool   value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Character", "message Character {int32  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("String",    "message String    {string value = $V$;}");
 
       ANNOTATIONS.add("Context");
       ANNOTATIONS.add("CookieParam");
@@ -256,7 +256,7 @@ public class JavaToProtobufGenerator {
    private static void protobufHeader(String[] args, StringBuilder sb)
    {
       sb.append("syntax = \"proto3\";\n");
-      sb.append("package " + args[1] + ";\n");
+      sb.append("package " + args[1].replace('-', '.') + ";\n");
       sb.append("option java_package = \"" + args[2] + "\";\n");
       sb.append("option java_outer_classname = \"" + args[3] + "_proto\";\n");
    }
@@ -533,7 +533,10 @@ public class JavaToProtobufGenerator {
             String rawType = p.getTypeAsString();
             String type = TYPE_MAP.get(rawType.toLowerCase());
             if (type != null) {
-               return PRIMITIVE_WRAPPER_TYPES.get(rawType);
+               return PRIMITIVE_WRAPPER_TYPES.get(rawType.toLowerCase());
+            }
+            if (PRIMITIVE_WRAPPER_TYPES.containsValue(rawType)) {
+               return rawType;
             }
             // array?
             ResolvedType rt = p.getType().resolve();
@@ -555,10 +558,18 @@ public class JavaToProtobufGenerator {
                return "Empty";
             } else {
                String rawType = ((Type) node).asString();
-               String type = TYPE_MAP.get(rawType);
+               System.out.println("return type: rawType: " + rawType);
+               String type = TYPE_MAP.get(rawType.toLowerCase());
+               System.out.println("return type: type: " + type);
                if (type != null) {
                   return PRIMITIVE_WRAPPER_TYPES.get(rawType.toLowerCase());
                }
+               if (PRIMITIVE_WRAPPER_TYPES.containsValue(rawType)) {
+                  return rawType;
+               }
+//               if ("String".equals(rawType)) {
+//                  return "String";
+//               }
                // array?
                ResolvedType rt = ((Type) node).resolve();
                resolvedTypes.add(rt.asReferenceType().getTypeDeclaration().get());
