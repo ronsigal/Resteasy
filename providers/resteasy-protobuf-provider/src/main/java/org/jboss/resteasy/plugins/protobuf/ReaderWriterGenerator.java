@@ -140,7 +140,7 @@ public class ReaderWriterGenerator {
          throw new IOException("unrecognized class: " + clazz);
       }
        */
-      for (int i = 1; i < subclasses.length; i++) {
+      for (int i = 0; i < subclasses.length; i++) {
          if (subclasses[i].isInterface()) {
             continue;
          }

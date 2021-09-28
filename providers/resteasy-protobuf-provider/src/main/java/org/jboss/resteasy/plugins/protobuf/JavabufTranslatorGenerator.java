@@ -400,6 +400,9 @@ public class JavabufTranslatorGenerator {
         .append(fqnify(clazz.getSimpleName())).append("_FromJavabuf implements TranslateFromJavabuf {\n")
         .append("      private static Descriptor descriptor = ").append(clazz.getCanonicalName()).append(".getDescriptor();\n");
       if (PRIMITIVE_WRAPPER_TYPES.containsKey(originalName)) {
+         if ("Short".equals(originalName)) {
+            originalName = "Integer"; // protobuf Short is represented as int32
+         }
          sb.append("      public ").append(originalName).append(" assignFromJavabuf(Message message) {\n")
            .append("         FieldDescriptor fd = descriptor.getFields().get(0);\n")
            .append("         return ").append(originalName).append(".valueOf((").append(originalName).append(") message.getField(fd));\n")
