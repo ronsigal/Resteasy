@@ -3,6 +3,7 @@ package org.jboss.resteasy.core;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.util.ThreadLocalStack;
 
+import javax.servlet.Servlet;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.UriInfo;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ public final class ResteasyContext
    }
 
    private static final ThreadLocalStack<Map<Class<?>, Object>> contextualData = new ThreadLocalStack<Map<Class<?>, Object>>();
+   private static final Map<String, Servlet> servletMap = new HashMap<String, Servlet>();
 
    private static final int maxForwards = 20;
 
@@ -109,5 +111,20 @@ public final class ResteasyContext
          }
       }
       return null;
+   }
+
+   public static void addServlet(String name, Servlet servlet)
+   {
+      servletMap.put(name, servlet);
+   }
+
+   public static void removeServlet(String name)
+   {
+      servletMap.remove(name);
+   }
+
+   public static Servlet getServlet(String name)
+   {
+      return servletMap.get(name);
    }
 }
