@@ -2,9 +2,11 @@ package org.jboss.resteasy.plugins.protobuf;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,14 +14,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+import javax.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
 
 import com.github.javaparser.ParseResult;
+import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.AnnotationExpr;
@@ -178,6 +185,7 @@ public class JavaToProtobufGenerator {
    private static Set<String> HTTP_VERBS = new HashSet<String>();
    private static boolean needEmpty = false;
    private static List<ResolvedReferenceTypeDeclaration> resolvedTypes = new CopyOnWriteArrayList<ResolvedReferenceTypeDeclaration>();
+   private static Set<String> additionalClasses;// = new CopyOnWriteArraySet<String>();
    private static Set<String> visited = new HashSet<String>();
    private static JavaSymbolSolver symbolSolver;
    private static ClassVisitor classVisitor = new ClassVisitor();
@@ -232,14 +240,17 @@ public class JavaToProtobufGenerator {
 
    public static void main(String[] args) throws IOException
    {
-      if (args.length != 4) {
+      if (args.length != 5) {
          logger.info("need five args");
          logger.info("  arg[0]: root directory");
          logger.info("  arg[1]: package to be used in .proto file");
          logger.info("  arg[2]: java package to be used in .proto file");
          logger.info("  arg[3]: java outer classname to be generated from .proto file");
+         logger.info("  arg[4]: comma separated of addition classes");
          return;
       }
+      additionalClasses = "empty".equals(args[4]) ? new CopyOnWriteArraySet<String>()
+                                                  : new CopyOnWriteArraySet<String>(Arrays.asList(args[4].split(",")));
       StringBuilder sb = new StringBuilder();
       protobufHeader(args, sb);
       new JavaToProtobufGenerator().processClasses(args, sb);
@@ -269,9 +280,6 @@ public class JavaToProtobufGenerator {
 
       // SourceRoot is a tool that read and writes Java files from packages on a certain root directory.
       Path path = Path.of(args[0], "/src/main/java/");
-      // In this case the root directory is found by taking the root from the current Maven module,
-      // with src/main/resources appended.
-      //      SourceRoot sourceRoot = new SourceRoot(CodeGenerationUtils.mavenModuleRoot(JavaToProtobufGenerator2.class).resolve("src/main/java/" + dirify(args[2])));
       SourceRoot sourceRoot = new SourceRoot(path);
       TypeSolver reflectionTypeSolver = new ReflectionTypeSolver();
       TypeSolver javaParserTypeSolver = new JavaParserTypeSolver(path);
@@ -284,11 +292,33 @@ public class JavaToProtobufGenerator {
       for (ParseResult<CompilationUnit> p : list) {
          jaxrsResourceVisitor.visit(p.getResult().get(), sb);
       }
+      processAdditionalClasses(symbolSolver, sb);
    }
 
    /****************************************************************************/
    /****************************** primary methods *****************************
-   /****************************************************************************/
+   /
+    * @throws FileNotFoundException ****************************************************************************/
+
+   private static void processAdditionalClasses(JavaSymbolSolver symbolSolver, StringBuilder sb) throws FileNotFoundException {
+      StaticJavaParser.getConfiguration().setSymbolResolver(symbolSolver);
+      while (!additionalClasses.isEmpty()) {
+         for (String filename : additionalClasses) {
+            System.out.println("processAdditionalClasses(): additionalClasses.size(): " + additionalClasses.size());
+            System.out.println("filename: " + filename);
+            int n = filename.indexOf(":");
+            if (n < 0) {
+               throw new RuntimeException("bad syntax: " + filename);
+            }
+            String dir = filename.substring(0, n).trim();
+            filename = dir + "/" + filename.substring(n + 1).replace(".", "/") + ".java";
+            CompilationUnit cu = StaticJavaParser.parse(new File(filename));
+            AdditionalClassVisitor additionalClassVisitor = new AdditionalClassVisitor(dir);
+            additionalClassVisitor.visit(cu, sb);
+         }
+      }
+   }
+
    private static void finishProto(StringBuilder sb) {
       if (needEmpty) {
          sb.append("\nmessage Empty {}");
@@ -301,7 +331,6 @@ public class JavaToProtobufGenerator {
 
    private static void writeProtoFile(String[] args, StringBuilder sb) throws IOException {
       String path = args[0];
-//      String generatedSources = "target/generatedSources/protobuf/idl";
       String generatedSources = "src/main/proto";
       for (String s : generatedSources.split("/")) {
          path += "/" + s;
@@ -386,7 +415,7 @@ public class JavaToProtobufGenerator {
                   }
                   ReferenceTypeImpl rt = (ReferenceTypeImpl) p.getType().resolve();
                   ResolvedReferenceTypeDeclaration rrtd = rt.getTypeDeclaration().get();
-                  String type = fqnify(removeTypeVariables(rt.asReferenceType().getQualifiedName()));
+                  String type = rt.asReferenceType().getQualifiedName();
                   if (!visited.contains(type)) {
                      resolvedTypes.add(rrtd);
                   }
@@ -412,7 +441,10 @@ public class JavaToProtobufGenerator {
          if (PRIMITIVE_WRAPPER_DEFINITIONS.containsKey(clazz.getClassName())) {
             return;
          }
-         String fqn = clazz.getPackageName() + "___" + clazz.getClassName();
+         if (Response.class.getName().equals(clazz.getQualifiedName())) {
+            return;
+         }
+         String fqn = clazz.getQualifiedName();
          if (visited.contains(fqn)) {
             return;
          }
@@ -423,7 +455,7 @@ public class JavaToProtobufGenerator {
          //         }
 
          // Begin protobuf message definition.
-         sb.append("\nmessage ").append(fqnify(fqn)).append(" {\n");
+         sb.append("\nmessage ").append(fqnifyClass(fqn)).append(" {\n");
 
          // Scan all variables in class.
          for (ResolvedFieldDeclaration rfd: clazz.getDeclaredFields()) {
@@ -443,7 +475,7 @@ public class JavaToProtobufGenerator {
                   if (!visited.contains(fqn)) {
                      resolvedTypes.add(ct.asReferenceType().getTypeDeclaration().get());
                   }
-                  type = "repeated " + fqnify(fqn);
+                  type = "repeated " + fqnifyClass(fqn);
                }
             } else { // Defined type
                if (rfd.getType().isReferenceType()) {
@@ -475,7 +507,7 @@ public class JavaToProtobufGenerator {
                if (Object.class.getName().equals(rcd.getQualifiedName())) {
                   continue;
                }
-               fqn = fqnify(rcd.getPackageName() + "." + rcd.getName());
+               fqn = fqnifyClass(rcd.getPackageName() + "." + rcd.getName());
                if (!visited.contains(fqn)) {
                   resolvedTypes.add(rcd);
                }
@@ -495,10 +527,11 @@ public class JavaToProtobufGenerator {
                if (Object.class.getName().equals(rcd.getClassName())) {
                   continue;
                }
-               fqn = fqnifyClass(rcd.getPackageName() + "." + rcd.getName());
+               fqn = rcd.getPackageName() + "." + rcd.getName();
                if (!visited.contains(fqn)) {
                   resolvedTypes.add(rcd);
                }
+               fqn = fqnifyClass(fqn);
                String superClassName = rcd.getName();
                String superClassVariableName = Character.toString(Character.toLowerCase(superClassName.charAt(0))).concat(superClassName.substring(1)) + "___super";
                sb.append("  ")
@@ -516,6 +549,137 @@ public class JavaToProtobufGenerator {
       }
    }
 
+   /**
+    * Visit all classes discovered by JaxrsResourceVisitor in the process of visiting all JAX-RS resources
+    */
+   static class AdditionalClassVisitor extends VoidVisitorAdapter<StringBuilder> {
+      private String dir;
+
+      public AdditionalClassVisitor(String dir) {
+         this.dir = dir;
+      }
+
+      /**
+       * For each class, create a message type with a field for each variable in the class.
+       */
+      public void visit(ClassOrInterfaceDeclaration clazz, StringBuilder sb) {
+         if (PRIMITIVE_WRAPPER_DEFINITIONS.containsKey(clazz.getName().asString())) {
+            return;
+         }
+         String packageName = getPackageName(clazz);
+         String fqn = packageName + "." + clazz.getNameAsString();
+         String filename = dir + ":" + fqn;
+         additionalClasses.remove(filename);
+         
+         if (visited.contains(fqn)) {
+            return;
+         }
+         visited.add(fqn);
+
+         //         if (subClass.isInterface()) {
+         //            return;
+         //         }
+
+         // Begin protobuf message definition.
+         sb.append("\nmessage ").append(fqnifyClass(fqn)).append(" {\n");
+
+         // Scan all variables in class.
+         for (FieldDeclaration fd: clazz.getFields()) {
+            ResolvedFieldDeclaration rfd = fd.resolve();
+            ResolvedType type = rfd.getType();
+            String typeName = type.describe();
+            if (TYPE_MAP.containsKey(typeName)) {
+               typeName = TYPE_MAP.get(typeName);
+            } else if (type.isArray()) {
+               ResolvedType ct = type.asArrayType().getComponentType();
+               if (ct.isPrimitive()) {
+                  typeName = "repeated " + typeName;
+               } else {
+                  fqn = type.describe();
+                     additionalClasses.add(dir + ":" + fqn);
+                  typeName = "repeated " + fqnifyClass(fqn);
+               }
+            } else { // Defined type
+               fqn = type.describe();
+               additionalClasses.add(dir + ":" + fqn);
+               typeName = fqnifyClass(type.describe());
+               System.out.println("visit(2): additionalClasses.size(): " + additionalClasses.size());
+               //               } else if (fd.getType().isTypeVariable()) {
+               //                  type = "bytes ";
+               //               }
+            }
+            if (type != null) {
+               sb.append("  ")
+               .append(typeName)
+               .append(" ")
+               .append(rfd.getName())
+               .append(" = ")
+               .append(counter++)
+               .append(";\n");
+            }
+         }
+
+         // Add field for superclass.
+         for (ResolvedReferenceType rrt : clazz.resolve().getAllAncestors()) {
+            if (Object.class.getName().equals(rrt.getQualifiedName())) {
+               continue;
+            }
+//            if (rrt.getTypeDeclaration().get() instanceof ReflectionClassDeclaration) {
+//               ReflectionClassDeclaration rcd = (ReflectionClassDeclaration) rrt.getTypeDeclaration().get();
+//               if (Object.class.getName().equals(rcd.getQualifiedName())) {
+//                  continue;
+//               }
+//               fqn = fqnify(rcd.getPackageName() + "." + rcd.getName());
+//               if (!visited.contains(fqn)) {
+//                  resolvedTypes.add(rcd);
+//               }
+//               String superClassName = rcd.getName();
+//               String superClassVariableName = Character.toString(Character.toLowerCase(superClassName.charAt(0))).concat(superClassName.substring(1)) + "___super";
+//               sb.append("  ")
+//               .append(fqn)
+//               .append(" ")
+//               .append(superClassVariableName)
+//               .append(" = ")
+//               .append(counter++)
+//               .append(";\n");
+//               break;
+//            } else 
+            if (rrt.getTypeDeclaration().get() instanceof JavaParserClassDeclaration) {
+               JavaParserClassDeclaration jpcd = (JavaParserClassDeclaration) rrt.getTypeDeclaration().get();
+               ResolvedClassDeclaration rcd = jpcd.asClass();
+               if (Object.class.getName().equals(rcd.getClassName())) {
+                  continue;
+               }
+               fqn = rcd.getPackageName() + "." + rcd.getName();
+               if (!visited.contains(fqn)) { // should fqn be fqnifyed?
+                  additionalClasses.add(dir + ":" + fqn);   // add to additionalClasses
+               }
+               fqn = fqnifyClass(fqn);
+               String superClassName = rcd.getName();
+               String superClassVariableName = Character.toString(Character.toLowerCase(superClassName.charAt(0))).concat(superClassName.substring(1)) + "___super";
+               sb.append("  ")
+               .append(fqn)
+               .append(" ")
+               .append(superClassVariableName)
+               .append(" = ")
+               .append(counter++)
+               .append(";\n");
+               break;
+
+            }
+         }
+         sb.append("}\n");
+      }
+   }
+
+   static private String getPackageName(ClassOrInterfaceDeclaration clazz) {
+      String fqn = clazz.getFullyQualifiedName().orElse(null);
+      if (fqn == null) {
+         return null;
+      }
+      int index = fqn.lastIndexOf(".");
+      return fqn.substring(0, index);
+   }
 
    /****************************************************************************/
    /****************************** utility methods *****************************
