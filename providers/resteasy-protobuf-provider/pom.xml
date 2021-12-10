@@ -116,6 +116,11 @@
             <artifactId>resteasy-undertow</artifactId>
              <version>${project.version}</version>
         </dependency>
+        <dependency>
+  <groupId>io.grpc</groupId>
+  <artifactId>grpc-stub</artifactId>
+  <version>1.39.0</version>
+</dependency>
 <!-- https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java -->
 <!--dependency>
     <groupId>com.google.protobuf</groupId>

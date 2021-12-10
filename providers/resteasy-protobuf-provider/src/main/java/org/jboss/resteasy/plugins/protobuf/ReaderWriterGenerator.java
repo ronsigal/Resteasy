@@ -9,7 +9,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.core.ResteasyContext;
+
+import io.grpc.classes.HttpServletResponseHandler;
 
 public class ReaderWriterGenerator {
 
@@ -17,15 +22,15 @@ public class ReaderWriterGenerator {
    private static Map<String, String> primitives = new HashMap<String, String>();
 
    static {
-      primitives.put("Boolean",   "boolean");
-      primitives.put("Character", "char");
-      primitives.put("Double",    "double");
-      primitives.put("Empty",     "ignore");
-      primitives.put("Float",     "float");
-      primitives.put("Integer",   "int");
-      primitives.put("Long",      "long");
-      primitives.put("Short",     "short");
-      primitives.put("String",    "ignore");
+      primitives.put("gBoolean",   "boolean");
+      primitives.put("gCharacter", "char");
+      primitives.put("gDouble",    "double");
+      primitives.put("gEmpty",     "ignore");
+      primitives.put("gFloat",     "float");
+      primitives.put("gInteger",   "int");
+      primitives.put("gLong",      "long");
+      primitives.put("gShort",     "short");
+      primitives.put("gString",    "ignore");
    }
 
    public static void main(String[] args) {
@@ -70,8 +75,15 @@ public class ReaderWriterGenerator {
         .append("import javax.ws.rs.ext.MessageBodyWriter;\n")
         .append("import javax.ws.rs.ext.Provider;\n")
         .append("import com.google.protobuf.GeneratedMessageV3;\n")
+        .append("import com.google.protobuf.Any;\n")
         .append("import com.google.protobuf.Message;\n")
-        .append("import ").append(wrapperClass.getPackageName()).append(".").append(rootClass).append("_JavabufTranslator;\n");
+        .append("import com.google.protobuf.CodedInputStream;\n")
+        .append("import com.google.protobuf.CodedOutputStream;\n")
+        .append("import ").append(HttpServletResponse.class.getCanonicalName()).append(";\n")
+        .append("import ").append(HttpServletResponseHandler.class.getCanonicalName()).append(";\n")
+        .append("import ").append(wrapperClass.getPackageName()).append(".").append(rootClass).append("_JavabufTranslator;\n")
+        .append("import ").append(ResteasyContext.class.getCanonicalName()).append(";\n")
+        ;
       for (Class<?> clazz : wrapperClass.getClasses()) {
          if (clazz.isInterface()) {
             continue;
@@ -79,6 +91,8 @@ public class ReaderWriterGenerator {
          if (primitives.containsKey(clazz.getSimpleName())) {
             sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
 //            continue;
+         } else if ("GeneralEntityMessage".equals(clazz.getSimpleName()) || "GeneralReturnMessage".equals(clazz.getSimpleName())) {
+            sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
          } else {
             sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
             sb.append("import ").append(originalClassName(clazz.getName())).append(";\n");
@@ -102,8 +116,21 @@ public class ReaderWriterGenerator {
         .append("   public Object readFrom(Class type, Type genericType, Annotation[] annotations, MediaType mediaType,\n")
         .append("        MultivaluedMap httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {\n")
         .append("      try {\n")
+//        .append("         GeneratedMessageV3 message = getMessage(type, entityStream);\n")
+//        .append("         return CC1_JavabufTranslator.translateFromJavabuf(message);\n")
+//        .append("      GeneratedMessageV3 message = null;\n")
+//        .append("        HttpServletResponse servletResponse = ResteasyContext.getContextData(HttpServletResponse.class);\n")
+//        .append("        if (servletResponse.getHeader(HttpServletResponseHandler.GRPC_RETURN_RESPONSE) != null ||\n")
+//        .append("           httpHeaders.getFirst(HttpServletResponseHandler.GRPC_RETURN_RESPONSE) != null) {\n")
+        .append("      if (httpHeaders.getFirst(HttpServletResponseHandler.GRPC_RETURN_RESPONSE) != null) {\n")
+//        .append("         Any any = Any.parseFrom(CodedInputStream.newInstance(entityStream));\n")
+//        .append("         message = unpackMessage(type, any);\n")
+        .append("         return Any.parseFrom(CodedInputStream.newInstance(entityStream));\n")
+        .append("      } else {\n")
         .append("         GeneratedMessageV3 message = getMessage(type, entityStream);\n")
         .append("         return CC1_JavabufTranslator.translateFromJavabuf(message);\n")
+        .append("      }\n")
+//        .append("      return CC1_JavabufTranslator.translateFromJavabuf(message);\n")
         .append("      } catch (Exception e) {\n")
         .append("         throw new RuntimeException(e);\n")
         .append("      }\n")
@@ -116,7 +143,14 @@ public class ReaderWriterGenerator {
         .append("   public void writeTo(Object t, Class type, Type genericType, Annotation[] annotations, MediaType mediaType,\n")
         .append("      MultivaluedMap httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {\n")
         .append("      Message message = CC1_JavabufTranslator.translateToJavabuf(t);\n")
-        .append("      message.writeTo(entityStream);\n")
+        .append("      HttpServletResponse servletResponse = ResteasyContext.getContextData(HttpServletResponse.class);\n")
+        .append("      if (servletResponse != null && servletResponse.getHeader(HttpServletResponseHandler.GRPC_RETURN_RESPONSE) != null) {\n")
+        .append("         CodedOutputStream cos = CodedOutputStream.newInstance(entityStream);\n")
+        .append("         Any.pack(message).writeTo(cos);\n")
+        .append("         cos.flush();\n")
+        .append("      } else {\n")
+        .append("         message.writeTo(entityStream);\n")
+        .append("      }\n")
         .append("   }\n\n")
         .append("   private static GeneratedMessageV3 getMessage(Class<?> clazz, InputStream is) throws IOException {\n");
       Class<?>[] subclasses = wrapperClass.getClasses();
@@ -165,6 +199,34 @@ public class ReaderWriterGenerator {
            .append("      }\n");
       }
       sb.append("   }\n\n");
+      
+      startElse = false;
+      sb.append("   private static GeneratedMessageV3 unpackMessage(Class<?> clazz, Any any) throws IOException {\n");
+      for (int i = 0; i < subclasses.length; i++) {
+         if (subclasses[i].isInterface()) {
+            continue;
+         }
+         if (startElse) {
+            sb.append("else ");
+         } else {
+//            sb.append("   ");
+            startElse = true;
+         }
+         String simpleName = subclasses[i].getSimpleName();
+         String insert = "";
+         if (primitives.containsKey(simpleName) && !primitives.get(simpleName).equals("ignore")) {
+            insert = " || " + primitives.get(simpleName) + ".class.equals(clazz)";
+         }
+         sb.append("      if (").append(javabufToJavaClass(simpleName)).append(".class.equals(clazz)").append(insert).append(") {\n")
+           .append("         return any.unpack(").append(simpleName).append(".class);\n")
+           .append("      } ");
+      }
+      if (subclasses.length > 0) {
+         sb.append("else {\n")
+           .append("         throw new IOException(\"unrecognized class: \" + clazz);\n")
+           .append("      }\n");
+      }
+      sb.append("   }\n\n");
    }
 
    private static void finishClass(StringBuilder sb) {
@@ -183,6 +245,9 @@ public class ReaderWriterGenerator {
          path += "/";
       }
       File file = new File(path + prefix + "MessageBodyReaderWriter.java");
+      if (file.exists()) {
+         return;
+      }
       file.createNewFile();
       FileWriter fw = new FileWriter(file.getAbsoluteFile());
       BufferedWriter bw = new BufferedWriter(fw);
@@ -194,8 +259,8 @@ public class ReaderWriterGenerator {
    private static String javabufToJavaClass(String classname) {
       int i = classname.indexOf("___");
       String simpleName = i < 0 ? classname : classname.substring(i + 3);
-      if (primitives.containsKey(simpleName) && !"Empty".equals(simpleName)) {
-         return "java.lang." + simpleName; 
+      if (primitives.containsKey(simpleName) && !"gEmpty".equals(simpleName)) {
+         return "java.lang." + simpleName.substring(1); 
       }
       return simpleName;      
       //      return "java.lang." + (i < 0 ? classname : classname.substring(i + 3));

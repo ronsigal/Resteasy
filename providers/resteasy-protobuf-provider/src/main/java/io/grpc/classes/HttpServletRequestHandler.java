@@ -54,6 +54,9 @@ public class HttpServletRequestHandler implements InvocationHandler {
       if ("getInputStream".equals(method.getName())) {
          return is;
       }
+      if ("isAsyncStarted".contentEquals(method.getName())) {
+         return false;
+      }
       if ("setAttribute".equals(method.getName())) {
          attributes.put((String) args[0], args[1]);
          return null;

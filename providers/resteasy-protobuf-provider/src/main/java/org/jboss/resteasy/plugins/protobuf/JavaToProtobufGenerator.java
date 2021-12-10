@@ -13,9 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
@@ -185,6 +187,8 @@ public class JavaToProtobufGenerator {
    private static Set<String> HTTP_VERBS = new HashSet<String>();
    private static boolean needEmpty = false;
    private static List<ResolvedReferenceTypeDeclaration> resolvedTypes = new CopyOnWriteArrayList<ResolvedReferenceTypeDeclaration>();
+   private static Set<String> entityMessageTypes = new HashSet<String>();
+   private static Set<String> returnMessageTypes = new HashSet<String>();
    private static Set<String> additionalClasses;// = new CopyOnWriteArraySet<String>();
    private static Set<String> visited = new HashSet<String>();
    private static JavaSymbolSolver symbolSolver;
@@ -204,23 +208,40 @@ public class JavaToProtobufGenerator {
       TYPE_MAP.put("String", "string");
       TYPE_MAP.put("java.lang.String", "string");
 
-      PRIMITIVE_WRAPPER_TYPES.put("short",   "Short");
-      PRIMITIVE_WRAPPER_TYPES.put("int",     "Integer");
-      PRIMITIVE_WRAPPER_TYPES.put("long",    "Long");
-      PRIMITIVE_WRAPPER_TYPES.put("float",   "Float");
-      PRIMITIVE_WRAPPER_TYPES.put("double",  "Double");
-      PRIMITIVE_WRAPPER_TYPES.put("boolean", "Boolean");
-      PRIMITIVE_WRAPPER_TYPES.put("char",    "Character");
-      PRIMITIVE_WRAPPER_TYPES.put("string",  "String");
+      PRIMITIVE_WRAPPER_TYPES.put("short",     "gShort");
+      PRIMITIVE_WRAPPER_TYPES.put("int",       "gInteger");
+      PRIMITIVE_WRAPPER_TYPES.put("long",      "gLong");
+      PRIMITIVE_WRAPPER_TYPES.put("float",     "gFloat");
+      PRIMITIVE_WRAPPER_TYPES.put("double",    "gDouble");
+      PRIMITIVE_WRAPPER_TYPES.put("boolean",   "gBoolean");
+      PRIMITIVE_WRAPPER_TYPES.put("char",      "gCharacter");
+      PRIMITIVE_WRAPPER_TYPES.put("string",    "gString");
+      PRIMITIVE_WRAPPER_TYPES.put("Short",     "gShort");
+      PRIMITIVE_WRAPPER_TYPES.put("Integer",   "gInteger");
+      PRIMITIVE_WRAPPER_TYPES.put("Long",      "gLong");
+      PRIMITIVE_WRAPPER_TYPES.put("Float",     "gFloat");
+      PRIMITIVE_WRAPPER_TYPES.put("Double",    "gDouble");
+      PRIMITIVE_WRAPPER_TYPES.put("Boolean",   "gBoolean");
+      PRIMITIVE_WRAPPER_TYPES.put("Character", "gCharacter");
+      PRIMITIVE_WRAPPER_TYPES.put("String",    "gString");
+      PRIMITIVE_WRAPPER_TYPES.put("java.lang.String",    "gString");
+      PRIMITIVE_WRAPPER_TYPES.put("java.lang.Short",     "gShort");
+      PRIMITIVE_WRAPPER_TYPES.put("java.lang.Integer",   "gInteger");
+      PRIMITIVE_WRAPPER_TYPES.put("java.lang.Long",      "gLong");
+      PRIMITIVE_WRAPPER_TYPES.put("java.lang.Float",     "gFloat");
+      PRIMITIVE_WRAPPER_TYPES.put("java.lang.Double",    "gDouble");
+      PRIMITIVE_WRAPPER_TYPES.put("java.lang.Boolean",   "gBoolean");
+      PRIMITIVE_WRAPPER_TYPES.put("java.lang.Character", "gCharacter");
+      PRIMITIVE_WRAPPER_TYPES.put("java.lang.String",    "gString");
 
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Short",     "message Short     {int32  value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Integer",   "message Integer   {int32  value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Long",      "message Long      {int64  value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Float",     "message Float     {float  value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Double",    "message Double    {double value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Boolean",   "message Boolean   {bool   value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Character", "message Character {int32  value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("String",    "message String    {string value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Short",     "message gShort     {int32  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Integer",   "message gInteger   {int32  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Long",      "message gLong      {int64  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Float",     "message gFloat     {float  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Double",    "message gDouble    {double value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Boolean",   "message gBoolean   {bool   value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Character", "message gCharacter {int32  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("String",    "message gString    {string value = $V$;}");
 
       ANNOTATIONS.add("Context");
       ANNOTATIONS.add("CookieParam");
@@ -240,17 +261,17 @@ public class JavaToProtobufGenerator {
 
    public static void main(String[] args) throws IOException
    {
-      if (args.length != 5) {
-         logger.info("need five args");
+      if (args.length != 4 && args.length != 5) {
+         logger.info("need four or five args");
          logger.info("  arg[0]: root directory");
          logger.info("  arg[1]: package to be used in .proto file");
          logger.info("  arg[2]: java package to be used in .proto file");
          logger.info("  arg[3]: java outer classname to be generated from .proto file");
-         logger.info("  arg[4]: comma separated of addition classes");
+         logger.info("  arg[4]: comma separated of addition classes [optional]");
          return;
       }
-      additionalClasses = "empty".equals(args[4]) ? new CopyOnWriteArraySet<String>()
-                                                  : new CopyOnWriteArraySet<String>(Arrays.asList(args[4].split(",")));
+      additionalClasses = args[4] == null ? new CopyOnWriteArraySet<String>()
+                                          : new CopyOnWriteArraySet<String>(Arrays.asList(args[4].split(",")));
       StringBuilder sb = new StringBuilder();
       protobufHeader(args, sb);
       new JavaToProtobufGenerator().processClasses(args, sb);
@@ -268,6 +289,7 @@ public class JavaToProtobufGenerator {
    {
       sb.append("syntax = \"proto3\";\n");
       sb.append("package " + args[1].replace('-', '.') + ";\n");
+      sb.append("import \"google/protobuf/any.proto\";\n");
       sb.append("option java_package = \"" + args[2] + "\";\n");
       sb.append("option java_outer_classname = \"" + args[3] + "_proto\";\n");
    }
@@ -321,12 +343,53 @@ public class JavaToProtobufGenerator {
 
    private static void finishProto(StringBuilder sb) {
       if (needEmpty) {
-         sb.append("\nmessage Empty {}");
+         sb.append("\nmessage gEmpty {}");
+         entityMessageTypes.add("gEmpty");
+         returnMessageTypes.add("gEmpty");
       }
 
       for (String wrapper : PRIMITIVE_WRAPPER_DEFINITIONS.values()) {
          sb.append("\n").append(wrapper.replace("$V$", String.valueOf(counter++)));
       }
+      createGeneralMessageTypes(sb, "GeneralEntityMessage");
+      createGeneralMessageTypes(sb, "GeneralReturnMessage");
+//      sb.append("\n\nmessage AbstractMessage {\n")
+//        .append("   string URL = ").append(counter++).append(";\n")
+//        .append("   oneof messageType {\n");
+//      int messageTypeCounter = 1;
+//      for (String messageType : entityMessageTypes) {
+//         sb.append("      ")
+//           .append(messageType)
+//           .append(" ")
+//           .append("messageType")
+//           .append(messageTypeCounter++)
+//           .append(" = ")
+//           .append(counter++)
+//           .append(";\n");
+//      }
+//      sb.append("   }\n}\n");
+   }
+   
+   private static void createGeneralMessageTypes(StringBuilder sb, String name) {
+      sb.append("\n\nmessage ")
+        .append(name)
+        .append(" {\n");
+      if ("GeneralEntityMessage".equals(name)) {
+        sb.append("   string URL = ").append(counter++).append(";\n");
+      }
+    sb.append("   oneof messageType {\n");
+//    int messageTypeCounter = 1;
+    for (String messageType : entityMessageTypes) {
+       sb.append("      ")
+         .append(messageType)
+         .append(" ")
+         .append(messageType).append("_field")
+//         .append(messageTypeCounter++)
+         .append(" = ")
+         .append(counter++)
+         .append(";\n");
+    }
+    sb.append("   }\n}\n");
    }
 
    private static void writeProtoFile(String[] args, StringBuilder sb) throws IOException {
@@ -399,13 +462,20 @@ public class JavaToProtobufGenerator {
                   .append("Service {\n");
                   started = true;
                }
-               sb.append("// ").append(classPath).append("/").append(methodPath).append(" ").append(httpMethod).append("\n");
+               String entityType = getEntityParameter(md);
+               String returnType = getReturnType(md);
+               sb.append("// ").append(classPath).append("/").append(methodPath).append(" ").append(entityType).append(" ").append(httpMethod).append("\n");
+               entityMessageTypes.add(entityType);
+               returnMessageTypes.add(returnType);
                sb.append("  rpc ")
                .append(md.getNameAsString())
                .append(" (")
-               .append(getEntityParameter(md))
+//               .append(getEntityParameter(md))
+//               .append(entityType)
+               .append("GeneralEntityMessage")
                .append(") returns (")
-               .append(getReturnType(md))
+//               .append(getReturnType(md))
+               .append(returnType)
                .append(");\n");
 
                // Add each parameter and return type to resolvedTypes for further processing.
@@ -693,25 +763,32 @@ public class JavaToProtobufGenerator {
                break;
             }
          }
+         String name = p.getTypeAsString();
+         if (AsyncResponse.class.getName().equals(name) || AsyncResponse.class.getSimpleName().equals(name)) {
+            isEntity = false;
+         }
          if (isEntity) {
             String rawType = p.getTypeAsString();
-            String type = TYPE_MAP.get(rawType.toLowerCase());
-            if (type != null) {
-               return PRIMITIVE_WRAPPER_TYPES.get(rawType.toLowerCase());
-            }
-            if (PRIMITIVE_WRAPPER_TYPES.containsValue(rawType)) {
-               return rawType;
+//            String type = TYPE_MAP.get(rawType.toLowerCase());
+//            if (type != null) {
+//               return PRIMITIVE_WRAPPER_TYPES.get(rawType.toLowerCase());
+//            }
+//            if (PRIMITIVE_WRAPPER_TYPES.containsValue(rawType)) {
+//               return rawType;
+//            }
+            if (PRIMITIVE_WRAPPER_TYPES.containsKey(rawType)) {
+               return PRIMITIVE_WRAPPER_TYPES.get(rawType);
             }
             // array?
             ResolvedType rt = p.getType().resolve();
             resolvedTypes.add(rt.asReferenceType().getTypeDeclaration().get());
-            type = rt.describe();
+            String type = rt.describe();
             int n = type.lastIndexOf(".");
             return fqnify(type.substring(0, n)) + "___" + type.substring(n + 1);
          }
       }
       needEmpty = true;
-      return "Empty";
+      return "gEmpty";
    }
 
    private static String getReturnType(MethodDeclaration md) {
@@ -719,16 +796,38 @@ public class JavaToProtobufGenerator {
          if (node instanceof Type) {
             if (node instanceof VoidType) {
                needEmpty = true;
-               return "Empty";
+               return "gEmpty";
             } else {
                String rawType = ((Type) node).asString();
                System.out.println("return type: rawType: " + rawType);
-               String type = TYPE_MAP.get(rawType.toLowerCase());
-               System.out.println("return type: type: " + type);
-               if (type != null) {
-                  return PRIMITIVE_WRAPPER_TYPES.get(rawType.toLowerCase());
+//               String type = TYPE_MAP.get(rawType.toLowerCase());
+//               System.out.println("return type: type: " + type);
+//               if (type != null) {
+//                  return PRIMITIVE_WRAPPER_TYPES.get(rawType.toLowerCase());
+//               }
+//               if (PRIMITIVE_WRAPPER_TYPES.containsValue(rawType)) {
+//                  return rawType;
+//               }
+               if (PRIMITIVE_WRAPPER_TYPES.containsKey(rawType)) {
+                  return PRIMITIVE_WRAPPER_TYPES.get(rawType);
                }
-               if (PRIMITIVE_WRAPPER_TYPES.containsValue(rawType)) {
+               if ("javax.ws.rs.core.Response".equals(rawType) || "Response".equals(rawType)) {
+                  return "google.protobuf.Any";
+               }
+               int open = rawType.indexOf("<");
+               int close = rawType.indexOf(">");
+               if (open >= 0 && close > open) {
+                  String type = rawType.substring(0, open);
+                  String parameterType = rawType.substring(open + 1, close);
+                  if (CompletionStage.class.getCanonicalName().contentEquals(type) || CompletionStage.class.getSimpleName().contentEquals(type)) {
+                     rawType = parameterType;
+                  } else {
+                     rawType = type;
+                  }
+                  System.out.println("return type: processed rawType: " + rawType);
+                  if (Response.class.getCanonicalName().equals(rawType) || Response.class.getSimpleName().equals(rawType)) {
+                     return "google.protobuf.Any";
+                  }
                   return rawType;
                }
 //               if ("String".equals(rawType)) {
@@ -737,13 +836,13 @@ public class JavaToProtobufGenerator {
                // array?
                ResolvedType rt = ((Type) node).resolve();
                resolvedTypes.add(rt.asReferenceType().getTypeDeclaration().get());
-               type = ((Type) node).resolve().describe();
+               String type = ((Type) node).resolve().describe();
                return fqnifyClass(type);
             }
          }
       }
       needEmpty = true;
-      return "Empty";
+      return "gEmpty";
    }
 
    // @Path() ???
