@@ -270,6 +270,7 @@ public class JavaToProtobufGenerator {
          logger.info("  arg[4]: comma separated of addition classes [optional]");
          return;
       }
+      System.out.println("root directory: " + args[0]);
       additionalClasses = args[4] == null ? new CopyOnWriteArraySet<String>()
                                           : new CopyOnWriteArraySet<String>(Arrays.asList(args[4].split(",")));
       StringBuilder sb = new StringBuilder();
@@ -351,40 +352,29 @@ public class JavaToProtobufGenerator {
       for (String wrapper : PRIMITIVE_WRAPPER_DEFINITIONS.values()) {
          sb.append("\n").append(wrapper.replace("$V$", String.valueOf(counter++)));
       }
-      createGeneralMessageTypes(sb, "GeneralEntityMessage");
-      createGeneralMessageTypes(sb, "GeneralReturnMessage");
-//      sb.append("\n\nmessage AbstractMessage {\n")
-//        .append("   string URL = ").append(counter++).append(";\n")
-//        .append("   oneof messageType {\n");
-//      int messageTypeCounter = 1;
-//      for (String messageType : entityMessageTypes) {
-//         sb.append("      ")
-//           .append(messageType)
-//           .append(" ")
-//           .append("messageType")
-//           .append(messageTypeCounter++)
-//           .append(" = ")
-//           .append(counter++)
-//           .append(";\n");
-//      }
-//      sb.append("   }\n}\n");
+      createGeneralEntityMessageType(sb);
+      createGeneralReturnMessageType(sb);
    }
-   
-   private static void createGeneralMessageTypes(StringBuilder sb, String name) {
-      sb.append("\n\nmessage ")
-        .append(name)
-        .append(" {\n");
-      if ("GeneralEntityMessage".equals(name)) {
-        sb.append("   string URL = ").append(counter++).append(";\n");
-      }
-    sb.append("   oneof messageType {\n");
-//    int messageTypeCounter = 1;
+
+   private static void createGeneralEntityMessageType(StringBuilder sb) {
+      sb.append("\n\nmessage Header {\n").append("   repeated string values = ").append(counter++).append(";\n}");
+      sb.append("\n\nmessage Cookie {\n")
+        .append("    string name = ").append(counter++).append(";\n")
+        .append("    string value = ").append(counter++).append(";\n")
+        .append("    int32 version = ").append(counter++).append(";\n")
+        .append("    string path = ").append(counter++).append(";\n")
+        .append("    string domain = ").append(counter++).append(";\n")
+        .append("}");
+      sb.append("\n\nmessage GeneralEntityMessage {\n")
+        .append("   string URL = ").append(counter++).append(";\n")
+        .append("   map<string, Header> headers = ").append(counter++).append(";\n")
+        .append("   repeated Cookie cookies = ").append(counter++).append(";\n")
+        .append("   oneof messageType {\n");
     for (String messageType : entityMessageTypes) {
        sb.append("      ")
          .append(messageType)
          .append(" ")
          .append(messageType).append("_field")
-//         .append(messageTypeCounter++)
          .append(" = ")
          .append(counter++)
          .append(";\n");
@@ -392,6 +382,22 @@ public class JavaToProtobufGenerator {
     sb.append("   }\n}\n");
    }
 
+   private static void createGeneralReturnMessageType(StringBuilder sb) {
+      sb.append("\nmessage GeneralReturnMessage {\n")
+        .append("   oneof messageType {\n");
+    for (String messageType : entityMessageTypes) {
+       sb.append("      ")
+         .append(messageType)
+         .append(" ")
+         .append(messageType).append("_field")
+         .append(" = ")
+         .append(counter++)
+         .append(";\n");
+    }
+    sb.append("   }\n}\n");
+   }
+
+   
    private static void writeProtoFile(String[] args, StringBuilder sb) throws IOException {
       String path = args[0];
       String generatedSources = "src/main/proto";
@@ -434,6 +440,10 @@ public class JavaToProtobufGenerator {
 
       public void visit(final ClassOrInterfaceDeclaration subClass, StringBuilder sb) {
          boolean started = false;
+         // Don't process gRPC server
+         if (subClass.getFullyQualifiedName().orElse("").startsWith("grpc.server")) {
+            return;
+         }
          Optional<AnnotationExpr> opt = subClass.getAnnotationByName("Path");
          SingleMemberAnnotationExpr annotationExpr = opt.isPresent() ? (SingleMemberAnnotationExpr) opt.get() : null;
          String classPath = "";
@@ -463,8 +473,13 @@ public class JavaToProtobufGenerator {
                   started = true;
                }
                String entityType = getEntityParameter(md);
+               System.out.println("entityType: " + entityType);
                String returnType = getReturnType(md);
-               sb.append("// ").append(classPath).append("/").append(methodPath).append(" ").append(entityType).append(" ").append(httpMethod).append("\n");
+               String async = isAsync(md) ? "async" : "sync";
+               sb.append("// ").append(classPath).append("/").append(methodPath).append(" ")
+                 .append(entityType).append(" ")
+                 .append(httpMethod).append(" ")
+                 .append(async).append("\n");
                entityMessageTypes.add(entityType);
                returnMessageTypes.add(returnType);
                sb.append("  rpc ")
@@ -480,6 +495,9 @@ public class JavaToProtobufGenerator {
 
                // Add each parameter and return type to resolvedTypes for further processing.
                for (Parameter p : md.getParameters()) {
+                  if (!isEntity(p)) {
+                     continue;
+                  }
                   if (p.getType().resolve().isPrimitive()) {
                      continue;
                   }
@@ -508,6 +526,9 @@ public class JavaToProtobufGenerator {
        */
       public void visit(ResolvedReferenceTypeDeclaration clazz, StringBuilder sb) {
          resolvedTypes.remove(clazz);
+         if (clazz.getPackageName().startsWith("java")) {
+            return;
+         }
          if (PRIMITIVE_WRAPPER_DEFINITIONS.containsKey(clazz.getClassName())) {
             return;
          }
@@ -755,19 +776,22 @@ public class JavaToProtobufGenerator {
    /****************************** utility methods *****************************
    /****************************************************************************/
    private static String getEntityParameter(MethodDeclaration md) {
+      System.out.println("getEntityParameter(): " + md.getNameAsString());
       for (Parameter p : md.getParameters()) {
-         boolean isEntity = true;
-         for (AnnotationExpr ae : p.getAnnotations()) {
-            if (ANNOTATIONS.contains(ae.getNameAsString())) {
-               isEntity = false;
-               break;
-            }
-         }
-         String name = p.getTypeAsString();
-         if (AsyncResponse.class.getName().equals(name) || AsyncResponse.class.getSimpleName().equals(name)) {
-            isEntity = false;
-         }
-         if (isEntity) {
+//         boolean isEntity = true;
+//         for (AnnotationExpr ae : p.getAnnotations()) {
+//            System.out.println("getEntityParameter(): " + ae.getNameAsString());
+//            if (ANNOTATIONS.contains(ae.getNameAsString())) {
+//               isEntity = false;
+//               break;
+//            }
+//         }
+//         System.out.println("getEntityParameter(): isEntity: " + isEntity);
+//         String name = p.getTypeAsString();
+//         if (AsyncResponse.class.getName().equals(name) || AsyncResponse.class.getSimpleName().equals(name)) {
+//            isEntity = false;
+//         }
+         if (isEntity(p)) {
             String rawType = p.getTypeAsString();
 //            String type = TYPE_MAP.get(rawType.toLowerCase());
 //            if (type != null) {
@@ -790,13 +814,38 @@ public class JavaToProtobufGenerator {
       needEmpty = true;
       return "gEmpty";
    }
+   
+   private static boolean isEntity(Parameter p) {
+      for (AnnotationExpr ae : p.getAnnotations()) {
+         if (ANNOTATIONS.contains(ae.getNameAsString())) {
+            return false;
+         }
+      }
+      String name = p.getTypeAsString();
+      if (AsyncResponse.class.getName().equals(name) || AsyncResponse.class.getSimpleName().equals(name)) {
+         return false;
+      }
+      return true;
+   }
 
    private static String getReturnType(MethodDeclaration md) {
+//      for (Parameter p : md.getParameters()) {
+//         for (AnnotationExpr ae : p.getAnnotations()) {
+//            if ("Suspended".equals(ae.getNameAsString())) {
+//               return "google.protobuf.Any";
+//            }
+//         }
+//      }
+      if (isAsync(md)) {
+         return "google.protobuf.Any";
+      }
+      
       for (Node node : md.getChildNodes()) {
          if (node instanceof Type) {
             if (node instanceof VoidType) {
-               needEmpty = true;
-               return "gEmpty";
+//               needEmpty = true;
+//               return "gEmpty";
+               return "google.protobuf.Any";
             } else {
                String rawType = ((Type) node).asString();
                System.out.println("return type: rawType: " + rawType);
@@ -845,6 +894,17 @@ public class JavaToProtobufGenerator {
       return "gEmpty";
    }
 
+   private static boolean isAsync(MethodDeclaration md) {
+      for (Parameter p : md.getParameters()) {
+         for (AnnotationExpr ae : p.getAnnotations()) {
+            if ("Suspended".equals(ae.getNameAsString())) {
+               return true;
+            }
+         }
+      }
+      return false;
+   }
+   
    // @Path() ???
    private static boolean isResourceMethod(MethodDeclaration md) {
       for (AnnotationExpr ae : md.getAnnotations()) {

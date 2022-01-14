@@ -5,15 +5,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletResponse;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.core.ResteasyContext;
 
+import io.grpc.classes.AsyncMockServletOutputStream;
 import io.grpc.classes.HttpServletResponseHandler;
 
 public class ReaderWriterGenerator {
@@ -79,7 +76,10 @@ public class ReaderWriterGenerator {
         .append("import com.google.protobuf.Message;\n")
         .append("import com.google.protobuf.CodedInputStream;\n")
         .append("import com.google.protobuf.CodedOutputStream;\n")
-        .append("import ").append(HttpServletResponse.class.getCanonicalName()).append(";\n")
+//        .append("import ").append(HttpServletResponse.class.getCanonicalName()).append(";\n")
+        .append("import ").append("javax.servlet.http.HttpServletResponse;\n")
+        .append("import ").append("io.grpc.classes.AsyncMockServletOutputStream;\n")
+//        .append("import ").append(AsyncMockServletOutputStream.class.getCanonicalName()).append(";\n")
         .append("import ").append(HttpServletResponseHandler.class.getCanonicalName()).append(";\n")
         .append("import ").append(wrapperClass.getPackageName()).append(".").append(rootClass).append("_JavabufTranslator;\n")
         .append("import ").append(ResteasyContext.class.getCanonicalName()).append(";\n")
@@ -91,7 +91,10 @@ public class ReaderWriterGenerator {
          if (primitives.containsKey(clazz.getSimpleName())) {
             sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
 //            continue;
-         } else if ("GeneralEntityMessage".equals(clazz.getSimpleName()) || "GeneralReturnMessage".equals(clazz.getSimpleName())) {
+         } else if ("GeneralEntityMessage".equals(clazz.getSimpleName())
+                 || "GeneralReturnMessage".equals(clazz.getSimpleName())
+                 || "Cookie".equals(clazz.getSimpleName())
+                 || "Header".equals(clazz.getSimpleName())) {
             sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
          } else {
             sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
@@ -148,6 +151,10 @@ public class ReaderWriterGenerator {
         .append("         CodedOutputStream cos = CodedOutputStream.newInstance(entityStream);\n")
         .append("         Any.pack(message).writeTo(cos);\n")
         .append("         cos.flush();\n")
+        .append("         if (servletResponse.getOutputStream() instanceof AsyncMockServletOutputStream) {\n")
+        .append("            AsyncMockServletOutputStream amsos = (AsyncMockServletOutputStream) servletResponse.getOutputStream();\n")
+        .append("            amsos.release();\n")
+        .append("         }\n")
         .append("      } else {\n")
         .append("         message.writeTo(entityStream);\n")
         .append("      }\n")

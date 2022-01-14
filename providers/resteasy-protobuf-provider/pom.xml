@@ -202,7 +202,31 @@
             <artifactId>javaparser-symbol-solver-core</artifactId>
             <version>3.18.0</version>
         </dependency>
-        
+        <!--dependency>
+	<groupId>org.jboss.weld.module</groupId>
+	<artifactId>weld-web</artifactId>
+	<version>3.1.2.Final</version>
+	<exclusions>
+	   <exclusion>
+	      <groupId>javax.enterprise</groupId>
+	      <artifactId>cdi-api</artifactId>
+	   </exclusion>
+	</exclusions>
+</dependency-->
+            <dependency>
+                <groupId>org.jboss.weld</groupId>
+                <artifactId>weld-api</artifactId>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.enterprise</groupId>
+                        <artifactId>cdi-api</artifactId>
+                    </exclusion>
+                </exclusions>
+           </dependency>
+           <dependency>
+                <groupId>org.jboss.weld</groupId>
+                <artifactId>weld-core-impl</artifactId>
+           </dependency>
   </dependencies>
   
       <build>

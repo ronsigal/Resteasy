@@ -42,7 +42,8 @@ public class HttpServletDispatcher extends HttpServlet implements HttpRequestFac
       ServletBootstrap bootstrap = new ServletBootstrap(servletConfig);
       servletContainerDispatcher.init(servletConfig.getServletContext(), bootstrap, this, this);
       name = servletConfig.getServletName();
-      ResteasyContext.addServlet(name, this);
+      System.out.println("servlet name: " + name);
+      ResteasyContext.addServlet(name, this, servletConfig.getServletContext());
    }
 
    @Override

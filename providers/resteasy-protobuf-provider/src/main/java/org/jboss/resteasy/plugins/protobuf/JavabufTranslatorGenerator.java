@@ -171,7 +171,10 @@ public class JavabufTranslatorGenerator {
          if (PRIMITIVE_WRAPPER_TYPES.containsKey(simpleName)) {
 //            continue;
             sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
-         } else if ("GeneralEntityMessage".equals(simpleName) || "GeneralReturnMessage".equals(simpleName)) {
+         } else if ("GeneralEntityMessage".equals(simpleName)
+                 || "GeneralReturnMessage".equals(simpleName)
+                 || "Cookie".equals(simpleName)
+                 || "Header".equals(simpleName)) {
 //            sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
             continue;
          } else {
@@ -214,7 +217,11 @@ public class JavabufTranslatorGenerator {
 //         if (PRIMITIVE_WRAPPER_TYPES.contains(simpleName)) {
 //            continue;
 //         }
-         if ("gEmpty".equals(simpleName) || "GeneralEntityMessage".equals(simpleName) || "GeneralReturnMessage".equals(simpleName)) {
+         if ("gEmpty".equals(simpleName)
+               || "GeneralEntityMessage".equals(simpleName)
+               || "GeneralReturnMessage".equals(simpleName)
+               || "Cookie".equals(simpleName)
+               || "Header".equals(simpleName)) {
             continue;
          }
          int i = simpleName.lastIndexOf("___");
@@ -378,7 +385,9 @@ public class JavabufTranslatorGenerator {
    }
     */
    private static void createTranslatorToJavabuf(Class<?> clazz, StringBuilder sb) throws Exception {
-      if ("gEmpty".equals(clazz.getSimpleName())) {
+      if ("gEmpty".equals(clazz.getSimpleName())
+            || "Cookie".equals(clazz.getSimpleName())
+            || "Header".equals(clazz.getSimpleName())) {
          return;
       }
       sb.append("   static class ")
@@ -427,7 +436,9 @@ public class JavabufTranslatorGenerator {
       if ("gEmpty".equals(originalName)) {
          return;
       }
-      if ("AbstractMessage".equals(clazz.getSimpleName())) {
+      if ("AbstractMessage".equals(clazz.getSimpleName())
+            || "Cookie".equals(clazz.getSimpleName())
+            || "Header".equals(clazz.getSimpleName())) {
          return;
       }
       sb.append("   static class ")

@@ -1,14 +1,14 @@
 package org.jboss.resteasy.grpc;
 
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -52,7 +52,7 @@ public class JaxrsImplBaseExtender {
          StringBuilder sbBody = new StringBuilder();
          Reader reader = new FileReader(file);
          Scanner scanner = new Scanner(reader);
-         classHeader(scanner, sbHeader);
+         classHeader(scanner, sbHeader, fileName);
          String s = scanner.findWithinHorizon("service ", 0);
          while (s != null) {
             serviceName = scanner.next();
@@ -72,7 +72,7 @@ public class JaxrsImplBaseExtender {
       }
    }
 
-   private void classHeader(Scanner scanner, StringBuilder sb) {
+   private void classHeader(Scanner scanner, StringBuilder sb, String fileName) {
       String pkg = null;
       String s = scanner.findWithinHorizon("java_package", 0);
       if (s != null) {
@@ -94,25 +94,33 @@ public class JaxrsImplBaseExtender {
          s = scanner.findWithinHorizon("\"", 0);
          outerClassName = scanner.next();
       }
-      imports(scanner, sb);
+      imports(scanner, sb, fileName);
       scanner.reset();
    }
 
-   private void imports(Scanner scanner, StringBuilder sb) {
+   private void imports(Scanner scanner, StringBuilder sb, String fileName) {
       sb.append("import com.google.protobuf.GeneratedMessageV3;\n")
         .append("import io.grpc.stub.StreamObserver;\n")
         .append("import java.io.ByteArrayInputStream;\n")
         .append("import java.io.ByteArrayOutputStream;\n")
         .append("import java.io.InputStream;\n")
         .append("import java.lang.reflect.Proxy;\n")
+        .append("import java.util.ArrayList;\n")
+        .append("import java.util.concurrent.ExecutorService;\n")
         .append("import java.util.HashMap;\n")
+        .append("import java.util.Iterator;\n")
+        .append("import java.util.List;\n")
         .append("import java.util.Map;\n")
         .append("import javax.servlet.Servlet;\n")
+        .append("import  javax.servlet.ServletContext;\n")
         .append("import javax.servlet.http.HttpServletRequest;\n")
         .append("import javax.servlet.http.HttpServletResponse;\n")
         .append("import org.jboss.resteasy.core.ResteasyContext;\n")
         .append("import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;\n")
         .append("import org.jboss.resteasy.plugins.server.servlet.HttpServlet30Dispatcher;\n")
+        .append("import io.grpc.classes.AsyncContextImpl;\n")
+        .append("import io.grpc.classes.AsyncMockServletOutputStream;\n")
+        .append("import io.grpc.classes.HttpServletRequestImpl;\n")
         .append("import io.grpc.classes.HttpServletRequestHandler;\n")
         .append("import io.grpc.classes.HttpServletResponseHandler;\n")
         .append("import io.grpc.classes.MockServletInputStream;\n")
@@ -125,7 +133,8 @@ public class JaxrsImplBaseExtender {
         .append("import org.jboss.weld.manager.BeanManagerImpl;\n")
         .append("import org.jboss.weld.bean.builtin.BeanManagerProxy;\n")
         .append("import javax.enterprise.inject.spi.BeanManager;\n")
-        .append("import com.google.protobuf.Any;\n");
+        .append("import com.google.protobuf.Any;\n")
+        .append("import grpc.server.").append(fileName).append("_Server;\n");
    }
 
    private void service(Scanner scanner, StringBuilder sbHeader, StringBuilder sbBody) {
@@ -143,9 +152,11 @@ public class JaxrsImplBaseExtender {
       System.out.println("actualEntityClass: " + actualEntityClass);
       String httpMethod = scanner.next();
       System.out.println("httpMethod: " + httpMethod);
+      String async = scanner.next();
+      System.out.println("async: " + async);
       String rpc = scanner.findWithinHorizon(" rpc ", 0);
       while (rpc != null) {
-         rpc(scanner, path, actualEntityClass, httpMethod, sbHeader, sbBody);
+         rpc(scanner, path, actualEntityClass, httpMethod, async, sbHeader, sbBody);
          scanner.nextLine();
          if (!scanner.hasNext("//")) {
             break;
@@ -155,11 +166,13 @@ public class JaxrsImplBaseExtender {
          actualEntityClass = scanner.next();
          httpMethod = scanner.next();
          System.out.println("httpMethod: " + httpMethod);
+         async = scanner.next();
+         System.out.println("async: " + async);
          rpc = scanner.findWithinHorizon(" rpc ", 0);
       }
    }
 
-   private void rpc(Scanner scanner, String path, String actualEntityClass, String httpMethod, StringBuilder sbHeader, StringBuilder sbBody) {
+   private void rpc(Scanner scanner, String path, String actualEntityClass, String httpMethod, String async, StringBuilder sbHeader, StringBuilder sbBody) {
       sbBody.append("\n   @java.lang.Override\n");
       String method = scanner.next();
       scanner.findWithinHorizon("\\(", 0);
@@ -183,7 +196,7 @@ public class JaxrsImplBaseExtender {
             .append(method).append("(")
             .append(param).append(" param, ")
             .append("StreamObserver<").append(retn).append("> responseObserver) {\n");
-      rpcBody(scanner, path, actualEntityClass, httpMethod, sbBody, retn);
+      rpcBody(scanner, path, actualEntityClass, httpMethod, async, sbBody, retn);
       sbBody.append("   }\n");
       scanner.reset();
    }
@@ -198,7 +211,7 @@ public class JaxrsImplBaseExtender {
              bmi.addContext(context); 
          }
     */
-   private void rpcBody(Scanner scanner, String path, String actualEntityClass, String method, StringBuilder sb, String retn) {
+   private void rpcBody(Scanner scanner, String path, String actualEntityClass, String method, String async, StringBuilder sb, String retn) {
       sb.append("      try {\n")
         .append("         HttpServletResponse response = getHttpServletResponse(\"" + retn + "\");\n")
         .append("         HttpServletDispatcher servlet = (HttpServletDispatcher) ResteasyContext.getServlet(\"").append(servletName).append("\");\n") // plug in correct servlet
@@ -209,12 +222,24 @@ public class JaxrsImplBaseExtender {
         /*
          gShort actualParam = param.getGShort_field();
          ByteArrayInputStream bais = new ByteArrayInputStream(actualParam.toByteArray());
+         HttpServletRequest request = new HttpServletRequestImpl("jaxrs.example.grpc-0.0.1-SNAPSHOT", url, "GET", msis, "jaxrs.example.CC1_proto.org_jboss_resteasy_example___CC7");
+
          */
-        
+        .append("         String url = param.getURL();\n")
         .append("         ByteArrayInputStream bais = new ByteArrayInputStream(actualParam.toByteArray());\n")
         .append("         MockServletInputStream msis = new MockServletInputStream(bais);\n")
-        .append("         HttpServletRequest request = getHttpServletRequest(\"").append(path).append("\", \"").append(method).append("\", msis, param.getClass().getName(), \"").append(retn).append("\");\n")
-        .append("         HttpRequestContextImpl context = new HttpRequestContextImpl(\"jaxrs.example.grpc-0.0.1-SNAPSHOT.war\");\n")
+        .append("         Map<String, List<String>> headers = convertHeaders(param.getHeadersMap());\n")
+        
+        /*
+          javax.servlet.http.Cookie[] cookies = convertCookies(param.getCookiesList());
+         HttpServletRequest request = new HttpServletRequestImpl("/jaxrs.example.grpc-0.0.1-SNAPSHOT", url, "GET", msis, "jaxrs.example.CC1_proto.gString", headers, cookies);
+
+         */
+        .append("         javax.servlet.http.Cookie[] cookies = convertCookies(param.getCookiesList());\n")
+        .append("         ServletContext servletContext = CC1_Server.getContext();\n")
+        .append("         HttpServletRequest request = new HttpServletRequestImpl(response, servletContext, \"").append(contextPath).append("\", url, \"").append(method).append("\", msis, \"").append(retn).append("\", headers, cookies);\n")
+//        .append("         HttpServletRequest request = getHttpServletRequest(\"").append(path).append("\", \"").append(method).append("\", msis, param.getClass().getName(), \"").append(retn).append("\");\n")
+        .append("         HttpRequestContextImpl context = new HttpRequestContextImpl(\"/jaxrs.example.grpc-0.0.1-SNAPSHOT.war\");\n")
         .append("         context.associate(request);\n")
         .append("         context.activate();\n")
         .append("         BeanManager bm = CDI.current().getBeanManager();\n")
@@ -225,19 +250,37 @@ public class JaxrsImplBaseExtender {
         .append("            BeanManagerImpl bmi = bmp.delegate();\n")
         .append("            bmi.addContext(context);\n")
         .append("         }\n")
-        .append("         hs30d.service(\"").append(method).append("\", request, response);\n")
-        .append("         MockServletOutputStream msos = (MockServletOutputStream) response.getOutputStream();\n")
-        .append("         ByteArrayOutputStream baos = msos.getDelegate();\n")
-        .append("         bais = new ByteArrayInputStream(baos.toByteArray());\n")
-        .append("         ").append(retn).append(" reply = ").append(retn).append(".parseFrom(bais);\n")
-        .append("         responseObserver.onNext(reply);\n")
-        .append("      } catch (Exception e) {\n")
+        .append("         hs30d.service(\"").append(method).append("\", request, response);\n");
+
+      if ("async".equals(async)) {
+         sb.append("         AsyncMockServletOutputStream amsos = (AsyncMockServletOutputStream) response.getOutputStream();\n")
+           .append("         amsos.await();\n")
+           .append("         ByteArrayOutputStream baos = amsos.getDelegate();\n")
+           .append("         ByteArrayInputStream bais1 = new ByteArrayInputStream(baos.toByteArray());\n")
+           .append("         com.google.protobuf.Any reply = com.google.protobuf.Any.parseFrom(bais1);\n")
+           .append("         responseObserver.onNext(reply);\n");
+      } else {
+         sb.append("         MockServletOutputStream msos = (MockServletOutputStream) response.getOutputStream();\n")
+           .append("         ByteArrayOutputStream baos = msos.getDelegate();\n")
+           .append("         bais = new ByteArrayInputStream(baos.toByteArray());\n")
+           .append("         ").append(retn).append(" reply = ").append(retn).append(".parseFrom(bais);\n")
+           .append("         responseObserver.onNext(reply);\n");
+//           .append("         responseObserver.onCompleted();\n");
+      }
+      sb.append("      } catch (Exception e) {\n")
         .append("         e.printStackTrace();\n")
         .append("         responseObserver.onError(e);\n")
-        .append("         return;\n")
+//        .append("         return;\n")
         .append("      }\n")
         .append("      responseObserver.onCompleted();\n");
    }
+   /*
+      } catch (Exception e) {
+         e.printStackTrace();
+         responseObserver.onError(e);
+      }
+      responseObserver.onCompleted();
+    */
 ///getOrgJbossResteasyExampleCC2Field
    
    private static void staticMethods(StringBuilder sb) {
@@ -259,6 +302,32 @@ public class JaxrsImplBaseExtender {
         .append("         new Class[] { HttpServletResponse.class },\n")
         .append("         new HttpServletResponseHandler(retn));\n")
         .append("   }\n\n");
+      sb.append("   private static Map<String, List<String>> convertHeaders(Map<String, jaxrs.example.CC1_proto.Header> protoHeaders) {\n")
+        .append("      Map<String, List<String>> headers = new HashMap<String, List<String>>();\n")
+        .append("      for (Map.Entry<String, jaxrs.example.CC1_proto.Header> entry : protoHeaders.entrySet()) {\n")
+        .append("         String key = entry.getKey();\n")
+        .append("         jaxrs.example.CC1_proto.Header protoHeader = entry.getValue();\n")
+        .append("         List<String> values = new ArrayList<String>();\n")
+        .append("         for (int i = 0; i < protoHeader.getValuesCount(); i++) {\n")
+        .append("            values.add(protoHeader.getValues(i));\n")
+        .append("         }\n")
+        .append("         headers.put(key, values);\n")
+        .append("      }\n")
+        .append("      return headers;\n")
+        .append("   }\n\n");
+      sb.append("     private static javax.servlet.http.Cookie[] convertCookies(List<jaxrs.example.CC1_proto.Cookie> cookieList) {\n")
+        .append("      javax.servlet.http.Cookie[] cookieArray = new javax.servlet.http.Cookie[cookieList.size()];\n")
+        .append("      int i = 0;\n")
+        .append("      for (Iterator<jaxrs.example.CC1_proto.Cookie> it = cookieList.iterator(); it.hasNext(); ) {\n")
+        .append("         jaxrs.example.CC1_proto.Cookie protoCookie = it.next();\n")
+        .append("         javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(protoCookie.getName(), protoCookie.getValue());\n")
+        .append("         cookie.setVersion(protoCookie.getVersion());\n")
+        .append("         cookie.setPath(protoCookie.getPath());\n")
+        .append("         cookie.setDomain(protoCookie.getDomain());\n")
+        .append("         cookieArray[i++] = cookie;\n")
+        .append("      }\n")
+        .append("      return cookieArray;\n")
+        .append("   }\n");
    }
 
    private static String getParamType(String packageName, String outerClassName, String param) {

@@ -1,0 +1,114 @@
+package io.grpc.classes;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.servlet.AsyncContext;
+import javax.servlet.AsyncListener;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+
+public class AsyncContextImpl implements AsyncContext {
+
+   private static ExecutorService executorService = Executors.newCachedThreadPool();
+
+   private ServletRequest servletRequest;
+   private ServletResponse servletResponse;
+   private Set<AsyncListener> listeners = new HashSet<AsyncListener>();
+   long timeout;
+   private volatile boolean complete = false;
+
+   public AsyncContextImpl(ServletRequest servletRequest, ServletResponse servletResponse) {
+      this.servletRequest = servletRequest;
+      this.servletResponse = servletResponse;
+   }
+   
+   public static ExecutorService getExecutorService() {
+      return executorService;
+   }
+
+   @Override
+   public ServletRequest getRequest() {
+      return servletRequest;
+   }
+
+   @Override
+   public ServletResponse getResponse() {
+      return servletResponse;
+   }
+
+   @Override
+   public boolean hasOriginalRequestAndResponse() {
+      throw new RuntimeException("hasOriginalRequestAndResponse() not implemented");
+   }
+
+   @Override
+   public void dispatch() {
+      throw new RuntimeException("dispatch() not implemented");
+   }
+
+   @Override
+   public void dispatch(String path) {
+      throw new RuntimeException("dispatch() not implemented");
+   }
+
+   @Override
+   public void dispatch(ServletContext context, String path) {
+      throw new RuntimeException("dispatch() not implemented");
+   }
+
+   @Override
+   public synchronized void complete() {
+       if (complete) {
+//           Messages.MESSAGES.trace("Ignoring call to AsyncContext.complete() as it has already been called");
+           return;
+       }
+       complete = true;
+//       if (timeoutKey != null) {
+//           timeoutKey.remove();
+//           timeoutKey = null;
+//       }
+//       if (!dispatched) {
+//           completeInternal(false);
+//       } else {
+//           onAsyncComplete();
+//       }
+//       if (previousAsyncContext != null) {
+//           previousAsyncContext.complete();
+//       }
+   }
+
+   @Override
+   public void start(Runnable run) {
+      executorService.execute(run);
+   }
+
+   @Override
+   public void addListener(AsyncListener listener) {
+      listeners.add(listener);
+   }
+
+   @Override
+   public void addListener(AsyncListener listener, ServletRequest servletRequest, ServletResponse servletResponse) {
+      throw new RuntimeException("addListener() not implemented");
+   }
+
+   @Override
+   public <T extends AsyncListener> T createListener(Class<T> clazz) throws ServletException {
+      throw new RuntimeException("createListener() not implemented");
+   }
+
+   @Override
+   public void setTimeout(long timeout) {
+      this.timeout = timeout;
+}
+
+   @Override
+   public long getTimeout() {
+      return timeout;
+   }
+}

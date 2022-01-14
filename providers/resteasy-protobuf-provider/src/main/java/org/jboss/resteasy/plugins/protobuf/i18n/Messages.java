@@ -1,5 +1,10 @@
 package org.jboss.resteasy.plugins.protobuf.i18n;
 
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletRequestWrapper;
+import javax.servlet.ServletResponse;
+import javax.servlet.ServletResponseWrapper;
+
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageBundle;
 
@@ -12,6 +17,22 @@ public interface Messages
    Messages MESSAGES = org.jboss.logging.Messages.getBundle(Messages.class);
    int BASE = 21000;
 
-   @Message(id = BASE + 05, value = "Expected Message, got %s")
+   @Message(id = 10028, value = "Async processing already started")
+   IllegalStateException asyncAlreadyStarted();
+   
+   @Message(id = BASE + 05, value = "Async not started")
+   IllegalStateException asyncNotStarted();
+   
+   @Message(id = BASE + 10, value = "Async processing already started")
+   IllegalStateException asyncProcessingAlreadyStarted();
+   
+   @Message(id = BASE + 15, value = "Expected Message, got %s")
    String expectedMessage(Class<?> clazz);
+   
+   @Message(id = BASE + 20, value = "Request %s was not original or a wrapper")
+   IllegalArgumentException requestWasNotOriginalOrWrapper(ServletRequest request);
+
+   @Message(id = BASE + 25, value = "Response %s was not original or a wrapper")
+   IllegalArgumentException responseWasNotOriginalOrWrapper(ServletResponse response);
+   
 }

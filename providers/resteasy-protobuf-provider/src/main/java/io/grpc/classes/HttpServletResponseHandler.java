@@ -12,7 +12,7 @@ public class HttpServletResponseHandler implements InvocationHandler {
 
    public static final String GRPC_RETURN_RESPONSE = "grpc-return-response";
    
-   private MockServletOutputStream msos = new MockServletOutputStream();
+   private AsyncMockServletOutputStream msos = new AsyncMockServletOutputStream();
    private MultivaluedMap<String, String> headers = new MultivaluedHashMap<String, String>();
    
    public HttpServletResponseHandler(String retn) {
