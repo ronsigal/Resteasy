@@ -68,6 +68,7 @@ public class HttpServletRequestImpl implements HttpServletRequest {
       this.headers = headers;
       List<String> list = new ArrayList<String>();
       list.add("application/grpc-jaxrs");
+      list.add("*/*;grpc-jaxrs=true");
       headers.put("Accept", list);
       headers.put("Content-Type", list);
       //      headers.get("Accept").add("application/grpc-jaxrs");

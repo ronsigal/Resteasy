@@ -5,7 +5,7 @@ import java.util.concurrent.CountDownLatch;
 
 public class AsyncMockServletOutputStream extends MockServletOutputStream {
    
-   private static CountDownLatch latch = new CountDownLatch(1);
+   private CountDownLatch latch = new CountDownLatch(1);
    
    public void await() throws InterruptedException {
       while (true) {
@@ -19,6 +19,7 @@ public class AsyncMockServletOutputStream extends MockServletOutputStream {
    }
 
    public void release() throws IOException {
+      new Exception("release()").printStackTrace();
       latch.countDown();
    }
 }

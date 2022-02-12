@@ -7,7 +7,9 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 
 public class MockServletOutputStream extends ServletOutputStream {
-   private ByteArrayOutputStream baos = new ByteArrayOutputStream();
+   protected ByteArrayOutputStream baos = new ByteArrayOutputStream();
+   
+   private boolean closed;
    
    @Override
    public boolean isReady()
@@ -28,5 +30,14 @@ public class MockServletOutputStream extends ServletOutputStream {
    
    public ByteArrayOutputStream getDelegate() {
       return baos;
+   }
+   
+   public void close() throws IOException {
+      super.close();
+      closed = true;
+   }
+   
+   public boolean isClosed() {
+      return closed;
    }
 }

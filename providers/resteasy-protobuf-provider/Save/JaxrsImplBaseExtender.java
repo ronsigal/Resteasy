@@ -323,8 +323,8 @@ public class JaxrsImplBaseExtender {
           */
          sb.append("         MockServletOutputStream msos = (MockServletOutputStream) response.getOutputStream();\n")
            .append("         ByteArrayOutputStream baos = msos.getDelegate();\n")
-           .append("         bais = new ByteArrayInputStream(baos.toByteArray());\n")
-           .append("         ").append(retn).append(" reply = ").append(retn).append(".parseFrom(bais);\n")
+           .append("         ByteArrayInputStream bais1 = new ByteArrayInputStream(baos.toByteArray());\n")
+           .append("         ").append(retn).append(" reply = ").append(retn).append(".parseFrom(bais1);\n")
            .append("         responseObserver.onNext(reply);\n");
       }
       sb.append("      } catch (Exception e) {\n")

@@ -1,7 +1,6 @@
 package org.jboss.resteasy.plugins.protobuf;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -10,7 +9,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,7 +18,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
@@ -35,11 +32,7 @@ import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.AnnotationExpr;
-import com.github.javaparser.ast.expr.FieldAccessExpr;
-import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
-import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.VoidType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
@@ -202,9 +195,6 @@ public class JavaToProtobufGenerator {
    private static ClassVisitor classVisitor = new ClassVisitor();
    private static JaxrsResourceVisitor jaxrsResourceVisitor = new JaxrsResourceVisitor();
    private static int counter = 1;
-   private static boolean isSSE;
-   private static String SSE_EVENT;
-   private static String SSE_EVENT_CLASSNAME = "org_jboss_resteasy_plugins_protobuf_sse___SseEvent";
 
    static {
       TYPE_MAP.put("byte", "int32");
@@ -267,17 +257,6 @@ public class JavaToProtobufGenerator {
       HTTP_VERBS.add("PATCH");
       HTTP_VERBS.add("POST");
       HTTP_VERBS.add("PUT");
-      
-      SSE_EVENT = "package org.jboss.resteasy.plugins.protobuf.sse;\n"
-                + "\n"
-                + "public class SseEvent {\n"
-                + "\n"
-                + "   String  comment;\n"
-                + "   String  name;\n"
-                + "   int     id;\n"
-                + "   byte[]  data;\n"
-                + "   long    retry;\n"
-                + "}";
    }
 
    public static void main(String[] args) throws IOException
@@ -361,14 +340,6 @@ public class JavaToProtobufGenerator {
             additionalClassVisitor.visit(cu, sb);
          }
       }
-      System.out.println("processAdditionalClasses(): " + isSSE);
-      if (isSSE) {
-         ByteArrayInputStream bais = new ByteArrayInputStream(SSE_EVENT.getBytes());
-         CompilationUnit cu = StaticJavaParser.parse(bais);
-         System.out.println("processAdditionalClasses(): cu: " + cu.getPackageDeclaration());
-         AdditionalClassVisitor additionalClassVisitor = new AdditionalClassVisitor("");
-         additionalClassVisitor.visit(cu, sb);
-      }
    }
 
    private static void finishProto(StringBuilder sb) {
@@ -383,10 +354,6 @@ public class JavaToProtobufGenerator {
       }
       createGeneralEntityMessageType(sb);
       createGeneralReturnMessageType(sb);
-//      if (isSSE) {
-//         createSSEEvent(sb);
-//      }
-      
    }
 
    private static void createGeneralEntityMessageType(StringBuilder sb) {
@@ -398,21 +365,46 @@ public class JavaToProtobufGenerator {
         .append("   string path = ").append(counter++).append(";\n")
         .append("   string domain = ").append(counter++).append(";\n")
         .append("}");
+      createOneofMessage(sb);
       sb.append("\n\nmessage GeneralEntityMessage {\n")
         .append("   string URL = ").append(counter++).append(";\n")
         .append("   map<string, Header> headers = ").append(counter++).append(";\n")
         .append("   repeated Cookie cookies = ").append(counter++).append(";\n")
-        .append("   oneof messageType {\n");
-    for (String messageType : entityMessageTypes) {
-       sb.append("      ")
-         .append(messageType)
-         .append(" ")
-         .append(messageType).append("_field")
-         .append(" = ")
-         .append(counter++)
-         .append(";\n");
-    }
-    sb.append("   }\n}\n");
+        .append("   OneofMessage entity = ").append(counter++).append(";\n")
+        .append("}\n");
+      sb.append("\n\nmessage RepeatedGeneralEntityMessage {\n")
+      .append("   string URL = ").append(counter++).append(";\n")
+      .append("   map<string, Header> headers = ").append(counter++).append(";\n")
+      .append("   repeated Cookie cookies = ").append(counter++).append(";\n")
+      .append("   repeated OneofMessage entity = ").append(counter++).append(";\n")
+      .append("}\n");
+//        .append("   oneof messageType {\n");
+//      for (String messageType : entityMessageTypes) {
+//         sb.append("      ")
+//           .append(messageType)
+//           .append(" ")
+//           .append(messageType).append("_field")
+//           .append(" = ")
+//           .append(counter++)
+//           .append(";\n");
+//      }
+//      sb.append("   }\n}\n");
+   }
+
+   private static void createOneofMessage(StringBuilder sb) {
+      sb.append("\n\nmessage OneofMessage {\n")
+        .append("   oneof field {\n");
+      for (String messageType : entityMessageTypes) {
+         sb.append("      ")
+           .append(messageType)
+           .append(" ")
+           .append(messageType).append("_field")
+           .append(" = ")
+           .append(counter++)
+           .append(";\n");
+      }
+      sb.append("   }\n")
+        .append("}\n");
    }
 
    private static void createGeneralReturnMessageType(StringBuilder sb) {
@@ -430,14 +422,6 @@ public class JavaToProtobufGenerator {
     sb.append("   }\n}\n");
    }
 
-//   private static void createSSEEvent(StringBuilder sb) {
-//      sb.append("\nmessage SSE_Event {\n")
-//        .append("   string Event = ").append(counter++).append(";\n")
-//        .append("   string Data = ").append(counter++).append(";\n")
-//        .append("   int32 Id = ").append(counter++).append(";\n")
-//        .append("   int32 Retry = ").append(counter++).append(";\n")
-//        .append("}\n");
-//   }
    
    private static void writeProtoFile(String[] args, StringBuilder sb) throws IOException {
       String path = args[0];
@@ -516,12 +500,11 @@ public class JavaToProtobufGenerator {
                String entityType = getEntityParameter(md);
                System.out.println("entityType: " + entityType);
                String returnType = getReturnType(md);
-               String syncType = isSuspended(md) ? "suspended" : (isCompletionStage(md) ? "completionStage" : (isSSE(md) ? "sse" : "sync"));
-               isSuspended(md);
+               String async = isAsync(md) ? "async" : "sync";
                sb.append("// ").append(classPath).append("/").append(methodPath).append(" ")
                  .append(entityType).append(" ")
                  .append(httpMethod).append(" ")
-                 .append(syncType).append("\n");
+                 .append(async).append("\n");
                entityMessageTypes.add(entityType);
                returnMessageTypes.add(returnType);
                sb.append("  rpc ")
@@ -532,7 +515,6 @@ public class JavaToProtobufGenerator {
                .append("GeneralEntityMessage")
                .append(") returns (")
 //               .append(getReturnType(md))
-               .append("sse".equals(syncType) ? "stream " : "")
                .append(returnType)
                .append(");\n");
 
@@ -594,16 +576,12 @@ public class JavaToProtobufGenerator {
          // Scan all variables in class.
          for (ResolvedFieldDeclaration rfd: clazz.getDeclaredFields()) {
             String type = null;
-            System.out.println("rfd type: " + rfd.getType());
-            if (rfd.getType().isPrimitive() || rfd.getType().isReferenceType() && String.class.getName().equals(rfd.getType().asReferenceType().getQualifiedName())) {
+            if (rfd.getType().isPrimitive()|| rfd.getType().isReferenceType() && String.class.getName().equals(rfd.getType().asReferenceType().getQualifiedName())) {
                type = TYPE_MAP.get(rfd.getType().describe());
             }  else if (rfd.getType() instanceof ResolvedArrayType) {
                ResolvedArrayType rat = (ResolvedArrayType) rfd.getType();
                ResolvedType ct = rat.getComponentType();
-               System.out.println("component type: " + ct.describe());
-               if ("byte".equals(ct.describe())) {
-                  type = "bytes";
-               } else  if (ct.isPrimitive()) {
+               if (ct.isPrimitive()) {
                   type = "repeated " + TYPE_MAP.get(removeTypeVariables(ct.describe()));
                } else {
                   fqn = removeTypeVariables(ct.describe());
@@ -701,12 +679,10 @@ public class JavaToProtobufGenerator {
        * For each class, create a message type with a field for each variable in the class.
        */
       public void visit(ClassOrInterfaceDeclaration clazz, StringBuilder sb) {
-         System.out.println("visiting: " + clazz);
          if (PRIMITIVE_WRAPPER_DEFINITIONS.containsKey(clazz.getName().asString())) {
             return;
          }
          String packageName = getPackageName(clazz);
-         System.out.println("visit(): packageName: " + packageName);
          String fqn = packageName + "." + clazz.getNameAsString();
          String filename = dir + ":" + fqn;
          additionalClasses.remove(filename);
@@ -721,7 +697,6 @@ public class JavaToProtobufGenerator {
          //         }
 
          // Begin protobuf message definition.
-         System.out.println("visit(): processing: " + fqnifyClass(fqn));
          sb.append("\nmessage ").append(fqnifyClass(fqn)).append(" {\n");
 
          // Scan all variables in class.
@@ -729,15 +704,11 @@ public class JavaToProtobufGenerator {
             ResolvedFieldDeclaration rfd = fd.resolve();
             ResolvedType type = rfd.getType();
             String typeName = type.describe();
-            System.out.println("visit(): typeName: " + typeName);
             if (TYPE_MAP.containsKey(typeName)) {
                typeName = TYPE_MAP.get(typeName);
             } else if (type.isArray()) {
                ResolvedType ct = type.asArrayType().getComponentType();
-               System.out.println("visit(): ct: " + ct.describe());
-               if ("byte".equals(ct.describe())) {
-                  typeName = "bytes";
-               } else if (ct.isPrimitive()) {
+               if (ct.isPrimitive()) {
                   typeName = "repeated " + typeName;
                } else {
                   fqn = type.describe();
@@ -890,142 +861,68 @@ public class JavaToProtobufGenerator {
 //            }
 //         }
 //      }
-      if (isSuspended(md)) {
+      if (isAsync(md)) {
          return "google.protobuf.Any";
       }
-      if (isSSE(md)) {
-         return SSE_EVENT_CLASSNAME;
-      }
+      
       for (Node node : md.getChildNodes()) {
          if (node instanceof Type) {
             if (node instanceof VoidType) {
-               //               needEmpty = true;
-               //               return "gEmpty";
-               return "google.protobuf.Any"; // ??
-            }
-            String rawType = ((Type) node).asString();
-            System.out.println("return type: rawType: " + rawType);
-            int open = rawType.indexOf("<");
-            int close = rawType.indexOf(">");
-            if (open >= 0 && close > open) {
-               String type = rawType.substring(0, open);
-               String parameterType = rawType.substring(open + 1, close);
-               if (CompletionStage.class.getCanonicalName().contentEquals(type) || CompletionStage.class.getSimpleName().contentEquals(type)) {
-                  rawType = parameterType;
-               } else {
-                  rawType = type;
-               }
-               System.out.println("return type: processed rawType: " + rawType);
-            }
-            //               String type = TYPE_MAP.get(rawType.toLowerCase());
-            //               System.out.println("return type: type: " + type);
-            //               if (type != null) {
-            //                  return PRIMITIVE_WRAPPER_TYPES.get(rawType.toLowerCase());
-            //               }
-            //               if (PRIMITIVE_WRAPPER_TYPES.containsValue(rawType)) {
-            //                  return rawType;
-            //               }
-            if (PRIMITIVE_WRAPPER_TYPES.containsKey(rawType)) {
-               return PRIMITIVE_WRAPPER_TYPES.get(rawType);
-            }
-            if ("javax.ws.rs.core.Response".equals(rawType) || "Response".equals(rawType)) {
+//               needEmpty = true;
+//               return "gEmpty";
                return "google.protobuf.Any";
+            } else {
+               String rawType = ((Type) node).asString();
+               System.out.println("return type: rawType: " + rawType);
+//               String type = TYPE_MAP.get(rawType.toLowerCase());
+//               System.out.println("return type: type: " + type);
+//               if (type != null) {
+//                  return PRIMITIVE_WRAPPER_TYPES.get(rawType.toLowerCase());
+//               }
+//               if (PRIMITIVE_WRAPPER_TYPES.containsValue(rawType)) {
+//                  return rawType;
+//               }
+               if (PRIMITIVE_WRAPPER_TYPES.containsKey(rawType)) {
+                  return PRIMITIVE_WRAPPER_TYPES.get(rawType);
+               }
+               if ("javax.ws.rs.core.Response".equals(rawType) || "Response".equals(rawType)) {
+                  return "google.protobuf.Any";
+               }
+               int open = rawType.indexOf("<");
+               int close = rawType.indexOf(">");
+               if (open >= 0 && close > open) {
+                  String type = rawType.substring(0, open);
+                  String parameterType = rawType.substring(open + 1, close);
+                  if (CompletionStage.class.getCanonicalName().contentEquals(type) || CompletionStage.class.getSimpleName().contentEquals(type)) {
+                     rawType = parameterType;
+                  } else {
+                     rawType = type;
+                  }
+                  System.out.println("return type: processed rawType: " + rawType);
+                  if (Response.class.getCanonicalName().equals(rawType) || Response.class.getSimpleName().equals(rawType)) {
+                     return "google.protobuf.Any";
+                  }
+                  return rawType;
+               }
+//               if ("String".equals(rawType)) {
+//                  return "String";
+//               }
+               // array?
+               ResolvedType rt = ((Type) node).resolve();
+               resolvedTypes.add(rt.asReferenceType().getTypeDeclaration().get());
+               String type = ((Type) node).resolve().describe();
+               return fqnifyClass(type);
             }
-//            int open = rawType.indexOf("<");
-//            int close = rawType.indexOf(">");
-//            if (open >= 0 && close > open) {
-//               String type = rawType.substring(0, open);
-//               String parameterType = rawType.substring(open + 1, close);
-//               if (CompletionStage.class.getCanonicalName().contentEquals(type) || CompletionStage.class.getSimpleName().contentEquals(type)) {
-//                  rawType = parameterType;
-//               } else {
-//                  rawType = type;
-//               }
-//               System.out.println("return type: processed rawType: " + rawType);
-//               if (Response.class.getCanonicalName().equals(rawType) || Response.class.getSimpleName().equals(rawType)) {
-//                  return "google.protobuf.Any";
-//               }
-//               return rawType;
-//            }
-            //               if ("String".equals(rawType)) {
-            //                  return "String";
-            //               }
-            // array?
-            ResolvedType rt = ((Type) node).resolve();
-            resolvedTypes.add(rt.asReferenceType().getTypeDeclaration().get());
-            String type = ((Type) node).resolve().describe();
-            return fqnifyClass(type);
          }
       }
       needEmpty = true;
       return "gEmpty";
    }
 
-//   private static boolean isAsync(MethodDeclaration md) {
-//      if (isSuspended(md)) {
-//         return true;
-//      }
-//      if (isCompletionStage(md)) {
-//         return true;
-//      }
-//      return false;
-//   }
-   
-   private static boolean isSuspended(MethodDeclaration md) {
+   private static boolean isAsync(MethodDeclaration md) {
       for (Parameter p : md.getParameters()) {
          for (AnnotationExpr ae : p.getAnnotations()) {
             if ("Suspended".equals(ae.getNameAsString())) {
-               return true;
-            }
-         }
-      }
-      return false;
-   }
-   
-   private static boolean isCompletionStage(MethodDeclaration md) {
-      for (Node node : md.getChildNodes()) {
-         System.out.println("isCompletionStage(): node: " + node.toString());
-         System.out.println("isCompletionStage(): node type: " + (node instanceof Type));
-         if (node instanceof Type) {
-            String rawType = ((Type) node).asString();
-            System.out.println("isCompletionStage(): rawType: " + rawType);
-            int open = rawType.indexOf("<");
-            int close = rawType.indexOf(">");
-            if (open >= 0 && close > open) {
-               String type = rawType.substring(0, open);
-               System.out.println("isCompletionStage(): type: " + type);
-               if (CompletionStage.class.getCanonicalName().contentEquals(type) || CompletionStage.class.getSimpleName().contentEquals(type)) {
-                  return true;
-               }
-            }
-         }
-      }
-      return false;
-   }
-   
-   private static boolean isSSE(MethodDeclaration md) {
-      Optional<AnnotationExpr> opt = md.getAnnotationByName("Produces");
-      if (opt.isEmpty()) {
-         return false;
-      }
-      AnnotationExpr ae = opt.get();
-      List<StringLiteralExpr> list1 = ae.findAll(StringLiteralExpr.class);
-      for (Iterator<StringLiteralExpr> it = list1.iterator(); it.hasNext(); ) {
-         StringLiteralExpr sle = it.next();
-         if (MediaType.SERVER_SENT_EVENTS.equals(sle.getValue())) {
-            isSSE = true;
-            return true;
-         }  
-      }
-      List<FieldAccessExpr> list2 = ae.findAll(FieldAccessExpr.class);
-      for (Iterator<FieldAccessExpr> it = list2.iterator(); it.hasNext(); ) {
-         FieldAccessExpr fae = it.next();
-         List<Node> list3 = fae.getChildNodes();
-         if (list3.size() >= 2 && list3.get(0) instanceof NameExpr && list3.get(1) instanceof SimpleName) {
-            NameExpr ne = (NameExpr) list3.get(0);
-            SimpleName sn = (SimpleName) list3.get(1);
-            if ("MediaType".equals(ne.getName().asString()) && "SERVER_SENT_EVENTS".equals(sn.asString())) {
-               isSSE = true;
                return true;
             }
          }

@@ -1,9 +1,7 @@
 package org.jboss.resteasy.plugins.protobuf.i18n;
 
 import javax.servlet.ServletRequest;
-import javax.servlet.ServletRequestWrapper;
 import javax.servlet.ServletResponse;
-import javax.servlet.ServletResponseWrapper;
 
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageBundle;
@@ -29,10 +27,13 @@ public interface Messages
    @Message(id = BASE + 15, value = "Expected Message, got %s")
    String expectedMessage(Class<?> clazz);
    
-   @Message(id = BASE + 20, value = "Request %s was not original or a wrapper")
+   @Message(id = BASE + 20, value = "No suitable message body writer for class : %s")
+   String notFoundMBW(String className);
+   
+   @Message(id = BASE + 25, value = "Request %s was not original or a wrapper")
    IllegalArgumentException requestWasNotOriginalOrWrapper(ServletRequest request);
 
-   @Message(id = BASE + 25, value = "Response %s was not original or a wrapper")
+   @Message(id = BASE + 30, value = "Response %s was not original or a wrapper")
    IllegalArgumentException responseWasNotOriginalOrWrapper(ServletResponse response);
    
 }
