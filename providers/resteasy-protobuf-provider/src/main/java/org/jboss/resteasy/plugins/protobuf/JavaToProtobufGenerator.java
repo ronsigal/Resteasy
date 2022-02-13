@@ -382,11 +382,7 @@ public class JavaToProtobufGenerator {
          sb.append("\n").append(wrapper.replace("$V$", String.valueOf(counter++)));
       }
       createGeneralEntityMessageType(sb);
-      createGeneralReturnMessageType(sb);
-//      if (isSSE) {
-//         createSSEEvent(sb);
-//      }
-      
+      createGeneralReturnMessageType(sb);   
    }
 
    private static void createGeneralEntityMessageType(StringBuilder sb) {
@@ -430,15 +426,6 @@ public class JavaToProtobufGenerator {
     sb.append("   }\n}\n");
    }
 
-//   private static void createSSEEvent(StringBuilder sb) {
-//      sb.append("\nmessage SSE_Event {\n")
-//        .append("   string Event = ").append(counter++).append(";\n")
-//        .append("   string Data = ").append(counter++).append(";\n")
-//        .append("   int32 Id = ").append(counter++).append(";\n")
-//        .append("   int32 Retry = ").append(counter++).append(";\n")
-//        .append("}\n");
-//   }
-   
    private static void writeProtoFile(String[] args, StringBuilder sb) throws IOException {
       String path = args[0];
       String generatedSources = "src/main/proto";
@@ -527,11 +514,8 @@ public class JavaToProtobufGenerator {
                sb.append("  rpc ")
                .append(md.getNameAsString())
                .append(" (")
-//               .append(getEntityParameter(md))
-//               .append(entityType)
                .append("GeneralEntityMessage")
                .append(") returns (")
-//               .append(getReturnType(md))
                .append("sse".equals(syncType) ? "stream " : "")
                .append(returnType)
                .append(");\n");
@@ -583,10 +567,6 @@ public class JavaToProtobufGenerator {
             return;
          }
          visited.add(fqn);
-
-         //         if (subClass.isInterface()) {
-         //            return;
-         //         }
 
          // Begin protobuf message definition.
          sb.append("\nmessage ").append(fqnifyClass(fqn)).append(" {\n");
@@ -716,10 +696,6 @@ public class JavaToProtobufGenerator {
          }
          visited.add(fqn);
 
-         //         if (subClass.isInterface()) {
-         //            return;
-         //         }
-
          // Begin protobuf message definition.
          System.out.println("visit(): processing: " + fqnifyClass(fqn));
          sb.append("\nmessage ").append(fqnifyClass(fqn)).append(" {\n");
@@ -748,10 +724,6 @@ public class JavaToProtobufGenerator {
                fqn = type.describe();
                additionalClasses.add(dir + ":" + fqn);
                typeName = fqnifyClass(type.describe());
-               System.out.println("visit(2): additionalClasses.size(): " + additionalClasses.size());
-               //               } else if (fd.getType().isTypeVariable()) {
-               //                  type = "bytes ";
-               //               }
             }
             if (type != null) {
                sb.append("  ")
@@ -769,26 +741,6 @@ public class JavaToProtobufGenerator {
             if (Object.class.getName().equals(rrt.getQualifiedName())) {
                continue;
             }
-//            if (rrt.getTypeDeclaration().get() instanceof ReflectionClassDeclaration) {
-//               ReflectionClassDeclaration rcd = (ReflectionClassDeclaration) rrt.getTypeDeclaration().get();
-//               if (Object.class.getName().equals(rcd.getQualifiedName())) {
-//                  continue;
-//               }
-//               fqn = fqnify(rcd.getPackageName() + "." + rcd.getName());
-//               if (!visited.contains(fqn)) {
-//                  resolvedTypes.add(rcd);
-//               }
-//               String superClassName = rcd.getName();
-//               String superClassVariableName = Character.toString(Character.toLowerCase(superClassName.charAt(0))).concat(superClassName.substring(1)) + "___super";
-//               sb.append("  ")
-//               .append(fqn)
-//               .append(" ")
-//               .append(superClassVariableName)
-//               .append(" = ")
-//               .append(counter++)
-//               .append(";\n");
-//               break;
-//            } else 
             if (rrt.getTypeDeclaration().get() instanceof JavaParserClassDeclaration) {
                JavaParserClassDeclaration jpcd = (JavaParserClassDeclaration) rrt.getTypeDeclaration().get();
                ResolvedClassDeclaration rcd = jpcd.asClass();
@@ -832,28 +784,8 @@ public class JavaToProtobufGenerator {
    private static String getEntityParameter(MethodDeclaration md) {
       System.out.println("getEntityParameter(): " + md.getNameAsString());
       for (Parameter p : md.getParameters()) {
-//         boolean isEntity = true;
-//         for (AnnotationExpr ae : p.getAnnotations()) {
-//            System.out.println("getEntityParameter(): " + ae.getNameAsString());
-//            if (ANNOTATIONS.contains(ae.getNameAsString())) {
-//               isEntity = false;
-//               break;
-//            }
-//         }
-//         System.out.println("getEntityParameter(): isEntity: " + isEntity);
-//         String name = p.getTypeAsString();
-//         if (AsyncResponse.class.getName().equals(name) || AsyncResponse.class.getSimpleName().equals(name)) {
-//            isEntity = false;
-//         }
          if (isEntity(p)) {
             String rawType = p.getTypeAsString();
-//            String type = TYPE_MAP.get(rawType.toLowerCase());
-//            if (type != null) {
-//               return PRIMITIVE_WRAPPER_TYPES.get(rawType.toLowerCase());
-//            }
-//            if (PRIMITIVE_WRAPPER_TYPES.containsValue(rawType)) {
-//               return rawType;
-//            }
             if (PRIMITIVE_WRAPPER_TYPES.containsKey(rawType)) {
                return PRIMITIVE_WRAPPER_TYPES.get(rawType);
             }
@@ -883,13 +815,6 @@ public class JavaToProtobufGenerator {
    }
 
    private static String getReturnType(MethodDeclaration md) {
-//      for (Parameter p : md.getParameters()) {
-//         for (AnnotationExpr ae : p.getAnnotations()) {
-//            if ("Suspended".equals(ae.getNameAsString())) {
-//               return "google.protobuf.Any";
-//            }
-//         }
-//      }
       if (isSuspended(md)) {
          return "google.protobuf.Any";
       }
@@ -899,8 +824,6 @@ public class JavaToProtobufGenerator {
       for (Node node : md.getChildNodes()) {
          if (node instanceof Type) {
             if (node instanceof VoidType) {
-               //               needEmpty = true;
-               //               return "gEmpty";
                return "google.protobuf.Any"; // ??
             }
             String rawType = ((Type) node).asString();
@@ -917,39 +840,12 @@ public class JavaToProtobufGenerator {
                }
                System.out.println("return type: processed rawType: " + rawType);
             }
-            //               String type = TYPE_MAP.get(rawType.toLowerCase());
-            //               System.out.println("return type: type: " + type);
-            //               if (type != null) {
-            //                  return PRIMITIVE_WRAPPER_TYPES.get(rawType.toLowerCase());
-            //               }
-            //               if (PRIMITIVE_WRAPPER_TYPES.containsValue(rawType)) {
-            //                  return rawType;
-            //               }
             if (PRIMITIVE_WRAPPER_TYPES.containsKey(rawType)) {
                return PRIMITIVE_WRAPPER_TYPES.get(rawType);
             }
             if ("javax.ws.rs.core.Response".equals(rawType) || "Response".equals(rawType)) {
                return "google.protobuf.Any";
             }
-//            int open = rawType.indexOf("<");
-//            int close = rawType.indexOf(">");
-//            if (open >= 0 && close > open) {
-//               String type = rawType.substring(0, open);
-//               String parameterType = rawType.substring(open + 1, close);
-//               if (CompletionStage.class.getCanonicalName().contentEquals(type) || CompletionStage.class.getSimpleName().contentEquals(type)) {
-//                  rawType = parameterType;
-//               } else {
-//                  rawType = type;
-//               }
-//               System.out.println("return type: processed rawType: " + rawType);
-//               if (Response.class.getCanonicalName().equals(rawType) || Response.class.getSimpleName().equals(rawType)) {
-//                  return "google.protobuf.Any";
-//               }
-//               return rawType;
-//            }
-            //               if ("String".equals(rawType)) {
-            //                  return "String";
-            //               }
             // array?
             ResolvedType rt = ((Type) node).resolve();
             resolvedTypes.add(rt.asReferenceType().getTypeDeclaration().get());
@@ -961,16 +857,6 @@ public class JavaToProtobufGenerator {
       return "gEmpty";
    }
 
-//   private static boolean isAsync(MethodDeclaration md) {
-//      if (isSuspended(md)) {
-//         return true;
-//      }
-//      if (isCompletionStage(md)) {
-//         return true;
-//      }
-//      return false;
-//   }
-   
    private static boolean isSuspended(MethodDeclaration md) {
       for (Parameter p : md.getParameters()) {
          for (AnnotationExpr ae : p.getAnnotations()) {

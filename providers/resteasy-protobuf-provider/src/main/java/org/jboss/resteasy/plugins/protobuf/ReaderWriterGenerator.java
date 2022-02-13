@@ -80,10 +80,8 @@ public class ReaderWriterGenerator {
         .append("import com.google.protobuf.Message;\n")
         .append("import com.google.protobuf.CodedInputStream;\n")
         .append("import com.google.protobuf.CodedOutputStream;\n")
-//        .append("import ").append(HttpServletResponse.class.getCanonicalName()).append(";\n")
         .append("import ").append("javax.servlet.http.HttpServletResponse;\n")
         .append("import ").append("io.grpc.classes.AsyncMockServletOutputStream;\n")
-//        .append("import ").append(AsyncMockServletOutputStream.class.getCanonicalName()).append(";\n")
         .append("import ").append(HttpServletResponseHandler.class.getCanonicalName()).append(";\n")
         .append("import ").append(wrapperClass.getPackageName()).append(".").append(rootClass).append("_JavabufTranslator;\n")
         .append("import ").append(ResteasyContext.class.getCanonicalName()).append(";\n")
@@ -94,7 +92,6 @@ public class ReaderWriterGenerator {
          }
          if (primitives.containsKey(clazz.getSimpleName())) {
             sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
-//            continue;
          } else if ("GeneralEntityMessage".equals(clazz.getSimpleName())
                  || "GeneralReturnMessage".equals(clazz.getSimpleName())
                  || "Cookie".equals(clazz.getSimpleName())
@@ -123,28 +120,18 @@ public class ReaderWriterGenerator {
         .append("   public Object readFrom(Class type, Type genericType, Annotation[] annotations, MediaType mediaType,\n")
         .append("        MultivaluedMap httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {\n")
         .append("      try {\n")
-//        .append("         GeneratedMessageV3 message = getMessage(type, entityStream);\n")
-//        .append("         return CC1_JavabufTranslator.translateFromJavabuf(message);\n")
-//        .append("      GeneratedMessageV3 message = null;\n")
-//        .append("        HttpServletResponse servletResponse = ResteasyContext.getContextData(HttpServletResponse.class);\n")
-//        .append("        if (servletResponse.getHeader(HttpServletResponseHandler.GRPC_RETURN_RESPONSE) != null ||\n")
-//        .append("           httpHeaders.getFirst(HttpServletResponseHandler.GRPC_RETURN_RESPONSE) != null) {\n")
         .append("      if (httpHeaders.getFirst(HttpServletResponseHandler.GRPC_RETURN_RESPONSE) != null) {\n")
-//        .append("         Any any = Any.parseFrom(CodedInputStream.newInstance(entityStream));\n")
-//        .append("         message = unpackMessage(type, any);\n")
         .append("         return Any.parseFrom(CodedInputStream.newInstance(entityStream));\n")
         .append("      } else {\n")
         .append("         GeneratedMessageV3 message = getMessage(type, entityStream);\n")
         .append("         return CC1_JavabufTranslator.translateFromJavabuf(message);\n")
         .append("      }\n")
-//        .append("      return CC1_JavabufTranslator.translateFromJavabuf(message);\n")
         .append("      } catch (Exception e) {\n")
         .append("         throw new RuntimeException(e);\n")
         .append("      }\n")
         .append("   }\n\n")
         .append("   @Override\n")
         .append("   public boolean isWriteable(Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {\n")
-//        .append("      return ((\"application\".equals(mediaType.getType()) && \"grpc-jaxrs\".equals(mediaType.getSubtype())) || mediaType.getParameters().get(\"grpc-jaxrs\") != null) &&  CC1_JavabufTranslator.handlesToJavabuf(type);\n")
         .append("      return CC1_JavabufTranslator.handlesToJavabuf(type);\n")
         .append("   }\n\n")
         .append("   @Override\n")
@@ -173,38 +160,6 @@ public class ReaderWriterGenerator {
         .append("   private static GeneratedMessageV3 getMessage(Class<?> clazz, InputStream is) throws IOException {\n");
       Class<?>[] subclasses = wrapperClass.getClasses();
       boolean startElse = false;
-/*
-      if (servletResponse != null && servletResponse.getHeader(HttpServletResponseHandler.GRPC_RETURN_RESPONSE) != null) {
-         CodedOutputStream cos = CodedOutputStream.newInstance(entityStream);
-         Any.pack(message).writeTo(cos);
-         cos.flush();
-      } else {
-         message.writeTo(entityStream);
-      }
-      if (servletResponse != null && servletResponse.getHeader(HttpServletResponseHandler.GRPC_ASYNC) != null) {
-         AsyncMockServletOutputStream amsos = (AsyncMockServletOutputStream) servletResponse.getOutputStream();
-         amsos.release();
-      }
- */
-//      if (subclasses.length > 0 && !subclasses[0].isInterface()) {
-//         startElse = true;
-//         sb.append("         if (").append(javabufToJavaClass(subclasses[0].getSimpleName())).append(".class.equals(clazz)) {\n")
-//           .append("            return ").append(subclasses[0].getSimpleName()).append(".parseFrom(is);\n")
-//           .append("      }");
-//      }
-      /*
-       if (CC5.class.equals(clazz)) {
-         return org_jboss_resteasy_test_grpc___CC5.parseFrom(is);
-      } else       if (CC3.class.equals(clazz)) {
-         return org_jboss_resteasy_test_grpc___CC3.parseFrom(is);
-      } else       if (CC4.class.equals(clazz)) {
-         return org_jboss_resteasy_test_grpc___CC4.parseFrom(is);
-      } else       if (CC2.class.equals(clazz)) {
-         return org_jboss_resteasy_test_grpc___CC2.parseFrom(is);
-      } else {
-         throw new IOException("unrecognized class: " + clazz);
-      }
-       */
       for (int i = 0; i < subclasses.length; i++) {
          if (subclasses[i].isInterface()) {
             continue;
@@ -212,7 +167,6 @@ public class ReaderWriterGenerator {
          if (startElse) {
             sb.append("else ");
          } else {
-//            sb.append("   ");
             startElse = true;
          }
          String simpleName = subclasses[i].getSimpleName();
@@ -240,7 +194,6 @@ public class ReaderWriterGenerator {
          if (startElse) {
             sb.append("else ");
          } else {
-//            sb.append("   ");
             startElse = true;
          }
          String simpleName = subclasses[i].getSimpleName();
@@ -294,20 +247,12 @@ public class ReaderWriterGenerator {
          return "java.lang." + simpleName.substring(1); 
       }
       return simpleName;      
-      //      return "java.lang." + (i < 0 ? classname : classname.substring(i + 3));
    }
 
    private static String originalSimpleName(String s) {
       int i = s.lastIndexOf("___");
       return i < 0 ? s : s.substring(i + 3);
    }
-
-//   private static String originalClassName(String s) {
-//      int i = s.indexOf("$");
-//      int j = s.lastIndexOf("___");
-//      String pkg = s.substring(i + 1, j).replace('_', '.');
-//      return pkg + "." + originalSimpleName(s);
-//   }
    
    private static String originalClassName(String s) {
       System.out.println("originalClassName(): " + s);
