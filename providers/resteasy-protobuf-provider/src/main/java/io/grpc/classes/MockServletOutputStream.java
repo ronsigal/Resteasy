@@ -12,19 +12,16 @@ public class MockServletOutputStream extends ServletOutputStream {
    private boolean closed;
    
    @Override
-   public boolean isReady()
-   {
+   public boolean isReady() {
       return true;
    }
 
    @Override
-   public void setWriteListener(WriteListener writeListener)
-   {
+   public void setWriteListener(WriteListener writeListener) {
    }
 
    @Override
-   public void write(int b) throws IOException
-   {
+   public void write(int b) throws IOException {
       baos.write(b);
    }
    

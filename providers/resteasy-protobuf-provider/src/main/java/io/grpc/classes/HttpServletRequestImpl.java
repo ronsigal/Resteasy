@@ -55,9 +55,6 @@ public class HttpServletRequestImpl implements HttpServletRequest {
    private Map<String, Object> attributes = new HashMap<String, Object>();
    private Map<String, String[]> parameters = new HashMap<String, String[]>();
 
-   //new HttpServletRequestImpl(contextPath, "p/cc7", "GET", msis, param.getClass().getName(), "jaxrs.example.CC1_proto.org_jboss_resteasy_example___CC7");
-   //new HttpServletRequestImpl(contextPath, url, "GET", msis, param.getClass().getName(), "jaxrs.example.CC1_proto.org_jboss_resteasy_example___CC7");
-
    public HttpServletRequestImpl(ServletResponse servletResponse, ServletContext servletContext, String contextPath, String uri, String method, ServletInputStream sis, String retn, Map<String, List<String>> headers, Cookie[] cookies) throws URISyntaxException {
       this.servletResponse = servletResponse;
       this.servletContext = servletContext;

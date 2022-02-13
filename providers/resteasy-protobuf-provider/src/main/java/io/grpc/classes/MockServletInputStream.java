@@ -14,32 +14,25 @@ public class MockServletInputStream extends ServletInputStream {
    }
    
    @Override
-   public boolean isFinished()
-   {
-      try
-      {
+   public boolean isFinished() {
+      try {
          return is.available() > 0;
-      }
-      catch (IOException e)
-      {
+      } catch (IOException e) {
          return true;
       }
    }
 
    @Override
-   public boolean isReady()
-   {
+   public boolean isReady() {
       return true;
    }
 
    @Override
-   public void setReadListener(ReadListener readListener)
-   { 
+   public void setReadListener(ReadListener readListener) { 
    }
 
    @Override
-   public int read() throws IOException
-   {
+   public int read() throws IOException {
       return is.read();
    }
 }

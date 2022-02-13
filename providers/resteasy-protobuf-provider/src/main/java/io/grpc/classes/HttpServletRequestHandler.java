@@ -3,7 +3,6 @@ package io.grpc.classes;
 import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,7 +11,6 @@ import java.util.Map;
 public class HttpServletRequestHandler implements InvocationHandler {
    private String contextPath;
    private String path;
-   private String method;
    private InputStream is;
    private Map<String, Object> attributes = new HashMap<String, Object>();
    private Map<String, String> headers = new HashMap<String, String>();   
@@ -20,7 +18,6 @@ public class HttpServletRequestHandler implements InvocationHandler {
    public HttpServletRequestHandler(String contextPath, String path, String method, InputStream message, Map<String, String> headers) {
       this.contextPath = contextPath;
       this.path = path;
-      this.method = method;
       this.is = message;
       this.headers = headers;
       headers.put("Accept", "application/grpc-jaxrs");

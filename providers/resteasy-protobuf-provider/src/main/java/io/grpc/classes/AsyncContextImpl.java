@@ -64,22 +64,9 @@ public class AsyncContextImpl implements AsyncContext {
    @Override
    public synchronized void complete() {
        if (complete) {
-//           Messages.MESSAGES.trace("Ignoring call to AsyncContext.complete() as it has already been called");
            return;
        }
        complete = true;
-//       if (timeoutKey != null) {
-//           timeoutKey.remove();
-//           timeoutKey = null;
-//       }
-//       if (!dispatched) {
-//           completeInternal(false);
-//       } else {
-//           onAsyncComplete();
-//       }
-//       if (previousAsyncContext != null) {
-//           previousAsyncContext.complete();
-//       }
    }
 
    @Override

@@ -37,7 +37,6 @@ public class HttpServletResponseHandler implements InvocationHandler {
       if ("getOutputStream".equals(method.getName())) {
          return msos;
       }
-      //Collection<String> getHeaders(String name)
       if ("getHeaders".equals(method.getName())) {
          return headers.get(args[0]);
       }
@@ -47,7 +46,6 @@ public class HttpServletResponseHandler implements InvocationHandler {
             return null;
          }
          return list.get(0);
-         //         return headers.get(args[0]).get(0);
       }
       return null;
    }
