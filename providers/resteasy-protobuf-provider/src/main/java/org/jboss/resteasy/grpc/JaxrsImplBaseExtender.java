@@ -1,7 +1,6 @@
 package org.jboss.resteasy.grpc;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -12,10 +11,6 @@ import java.util.Scanner;
 import java.util.Set;
 
 import org.jboss.logging.Logger;
-
-//import jaxrs.example.AsyncMockServletOutputStream;
-//import jaxrs.example.MockServletOutputStream;
-//import jaxrs.example.CC1_proto.org_jboss_resteasy_plugins_protobuf_sse___SseEvent;
 
 public class JaxrsImplBaseExtender {
 
@@ -189,7 +184,6 @@ public class JaxrsImplBaseExtender {
       scanner.findWithinHorizon("returns", 0);
       scanner.findWithinHorizon("\\(", 0);
       String retn = getReturnType(packageName, outerClassName, scanner.next());
-//      sbHeader.append("import " + retn + ";\n");
       System.out.println("retn: " + retn);
       if (!imports.contains(retn)) {
          sbHeader.append("import " + retn + ";\n");
@@ -204,44 +198,20 @@ public class JaxrsImplBaseExtender {
       scanner.reset();
    }
 
-   /*
-          BeanManager bm = CDI.current().getBeanManager();
-         try {
-          bm.getContext(RequestScoped.class);
-         } catch (ContextNotActiveException e) {
-             BeanManagerProxy bmp = (BeanManagerProxy) bm;
-             BeanManagerImpl bmi = bmp.delegate();
-             bmi.addContext(context); 
-         }
-    */
    private void rpcBody(Scanner scanner, String path, String actualEntityClass, String method, String syncType, StringBuilder sb, String retn) {
       sb.append("      try {\n")
         .append("         HttpServletResponse response = getHttpServletResponse(\"" + retn + "\", \"" + syncType + "\");\n")
         .append("         HttpServletDispatcher servlet = (HttpServletDispatcher) ResteasyContext.getServlet(\"").append(servletName).append("\");\n") // plug in correct servlet
         .append("         HttpServlet30Dispatcher hs30d = new HttpServlet30Dispatcher();\n")
         .append("         hs30d.init(servlet.getServletConfig());\n")
-//        .append("         ").append(actualEntityClass).append(" actualParam = param.get").append(actualEntityClass.substring(0, 1).toUpperCase()).append(actualEntityClass.substring(1)).append("_field();\n")
         .append("         ").append(actualEntityClass).append(" actualParam = param.").append(getGetterMethod(actualEntityClass)).append(";\n")
-        /*
-         gShort actualParam = param.getGShort_field();
-         ByteArrayInputStream bais = new ByteArrayInputStream(actualParam.toByteArray());
-         HttpServletRequest request = new HttpServletRequestImpl("jaxrs.example.grpc-0.0.1-SNAPSHOT", url, "GET", msis, "jaxrs.example.CC1_proto.org_jboss_resteasy_example___CC7");
-
-         */
         .append("         String url = param.getURL();\n")
         .append("         ByteArrayInputStream bais = new ByteArrayInputStream(actualParam.toByteArray());\n")
         .append("         MockServletInputStream msis = new MockServletInputStream(bais);\n")
         .append("         Map<String, List<String>> headers = convertHeaders(param.getHeadersMap());\n")
-        
-        /*
-          javax.servlet.http.Cookie[] cookies = convertCookies(param.getCookiesList());
-         HttpServletRequest request = new HttpServletRequestImpl("/jaxrs.example.grpc-0.0.1-SNAPSHOT", url, "GET", msis, "jaxrs.example.CC1_proto.gString", headers, cookies);
-
-         */
         .append("         javax.servlet.http.Cookie[] cookies = convertCookies(param.getCookiesList());\n")
         .append("         ServletContext servletContext = CC1_Server.getContext();\n")
         .append("         HttpServletRequest request = new HttpServletRequestImpl(response, servletContext, \"").append(contextPath).append("\", url, \"").append(method).append("\", msis, \"").append(retn).append("\", headers, cookies);\n")
-//        .append("         HttpServletRequest request = getHttpServletRequest(\"").append(path).append("\", \"").append(method).append("\", msis, param.getClass().getName(), \"").append(retn).append("\");\n")
         .append("         HttpRequestContextImpl context = new HttpRequestContextImpl(\"/jaxrs.example.grpc-0.0.1-SNAPSHOT.war\");\n")
         .append("         context.associate(request);\n")
         .append("         context.activate();\n")
@@ -256,32 +226,17 @@ public class JaxrsImplBaseExtender {
         .append("         hs30d.service(\"").append(method).append("\", request, response);\n");
 
       if ("suspended".equals(syncType)) {
-         /*
-         AsyncMockServletOutputStream amsos = (AsyncMockServletOutputStream) response.getOutputStream();
-         amsos.await();
-         ByteArrayOutputStream baos = amsos.getDelegate();
-         ByteArrayInputStream bais1 = new ByteArrayInputStream(baos.toByteArray());
-         jaxrs.example.CC1_proto.gString reply = jaxrs.example.CC1_proto.gString.parseFrom(bais1);
-         responseObserver.onNext(reply);
-          */
          sb.append("         AsyncMockServletOutputStream amsos = (AsyncMockServletOutputStream) response.getOutputStream();\n")
            .append("         amsos.await();\n")
            .append("         ByteArrayOutputStream baos = amsos.getDelegate();\n")
            .append("         ByteArrayInputStream bais1 = new ByteArrayInputStream(baos.toByteArray());\n")
-//           .append("         jaxrs.example.CC1_proto.gString reply = jaxrs.example.CC1_proto.gString.parseFrom(bais1);\n")
            .append("         com.google.protobuf.Any reply = com.google.protobuf.Any.parseFrom(bais1);\n")
            .append("         responseObserver.onNext(reply);\n");
-
-//           .append("         ByteArrayInputStream bais1 = new ByteArrayInputStream(baos.toByteArray());\n")
-//           .append("         com.google.protobuf.Any reply = com.google.protobuf.Any.parseFrom(bais1);\n")
-//           .append("         responseObserver.onNext(reply);\n");
       } else if ("completionStage".equals(syncType)) {
          sb.append("         AsyncMockServletOutputStream amsos = (AsyncMockServletOutputStream) response.getOutputStream();\n")
            .append("         amsos.await();\n")
            .append("         ByteArrayOutputStream baos = amsos.getDelegate();\n")
            .append("         ByteArrayInputStream bais1 = new ByteArrayInputStream(baos.toByteArray());\n")
-//         .append("         jaxrs.example.CC1_proto.gString reply = jaxrs.example.CC1_proto.gString.parseFrom(bais1);\n")
-//           .append("         com.google.protobuf.Any reply = com.google.protobuf.Any.parseFrom(bais1);\n")
            .append("         ").append(retn).append(" reply = ").append(retn).append(".parseFrom(bais1);\n")
            .append("         responseObserver.onNext(reply);\n");
       }
@@ -297,8 +252,6 @@ public class JaxrsImplBaseExtender {
            .append("            if (amsos.isClosed()) {\n")
            .append("               break;\n")
            .append("            }\n")
-//           .append("            ByteArrayOutputStream baos = amsos.getDelegate();\n")
-//           .append("            ByteArrayInputStream bais1 = new ByteArrayInputStream(baos.toByteArray());\n")
            .append("            byte[] bytes = baos.toByteArray();\n")
            .append("            if (bytes.length == 2 && bytes[0] == 10 && bytes[1] == 10) {\n")
            .append("               continue;\n")
@@ -310,17 +263,8 @@ public class JaxrsImplBaseExtender {
            .append("            } catch (Exception e) {\n")
            .append("               continue;\n")
            .append("            }\n")           
-//           .append("            org_jboss_resteasy_plugins_protobuf_sse___SseEvent reply = org_jboss_resteasy_plugins_protobuf_sse___SseEvent.parseFrom(bais1);\n")
-//           .append("            responseObserver.onNext(reply);\n")
            .append("         }\n");
       } else {
-         /*
-         MockServletOutputStream msos = (MockServletOutputStream) response.getOutputStream();
-         ByteArrayOutputStream baos = msos.getDelegate();
-         ByteArrayInputStream bais1 = new ByteArrayInputStream(baos.toByteArray());
-         com.google.protobuf.Any reply = com.google.protobuf.Any.parseFrom(bais1);
-         responseObserver.onNext(reply);
-          */
          sb.append("         MockServletOutputStream msos = (MockServletOutputStream) response.getOutputStream();\n")
            .append("         ByteArrayOutputStream baos = msos.getDelegate();\n")
            .append("         bais = new ByteArrayInputStream(baos.toByteArray());\n")
@@ -330,19 +274,10 @@ public class JaxrsImplBaseExtender {
       sb.append("      } catch (Exception e) {\n")
         .append("         e.printStackTrace();\n")
         .append("         responseObserver.onError(e);\n")
-//        .append("         return;\n")
         .append("      }\n")
         .append("      responseObserver.onCompleted();\n");
    }
-   /*
-      } catch (Exception e) {
-         e.printStackTrace();
-         responseObserver.onError(e);
-      }
-      responseObserver.onCompleted();
-    */
-///getOrgJbossResteasyExampleCC2Field
-   
+
    private static void staticMethods(StringBuilder sb) {
       sb.append("\n")
         .append("   private static HttpServletRequest getHttpServletRequest(String path, String method, InputStream is, String className, String retn) {\n")
@@ -406,9 +341,6 @@ public class JaxrsImplBaseExtender {
       return packageName + "." + outerClassName + "." + param;
    }
 
-//   getOrgJbossResteasyExampleCC2Field
-//   org_jboss_resteasy_example___CC2
-   
    private String getGetterMethod(String actualEntityClass) {
       System.out.println("getGetterMethod: actualEntityClass: " + actualEntityClass);
       actualEntityClass = actualEntityClass.replaceAll("___", "_");
@@ -422,7 +354,6 @@ public class JaxrsImplBaseExtender {
          } else {
             sb.append(actualEntityClass.charAt(i++));
          }
-         System.out.println("sb: " + sb.toString());
       }
       sb.append("Field()");
       return sb.toString();
