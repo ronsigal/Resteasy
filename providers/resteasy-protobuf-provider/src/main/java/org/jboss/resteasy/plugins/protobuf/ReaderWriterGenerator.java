@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.core.ResteasyContext;
+import org.jboss.resteasy.grpc.ServletConfigWrapper;
 
 import io.grpc.classes.AsyncMockServletOutputStream;
 import io.grpc.classes.HttpServletResponseHandler;
@@ -67,6 +68,7 @@ public class ReaderWriterGenerator {
         .append("import java.io.OutputStream;\n")
         .append("import java.lang.annotation.Annotation;\n")
         .append("import java.lang.reflect.Type;\n")
+        .append("import javax.servlet.ServletConfig;\n")
         .append("import javax.ws.rs.Consumes;\n")
         .append("import javax.ws.rs.Produces;\n")
         .append("import javax.ws.rs.WebApplicationException;\n")
@@ -132,7 +134,8 @@ public class ReaderWriterGenerator {
         .append("   }\n\n")
         .append("   @Override\n")
         .append("   public boolean isWriteable(Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {\n")
-        .append("      return CC1_JavabufTranslator.handlesToJavabuf(type);\n")
+        .append("      ServletConfig servletConfig = ResteasyContext.getContextData(ServletConfig.class);\n")
+        .append("      return servletConfig != null && servletConfig.getInitParameter(ServletConfigWrapper.GRPC_JAXRS) != null && CC1_JavabufTranslator.handlesToJavabuf(type);\n")
         .append("   }\n\n")
         .append("   @Override\n")
         .append("   public void writeTo(Object t, Class type, Type genericType, Annotation[] annotations, MediaType mediaType,\n")

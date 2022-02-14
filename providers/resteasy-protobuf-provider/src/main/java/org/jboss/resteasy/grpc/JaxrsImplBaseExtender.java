@@ -114,6 +114,7 @@ public class JaxrsImplBaseExtender {
         .append("import javax.servlet.http.HttpServletRequest;\n")
         .append("import javax.servlet.http.HttpServletResponse;\n")
         .append("import org.jboss.resteasy.core.ResteasyContext;\n")
+        .append("import org.jboss.resteasy.grpc.ServletConfigWrapper;\n")
         .append("import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;\n")
         .append("import org.jboss.resteasy.plugins.server.servlet.HttpServlet30Dispatcher;\n")
         .append("import io.grpc.classes.AsyncContextImpl;\n")
@@ -203,7 +204,7 @@ public class JaxrsImplBaseExtender {
         .append("         HttpServletResponse response = getHttpServletResponse(\"" + retn + "\", \"" + syncType + "\");\n")
         .append("         HttpServletDispatcher servlet = (HttpServletDispatcher) ResteasyContext.getServlet(\"").append(servletName).append("\");\n") // plug in correct servlet
         .append("         HttpServlet30Dispatcher hs30d = new HttpServlet30Dispatcher();\n")
-        .append("         hs30d.init(servlet.getServletConfig());\n")
+        .append("         hs30d.init(new ServletConfigWrapper(servlet.getServletConfig()));\n")
         .append("         ").append(actualEntityClass).append(" actualParam = param.").append(getGetterMethod(actualEntityClass)).append(";\n")
         .append("         String url = param.getURL();\n")
         .append("         ByteArrayInputStream bais = new ByteArrayInputStream(actualParam.toByteArray());\n")
@@ -274,8 +275,9 @@ public class JaxrsImplBaseExtender {
       sb.append("      } catch (Exception e) {\n")
         .append("         e.printStackTrace();\n")
         .append("         responseObserver.onError(e);\n")
-        .append("      }\n")
-        .append("      responseObserver.onCompleted();\n");
+        .append("      } finally {\n")
+        .append("         responseObserver.onCompleted();\n")
+        .append("      }\n");
    }
 
    private static void staticMethods(StringBuilder sb) {
