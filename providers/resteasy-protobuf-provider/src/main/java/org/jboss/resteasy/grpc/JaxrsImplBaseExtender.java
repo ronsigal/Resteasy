@@ -133,7 +133,7 @@ public class JaxrsImplBaseExtender {
         .append("import org.jboss.weld.bean.builtin.BeanManagerProxy;\n")
         .append("import javax.enterprise.inject.spi.BeanManager;\n")
         .append("import com.google.protobuf.Any;\n")
-        .append("import grpc.server.").append(fileName).append("_Server;\n");
+        .append("import test.grpc.").append(fileName).append("_Server;\n");
    }
 
    private void service(Scanner scanner, StringBuilder sbHeader, StringBuilder sbBody) {
