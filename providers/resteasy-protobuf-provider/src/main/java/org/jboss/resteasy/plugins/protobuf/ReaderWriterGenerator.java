@@ -1,20 +1,15 @@
 package org.jboss.resteasy.plugins.protobuf;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.ws.rs.Produces;
-
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.core.ResteasyContext;
-import org.jboss.resteasy.grpc.ServletConfigWrapper;
 
-import io.grpc.classes.AsyncMockServletOutputStream;
 import io.grpc.classes.HttpServletResponseHandler;
 
 public class ReaderWriterGenerator {

@@ -1,12 +1,24 @@
 package org.jboss.resteasy.plugins.protobuf.sse;
 
+import org.jboss.resteasy.plugins.providers.sse.InboundSseEventImpl;
+
 public class SseEvent {
 
    private String  comment;
+   private String  id;
    private String  name;
-   private int     id;
    private byte[]  data;
-   private long    retry;
+   private long    reconnectDelay;
+   
+   public SseEvent() {}
+   
+   public SseEvent(InboundSseEventImpl inboundSseEvent) {
+      setComment(inboundSseEvent.getComment());
+      setData(inboundSseEvent.getRawData());
+      setId(inboundSseEvent.getId());
+      setName(inboundSseEvent.getName());
+      setReconnectDelay(inboundSseEvent.getReconnectDelay());
+   }
    
    public String getComment()
    {
@@ -16,6 +28,14 @@ public class SseEvent {
    {
       this.comment = comment;
    }
+   public String getId()
+   {
+      return id;
+   }
+   public void setId(String id)
+   {
+      this.id = id;
+   }
    public String getName()
    {
       return name;
@@ -24,14 +44,6 @@ public class SseEvent {
    {
       this.name = name;
    }
-   public int getId()
-   {
-      return id;
-   }
-   public void setId(int id)
-   {
-      this.id = id;
-   }
    public byte[] getData() {
       return data;
    }
@@ -39,12 +51,15 @@ public class SseEvent {
    {
       this.data = data;
    }
-   public long isRetry()
+   public long getReconnectDelay()
    {
-      return retry;
+      return reconnectDelay;
    }
-   public void setRetry(long retry)
+   public void setReconnectDelay(long reconnectDelay)
    {
-      this.retry = retry;
+      this.reconnectDelay = reconnectDelay;
+   }
+   public boolean isReconnectDelaySet() {
+      return reconnectDelay > -1;
    }
 }

@@ -273,10 +273,10 @@ public class JavaToProtobufGenerator {
                 + "public class SseEvent {\n"
                 + "\n"
                 + "   String  comment;\n"
+                + "   String  id;\n"
                 + "   String  name;\n"
-                + "   int     id;\n"
                 + "   byte[]  data;\n"
-                + "   long    retry;\n"
+                + "   long    reconnectDelay;\n"
                 + "}";
    }
 

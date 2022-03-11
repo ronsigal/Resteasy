@@ -5,13 +5,17 @@ import java.util.Enumeration;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
+import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
+
 public class ServletConfigWrapper implements ServletConfig {
 
    public static final String GRPC_JAXRS = "grpcJaxrs";
    ServletConfig delegate;
+   String readerWriter;
 
-   public ServletConfigWrapper(ServletConfig delegate) {
+   public ServletConfigWrapper(ServletConfig delegate, String readerWriter) {
       this.delegate = delegate;
+      this.readerWriter = readerWriter;
    }
 
    @Override
@@ -28,6 +32,9 @@ public class ServletConfigWrapper implements ServletConfig {
    public String getInitParameter(String name) {
       if (GRPC_JAXRS.equals(name)) {
          return "true";
+      }
+      if (ResteasyContextParameters.RESTEASY_PROVIDERS.equals(name)) {
+         return readerWriter;
       }
       return delegate.getInitParameter(name);
    }
