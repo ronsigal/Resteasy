@@ -22,6 +22,6 @@
         <module>multipart</module>
         <module>resteasy-html</module>
         <module>resteasy-validator-provider</module>
-        <module>resteasy-protobuf-provider</module>
+        <module>resteasy-grpc-provider</module>
     </modules>
 </project>

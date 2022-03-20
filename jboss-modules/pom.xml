@@ -166,7 +166,7 @@
 
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-protobuf-provider</artifactId>
+            <artifactId>resteasy-grpc-provider</artifactId>
             <version>${project.version}</version>
         </dependency>
 

@@ -90,8 +90,8 @@
             <maven-resource group="org.jboss.resteasy" artifact="resteasy-atom-provider"/>
         </module-def>
 
-        <module-def name="org.jboss.resteasy.resteasy-protobuf-provider">
-            <maven-resource group="org.jboss.resteasy" artifact="resteasy-protobuf-provider"/>
+        <module-def name="org.jboss.resteasy.resteasy-grpc-provider">
+            <maven-resource group="org.jboss.resteasy" artifact="resteasy-grpc-provider"/>
             <maven-resource group="io.grpc" artifact="grpc-api"/>
         	<!--maven-resource group="com.google.guava" artifact="guava"/-->
         </module-def>
