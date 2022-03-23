@@ -153,13 +153,9 @@ public class JaxrsImplBaseExtender {
       scanner.nextLine();
       scanner.skip("//");
       String path = scanner.next();
-      System.out.println("path: " + path);
       String actualEntityClass = scanner.next();
-      System.out.println("actualEntityClass: " + actualEntityClass);
       String httpMethod = scanner.next();
-      System.out.println("httpMethod: " + httpMethod);
       String syncType = scanner.next();
-      System.out.println("syncType: " + syncType);
       String rpc = scanner.findWithinHorizon(" rpc ", 0);
       while (rpc != null) {
          rpc(scanner, root, actualEntityClass, httpMethod, syncType, sbHeader, sbBody);
@@ -171,9 +167,7 @@ public class JaxrsImplBaseExtender {
          path = scanner.next();
          actualEntityClass = scanner.next();
          httpMethod = scanner.next();
-         System.out.println("httpMethod: " + httpMethod);
          syncType = scanner.next();
-         System.out.println("syncType: " + syncType);
          rpc = scanner.findWithinHorizon(" rpc ", 0);
       }
    }
@@ -184,7 +178,6 @@ public class JaxrsImplBaseExtender {
       scanner.findWithinHorizon("\\(", 0);
       scanner.useDelimiter("\\)");
       String param = getParamType(packageName, outerClassName, scanner.next());
-      System.out.println("actualEntityClass: " + actualEntityClass);
       if (!imports.contains(actualEntityClass)) {
          sbHeader.append("import " + packageName + "." + outerClassName + "." + actualEntityClass + ";\n");
          imports.add(actualEntityClass);
@@ -192,7 +185,6 @@ public class JaxrsImplBaseExtender {
       scanner.findWithinHorizon("returns", 0);
       scanner.findWithinHorizon("\\(", 0);
       String retn = getReturnType(packageName, outerClassName, scanner.next());
-      System.out.println("retn: " + retn);
       if (!imports.contains(retn)) {
          sbHeader.append("import " + retn + ";\n");
          imports.add(retn);
@@ -362,7 +354,6 @@ public class JaxrsImplBaseExtender {
    }
    
    private static String getReturnType(String packageName, String outerClassName, String param) {
-      System.out.println("param: " + param);
       int pos = param.indexOf("stream");
       if (pos >= 0) {
          param = param.substring(pos + 6).stripLeading();
@@ -374,9 +365,7 @@ public class JaxrsImplBaseExtender {
    }
 
    private String getGetterMethod(String actualEntityClass) {
-      System.out.println("getGetterMethod: actualEntityClass: " + actualEntityClass);
       actualEntityClass = actualEntityClass.replaceAll("___", "_");
-      System.out.println("getGetterMethod: actualEntityClass: " + actualEntityClass);
       StringBuilder sb = new StringBuilder("get");
       sb.append(actualEntityClass.substring(0, 1).toUpperCase());
       for (int i = 1; i < actualEntityClass.length(); ) {

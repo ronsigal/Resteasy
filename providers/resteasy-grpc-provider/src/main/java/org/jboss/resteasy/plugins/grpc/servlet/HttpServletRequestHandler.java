@@ -23,7 +23,6 @@ public class HttpServletRequestHandler implements InvocationHandler {
       headers.put("Accept", "application/grpc-jaxrs");
       headers.put("Content-Type", "application/grpc-jaxrs");
    }
-//   public Enumeration<String> getHeaders(String name);
 
    @Override
    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {

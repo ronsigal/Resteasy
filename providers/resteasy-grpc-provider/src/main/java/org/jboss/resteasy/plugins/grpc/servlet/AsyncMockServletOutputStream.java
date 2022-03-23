@@ -19,7 +19,6 @@ public class AsyncMockServletOutputStream extends MockServletOutputStream {
    }
 
    public void release() throws IOException {
-      new Exception("release()").printStackTrace();
       latch.countDown();
    }
 }

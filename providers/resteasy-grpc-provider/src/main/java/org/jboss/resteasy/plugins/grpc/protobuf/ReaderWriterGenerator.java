@@ -253,7 +253,6 @@ public class ReaderWriterGenerator {
    }
    
    private static String originalClassName(String s) {
-      System.out.println("originalClassName(): " + s);
       int i = s.indexOf("$");
       int j = s.lastIndexOf("___");
       j = j < 0 ? s.length() : j;

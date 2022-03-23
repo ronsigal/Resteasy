@@ -291,7 +291,6 @@ public class JavaToProtobufGenerator {
          logger.info("  arg[4]: comma separated of addition classes [optional]");
          return;
       }
-      System.out.println("root directory: " + args[0]);
       additionalClasses = args[4] == null ? new CopyOnWriteArraySet<String>()
                                           : new CopyOnWriteArraySet<String>(Arrays.asList(args[4].split(",")));
       StringBuilder sb = new StringBuilder();
@@ -348,8 +347,6 @@ public class JavaToProtobufGenerator {
       StaticJavaParser.getConfiguration().setSymbolResolver(symbolSolver);
       while (!additionalClasses.isEmpty()) {
          for (String filename : additionalClasses) {
-            System.out.println("processAdditionalClasses(): additionalClasses.size(): " + additionalClasses.size());
-            System.out.println("filename: " + filename);
             int n = filename.indexOf(":");
             if (n < 0) {
                throw new RuntimeException("bad syntax: " + filename);
@@ -361,11 +358,9 @@ public class JavaToProtobufGenerator {
             additionalClassVisitor.visit(cu, sb);
          }
       }
-      System.out.println("processAdditionalClasses(): " + isSSE);
       if (isSSE) {
          ByteArrayInputStream bais = new ByteArrayInputStream(SSE_EVENT.getBytes());
          CompilationUnit cu = StaticJavaParser.parse(bais);
-         System.out.println("processAdditionalClasses(): cu: " + cu.getPackageDeclaration());
          AdditionalClassVisitor additionalClassVisitor = new AdditionalClassVisitor("");
          additionalClassVisitor.visit(cu, sb);
       }
@@ -501,7 +496,6 @@ public class JavaToProtobufGenerator {
                   started = true;
                }
                String entityType = getEntityParameter(md);
-               System.out.println("entityType: " + entityType);
                String returnType = getReturnType(md);
                String syncType = isSuspended(md) ? "suspended" : (isCompletionStage(md) ? "completionStage" : (isSSE(md) ? "sse" : "sync"));
                isSuspended(md);
@@ -574,13 +568,11 @@ public class JavaToProtobufGenerator {
          // Scan all variables in class.
          for (ResolvedFieldDeclaration rfd: clazz.getDeclaredFields()) {
             String type = null;
-            System.out.println("rfd type: " + rfd.getType());
             if (rfd.getType().isPrimitive() || rfd.getType().isReferenceType() && String.class.getName().equals(rfd.getType().asReferenceType().getQualifiedName())) {
                type = TYPE_MAP.get(rfd.getType().describe());
             }  else if (rfd.getType() instanceof ResolvedArrayType) {
                ResolvedArrayType rat = (ResolvedArrayType) rfd.getType();
                ResolvedType ct = rat.getComponentType();
-               System.out.println("component type: " + ct.describe());
                if ("byte".equals(ct.describe())) {
                   type = "bytes";
                } else  if (ct.isPrimitive()) {
@@ -681,12 +673,10 @@ public class JavaToProtobufGenerator {
        * For each class, create a message type with a field for each variable in the class.
        */
       public void visit(ClassOrInterfaceDeclaration clazz, StringBuilder sb) {
-         System.out.println("visiting: " + clazz);
          if (PRIMITIVE_WRAPPER_DEFINITIONS.containsKey(clazz.getName().asString())) {
             return;
          }
          String packageName = getPackageName(clazz);
-         System.out.println("visit(): packageName: " + packageName);
          String fqn = packageName + "." + clazz.getNameAsString();
          String filename = dir + ":" + fqn;
          additionalClasses.remove(filename);
@@ -697,7 +687,6 @@ public class JavaToProtobufGenerator {
          visited.add(fqn);
 
          // Begin protobuf message definition.
-         System.out.println("visit(): processing: " + fqnifyClass(fqn));
          sb.append("\nmessage ").append(fqnifyClass(fqn)).append(" {\n");
 
          // Scan all variables in class.
@@ -705,12 +694,10 @@ public class JavaToProtobufGenerator {
             ResolvedFieldDeclaration rfd = fd.resolve();
             ResolvedType type = rfd.getType();
             String typeName = type.describe();
-            System.out.println("visit(): typeName: " + typeName);
             if (TYPE_MAP.containsKey(typeName)) {
                typeName = TYPE_MAP.get(typeName);
             } else if (type.isArray()) {
                ResolvedType ct = type.asArrayType().getComponentType();
-               System.out.println("visit(): ct: " + ct.describe());
                if ("byte".equals(ct.describe())) {
                   typeName = "bytes";
                } else if (ct.isPrimitive()) {
@@ -782,7 +769,6 @@ public class JavaToProtobufGenerator {
    /****************************** utility methods *****************************
    /****************************************************************************/
    private static String getEntityParameter(MethodDeclaration md) {
-      System.out.println("getEntityParameter(): " + md.getNameAsString());
       for (Parameter p : md.getParameters()) {
          if (isEntity(p)) {
             String rawType = p.getTypeAsString();
@@ -827,7 +813,6 @@ public class JavaToProtobufGenerator {
                return "google.protobuf.Any"; // ??
             }
             String rawType = ((Type) node).asString();
-            System.out.println("return type: rawType: " + rawType);
             int open = rawType.indexOf("<");
             int close = rawType.indexOf(">");
             if (open >= 0 && close > open) {
@@ -838,7 +823,6 @@ public class JavaToProtobufGenerator {
                } else {
                   rawType = type;
                }
-               System.out.println("return type: processed rawType: " + rawType);
             }
             if (PRIMITIVE_WRAPPER_TYPES.containsKey(rawType)) {
                return PRIMITIVE_WRAPPER_TYPES.get(rawType);
@@ -870,16 +854,12 @@ public class JavaToProtobufGenerator {
    
    private static boolean isCompletionStage(MethodDeclaration md) {
       for (Node node : md.getChildNodes()) {
-         System.out.println("isCompletionStage(): node: " + node.toString());
-         System.out.println("isCompletionStage(): node type: " + (node instanceof Type));
          if (node instanceof Type) {
             String rawType = ((Type) node).asString();
-            System.out.println("isCompletionStage(): rawType: " + rawType);
             int open = rawType.indexOf("<");
             int close = rawType.indexOf(">");
             if (open >= 0 && close > open) {
                String type = rawType.substring(0, open);
-               System.out.println("isCompletionStage(): type: " + type);
                if (CompletionStage.class.getCanonicalName().contentEquals(type) || CompletionStage.class.getSimpleName().contentEquals(type)) {
                   return true;
                }

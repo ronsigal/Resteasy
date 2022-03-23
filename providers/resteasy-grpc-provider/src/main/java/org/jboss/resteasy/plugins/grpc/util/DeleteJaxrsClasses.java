@@ -36,12 +36,9 @@ public class DeleteJaxrsClasses {
                fileName = fileName.substring(n + "src/main/java".length());
                fileName = fileName.replace(".java", ".class");
                fileName = root + "/target/classes" + fileName;
-               System.out.println("File:" + fileName);
                File file = new File(fileName);
-               System.out.println(file.exists());
                if (file.exists()) {
                   file.delete();
-                  System.out.println(file.exists());
                }
                String subdir = fileName.substring(0, fileName.lastIndexOf("/"));
                String prefix = fileName.substring(0, fileName.lastIndexOf(".")) + "$";
