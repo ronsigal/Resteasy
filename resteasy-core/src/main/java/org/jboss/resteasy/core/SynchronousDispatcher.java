@@ -80,6 +80,16 @@ public class SynchronousDispatcher implements Dispatcher
       defaultContextObjects.put(Registry.class, registry);
    }
 
+   public SynchronousDispatcher(final SynchronousDispatcher dispatcher, final ResteasyProviderFactory providerFactory)
+   {
+      this.providerFactory = providerFactory;
+      this.registry = dispatcher.registry;
+      defaultContextObjects.put(Providers.class, providerFactory);
+      defaultContextObjects.put(Registry.class, registry);
+      defaultContextObjects.put(Dispatcher.class, this);
+      defaultContextObjects.put(InternalDispatcher.class, InternalDispatcher.getInstance());
+   }
+
    public ResteasyProviderFactory getProviderFactory()
    {
       return providerFactory;

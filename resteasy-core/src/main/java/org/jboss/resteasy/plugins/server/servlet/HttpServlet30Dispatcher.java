@@ -44,4 +44,14 @@ public class HttpServlet30Dispatcher extends HttpServletDispatcher
          }
       };
    }
+   
+   @Override
+   public HttpServlet30Dispatcher clone() {
+       try {
+           return (HttpServlet30Dispatcher) super.clone();
+       } catch (CloneNotSupportedException e) {
+//           return new Address(this.street, this.getCity(), this.getCountry());
+          throw new RuntimeException(e);
+       }
+   }
 }

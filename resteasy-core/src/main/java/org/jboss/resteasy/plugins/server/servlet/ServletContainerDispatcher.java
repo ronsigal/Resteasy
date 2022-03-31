@@ -62,6 +62,11 @@ public class ServletContainerDispatcher
       return dispatcher;
    }
 
+   public void setDispather(Dispatcher dispatcher)
+   {
+      this.dispatcher = dispatcher;
+   }
+
    @SuppressWarnings(value = "unchecked")
    public void init(ServletContext servletContext, ConfigurationBootstrap bootstrap, HttpRequestFactory requestFactory, HttpResponseFactory responseFactory) throws ServletException
    {
@@ -267,5 +272,27 @@ public class ServletContainerDispatcher
          }
 
       }
+   }
+
+   public ResteasyProviderFactory getProviderFactory()
+   {
+      return this.providerFactory;
+   }
+   
+   public void setProviderFactory(ResteasyProviderFactory providerFactory)
+   {
+      this.providerFactory = providerFactory;
+   }
+
+   public ServletContainerDispatcher copy(final ServletConfig servletConfig)
+   {
+      ServletContainerDispatcher servletContainerDispatcher = new ServletContainerDispatcher(servletConfig);
+      servletContainerDispatcher.dispatcher = this.dispatcher;
+      servletContainerDispatcher.providerFactory = this.providerFactory;
+      servletContainerDispatcher.servletMappingPrefix = this.servletMappingPrefix;
+      servletContainerDispatcher.deployment = this.deployment;
+      servletContainerDispatcher.requestFactory = this.requestFactory;
+      servletContainerDispatcher.responseFactory = this.responseFactory;
+      return servletContainerDispatcher;
    }
 }
