@@ -120,7 +120,6 @@ public class JaxrsImplBaseExtender {
         .append("import javax.servlet.ServletContext;\n")
         .append("import javax.servlet.http.HttpServletRequest;\n")
         .append("import javax.servlet.http.HttpServletResponse;\n")
-//        .append("import jaxrs.example." + fileName + "MessageBodyReaderWriter;\n")
         .append("import org.jboss.as.weld.WeldProvider;\n")
         .append("import org.jboss.resteasy.core.ResteasyContext;\n")
         .append("import org.jboss.resteasy.core.SynchronousDispatcher;\n")
@@ -135,7 +134,6 @@ public class JaxrsImplBaseExtender {
         .append("import org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher;\n")
         .append("import org.jboss.resteasy.plugins.grpc.servlet.AsyncContextImpl;\n")
         .append("import org.jboss.resteasy.plugins.grpc.servlet.AsyncMockServletOutputStream;\n")
-//        .append("import org.jboss.resteasy.plugins.grpc.servlet.HttpServlet30DispatcherExtension;\n")
         .append("import org.jboss.resteasy.plugins.grpc.servlet.HttpServletRequestImpl;\n")
         .append("import org.jboss.resteasy.plugins.grpc.servlet.HttpServletRequestHandler;\n")
         .append("import org.jboss.resteasy.plugins.grpc.servlet.HttpServletResponseHandler;\n")
@@ -150,6 +148,7 @@ public class JaxrsImplBaseExtender {
         .append("import javax.enterprise.inject.spi.CDI;\n")
         .append("import javax.enterprise.context.RequestScoped;\n")
         .append("import javax.enterprise.context.ContextNotActiveException;\n")
+        .append("import org.jboss.weld.context.http.HttpRequestContext;\n")
         .append("import org.jboss.weld.module.web.context.http.HttpRequestContextImpl;\n")
         .append("import org.jboss.weld.manager.BeanManagerImpl;\n")
         .append("import org.jboss.weld.bean.builtin.BeanManagerProxy;\n")
@@ -165,10 +164,9 @@ public class JaxrsImplBaseExtender {
             .append("GrpcImpl extends ")
             .append(serviceName)
             .append("ImplBase {\n\n")
-//            .append("@Inject BoundRequestContext requestContext;\n")
             .append("   private HttpServletDispatcher servlet;\n")
+            .append("   private HttpRequestContext cdiContext;\n")
             ;
-//            .append("   BeanManager manager = CDI.current().getBeanManager();\n\n");
       scanner.nextLine();
       scanner.skip("//");
       String path = scanner.next();
@@ -219,65 +217,12 @@ public class JaxrsImplBaseExtender {
 
    private void rpcBody(Scanner scanner, String root, String actualEntityClass, String method, String syncType, StringBuilder sb, String retn) {
       sb.append("      try {\n")
-//        .append("         BeanManager manager = CDI.current().getBeanManager();\n")
         .append("         HttpServletResponse response = getHttpServletResponse(\"" + retn + "\", \"" + syncType + "\");\n")
-//        .append("         HttpServletDispatcher servlet = (HttpServletDispatcher) ResteasyContext.getServlet(\"").append(servletName).append("\");\n") // plug in correct servlet
-//        .append("         HttpServlet30Dispatcher hs30d = new HttpServlet30Dispatcher();\n")
-//        .append("         HttpServlet30Dispatcher hs30d = new HttpServlet30DispatcherExtension(servlet.getServletContainerDispatcher());\n")
-//        .append("         String readerWriter = getClass().getPackage()").append(".toString().substring(\"package \".length()) + \".\" + \"").append(root).append("\" + \"MessageBodyReaderWriter\";\n")
-//        .append("         ServletConfig servletConfig = new ServletConfigWrapper(servlet.getServletConfig(), readerWriter);\n")
-//        .append("         ServletContainerDispatcher servletContainerDispatcher = servlet.getServletContainerDispatcher().copy(servletConfig);\n" )
-//        .append("         ResteasyProviderFactory resteasyProviderFactory = new ResteasyProviderFactoryImpl(RuntimeType.SERVER, servletContainerDispatcher.getProviderFactory());\n")
-      
-//        .append("           ServletContainerDispatcher servletContainerDispatcher = servlet.getServletContainerDispatcher().copy(servletConfig);\n")
-//        .append("           ServletContainerDispatcher servletContainerDispatcher = servlet.getServletContainerDispatcher();\n")
-//        .append("           ResteasyProviderFactory resteasyProviderFactory = servletContainerDispatcher.getProviderFactory();\n")
-        
-//        .append("         resteasyProviderFactory.registerProvider(jaxrs.example." + root + "MessageBodyReaderWriter.class, false);\n")
-       /*
-         servletContainerDispatcher.setProviderFactory(resteasyProviderFactory);
-         Dispatcher dispatcher = new SynchronousDispatcher(servletContainerDispatcher.getDispatcher(), resteasyProviderFactory);
-         servletContainerDispatcher.setDispatcher(dispatcher);
-        */
-        
-//        .append("         servletContainerDispatcher.setProviderFactory(resteasyProviderFactory);\n")
-//        .append("         Dispatcher dispatcher = new SynchronousDispatcher((SynchronousDispatcher) servletContainerDispatcher.getDispatcher(), resteasyProviderFactory);\n")
-//        .append("         servletContainerDispatcher.setDispatcher(dispatcher);\n")
-//        .append("         HttpServlet30Dispatcher hs30d = new HttpServlet30DispatcherExtension(servletContainerDispatcher);\n")
-        /*
-        ServletContainerDispatcher servletContainerDispatcher = servlet.getServletContainerDispatcher();
-        ResteasyProviderFactory resteasyProviderFactory = new ResteasyProviderFactoryImpl(RuntimeType.SERVER, servletContainerDispatcher.getProviderFactory());
-        resteasyProviderFactory.registerProvider(CC1MessageBodyReaderWriter.class, false);
-        HttpServlet30Dispatcher hs30d = new HttpServlet30DispatcherExtension(servletContainerDispatcher);
-        */
-//        .append("         String readerWriter = getClass().getPackage()").append(".toString().substring(\"package \".length()) + \".\" + \"").append(root).append("\" + \"MessageBodyReaderWriter\";\n")
-//        .append("         hs30d.init(servletConfig);\n")
-        .append("         ").append(actualEntityClass).append(" actualParam = param.").append(getGetterMethod(actualEntityClass)).append(";\n")
-        .append("         String url = param.getURL();\n")
-        .append("         ByteArrayInputStream bais = new ByteArrayInputStream(actualParam.toByteArray());\n")
-        .append("         MockServletInputStream msis = new MockServletInputStream(bais);\n")
-        .append("         Map<String, List<String>> headers = convertHeaders(param.getHeadersMap());\n")
-        .append("         javax.servlet.http.Cookie[] cookies = convertCookies(param.getCookiesList());\n")
-        .append("         ServletContext servletContext = CC1_Server.getContext();\n")
-        .append("         HttpServletRequest request = new HttpServletRequestImpl(response, servletContext, \"").append(contextPath).append("\", url, \"").append(method).append("\", msis, \"").append(retn).append("\", headers, cookies);\n")
-        .append("         CDI.setCDIProvider(new WeldProvider());\n")
-//        .append("         BeanManager bm = CDI.current().getBeanManager();\n")
-        .append("         BeanManager bm = GrpcCdiExtension.getBeanManager();\n")
-        .append("         HttpRequestContextImpl context = new HttpRequestContextImpl(\"jaxrs.example.grpc-0.0.1-SNAPSHOT.war\");\n")
-        .append("         context.associate(request);\n")
-        .append("         context.activate();\n")
-//        .append("         BeanManager bm = CDI.current().getBeanManager();\n")
-        .append("         try {\n")
-        .append("            bm.getContext(RequestScoped.class);\n")
-        .append("         } catch (ContextNotActiveException e) {\n")
-        .append("            BeanManagerProxy bmp = (BeanManagerProxy) bm;\n")
-        .append("            BeanManagerImpl bmi = bmp.delegate();\n")
-        .append("            bmi.addContext(context);\n")
-        .append("         }\n")
-//        .append("         hs30d.service(\"").append(method).append("\", request, response);\n");
+        .append("         GeneratedMessageV3 actualParam = param.").append(getGetterMethod(actualEntityClass)).append(";\n")
+        .append("         HttpServletRequest request = getHttpServletRequest(param, actualParam, response, \"").append(contextPath).append("\", \"").append(method).append("\", \"").append(retn).append("\");\n")
+        .append("         associateCdiContext(request);\n")
         .append("         HttpServletDispatcher servlet = getServlet();\n")
         .append("         servlet.service(\"").append(method).append("\", request, response);\n");
-
       if ("suspended".equals(syncType)) {
          sb.append("         AsyncMockServletOutputStream amsos = (AsyncMockServletOutputStream) response.getOutputStream();\n")
            .append("         amsos.await();\n")
@@ -330,7 +275,7 @@ public class JaxrsImplBaseExtender {
       } else {
          sb.append("         MockServletOutputStream msos = (MockServletOutputStream) response.getOutputStream();\n")
            .append("         ByteArrayOutputStream baos = msos.getDelegate();\n")
-           .append("         bais = new ByteArrayInputStream(baos.toByteArray());\n")
+           .append("         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());\n")
            .append("         ").append(retn).append(" reply = ").append(retn).append(".parseFrom(bais);\n")
            .append("         responseObserver.onNext(reply);\n");
       }
@@ -344,49 +289,31 @@ public class JaxrsImplBaseExtender {
 
    private void staticMethods(StringBuilder sb) {
       sb.append("\n")
-        .append("   private static HttpServletRequest getHttpServletRequest(String path, String method, InputStream is, String className, String retn) {\n")
-        .append("      Map<String, String> headers = new HashMap<String, String>();\n")
-        .append("      headers.put(\"javabuf-name\", className);\n")
-        .append("      if (\"com.google.protobuf.Any\".equals(retn)) {\n")
-        .append("         headers.put(HttpServletResponseHandler.GRPC_RETURN_RESPONSE, \"true\");\n")
-        .append("      }\n")
-        .append("      return (HttpServletRequest) Proxy.newProxyInstance(\n")
-        .append("         HttpServletRequest.class.getClassLoader(),\n")
-        .append("         new Class[] { HttpServletRequest.class },\n")
-        .append("         new HttpServletRequestHandler(\"").append(contextPath).append("\", path, method, is, headers));\n")
-        .append("   }\n\n");
-      sb.append("   private static HttpServletResponse getHttpServletResponse(String retn, String syncType) {\n")
-        .append("      return (HttpServletResponse) Proxy.newProxyInstance(\n")
-        .append("         HttpServletResponse.class.getClassLoader(),\n")
-        .append("         new Class[] { HttpServletResponse.class },\n")
-        .append("         new HttpServletResponseHandler(retn, syncType));\n")
-        .append("   }\n\n");
-      sb.append("   private static Map<String, List<String>> convertHeaders(Map<String, jaxrs.example.CC1_proto.Header> protoHeaders) {\n")
-        .append("      Map<String, List<String>> headers = new HashMap<String, List<String>>();\n")
-        .append("      for (Map.Entry<String, jaxrs.example.CC1_proto.Header> entry : protoHeaders.entrySet()) {\n")
-        .append("         String key = entry.getKey();\n")
-        .append("         jaxrs.example.CC1_proto.Header protoHeader = entry.getValue();\n")
-        .append("         List<String> values = new ArrayList<String>();\n")
-        .append("         for (int i = 0; i < protoHeader.getValuesCount(); i++) {\n")
-        .append("            values.add(protoHeader.getValues(i));\n")
+        .append("//=============================  static methods =============================\n")
+        .append("   private void associateCdiContext(HttpServletRequest request) {\n")
+        .append("      if (cdiContext == null) {\n")
+        .append("         synchronized(this) {\n")
+        .append("            if (cdiContext == null) {\n")
+        .append("               CDI.setCDIProvider(new WeldProvider());\n")
+        .append("               cdiContext = new HttpRequestContextImpl(\"jaxrs.example.grpc-0.0.1-SNAPSHOT.war\");\n")
+        .append("               cdiContext.associate(request);\n")
+        .append("               cdiContext.activate();\n")
+        .append("               BeanManager bm = GrpcCdiExtension.getBeanManager();\n")
+        .append("               try {\n")
+        .append("                  bm.getContext(RequestScoped.class);\n")
+        .append("               } catch (ContextNotActiveException e) {\n")
+        .append("                  BeanManagerProxy bmp = (BeanManagerProxy) bm;\n")
+        .append("                  BeanManagerImpl bmi = bmp.delegate();\n")
+        .append("                  bmi.addContext(cdiContext);\n")
+        .append("               }\n")
+        .append("               return;\n")
+        .append("            }\n")
         .append("         }\n")
-        .append("         headers.put(key, values);\n")
         .append("      }\n")
-        .append("      return headers;\n")
-        .append("   }\n\n");
-      sb.append("   private static javax.servlet.http.Cookie[] convertCookies(List<jaxrs.example.CC1_proto.Cookie> cookieList) {\n")
-        .append("      javax.servlet.http.Cookie[] cookieArray = new javax.servlet.http.Cookie[cookieList.size()];\n")
-        .append("      int i = 0;\n")
-        .append("      for (Iterator<jaxrs.example.CC1_proto.Cookie> it = cookieList.iterator(); it.hasNext(); ) {\n")
-        .append("         jaxrs.example.CC1_proto.Cookie protoCookie = it.next();\n")
-        .append("         javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(protoCookie.getName(), protoCookie.getValue());\n")
-        .append("         cookie.setVersion(protoCookie.getVersion());\n")
-        .append("         cookie.setPath(protoCookie.getPath());\n")
-        .append("         cookie.setDomain(protoCookie.getDomain());\n")
-        .append("         cookieArray[i++] = cookie;\n")
-        .append("      }\n")
-        .append("      return cookieArray;\n")
-        .append("   }\n\n");
+        .append("      cdiContext.associate(request);\n")
+        .append("      cdiContext.activate();\n")
+        .append("   }\n\n")
+        ;
       sb.append("   private HttpServletDispatcher getServlet() {\n")
         .append("      if (servlet == null) {\n")
         .append("         synchronized(this) {\n")
@@ -400,6 +327,52 @@ public class JaxrsImplBaseExtender {
         .append("         }\n")
         .append("      }\n")
         .append("      return servlet;\n")
+        .append("   }\n\n")
+        ;
+      sb.append("   private static HttpServletResponse getHttpServletResponse(String retn, String syncType) {\n")
+        .append("      return (HttpServletResponse) Proxy.newProxyInstance(\n")
+        .append("         HttpServletResponse.class.getClassLoader(),\n")
+        .append("         new Class[] { HttpServletResponse.class },\n")
+        .append("         new HttpServletResponseHandler(retn, syncType));\n")
+        .append("   }\n\n")
+        ;
+      sb.append("   private static Map<String, List<String>> convertHeaders(Map<String, jaxrs.example.CC1_proto.Header> protoHeaders) {\n")
+        .append("      Map<String, List<String>> headers = new HashMap<String, List<String>>();\n")
+        .append("      for (Map.Entry<String, jaxrs.example.CC1_proto.Header> entry : protoHeaders.entrySet()) {\n")
+        .append("         String key = entry.getKey();\n")
+        .append("         jaxrs.example.CC1_proto.Header protoHeader = entry.getValue();\n")
+        .append("         List<String> values = new ArrayList<String>();\n")
+        .append("         for (int i = 0; i < protoHeader.getValuesCount(); i++) {\n")
+        .append("            values.add(protoHeader.getValues(i));\n")
+        .append("         }\n")
+        .append("         headers.put(key, values);\n")
+        .append("      }\n")
+        .append("      return headers;\n")
+        .append("   }\n\n")
+        ;
+      sb.append("   private static HttpServletRequest getHttpServletRequest(jaxrs.example.CC1_proto.GeneralEntityMessage param, GeneratedMessageV3 actualParam, HttpServletResponse response, String context, String verb, String type) throws Exception {\n")
+        .append("      String url = param.getURL();\n")
+        .append("      ByteArrayInputStream bais = new ByteArrayInputStream(actualParam.toByteArray());\n")
+        .append("      MockServletInputStream msis = new MockServletInputStream(bais);\n")
+        .append("      Map<String, List<String>> headers = convertHeaders(param.getHeadersMap());\n")
+        .append("      javax.servlet.http.Cookie[] cookies = convertCookies(param.getCookiesList());\n")
+        .append("      ServletContext servletContext = CC1_Server.getContext();\n")
+        .append("      HttpServletRequest request = new HttpServletRequestImpl(response, servletContext, context, url, verb, msis, type, headers, cookies);\n")
+        .append("      return request;\n")
+        .append("   }\n\n")
+        ;
+      sb.append("   private static javax.servlet.http.Cookie[] convertCookies(List<jaxrs.example.CC1_proto.Cookie> cookieList) {\n")
+        .append("      javax.servlet.http.Cookie[] cookieArray = new javax.servlet.http.Cookie[cookieList.size()];\n")
+        .append("      int i = 0;\n")
+        .append("      for (Iterator<jaxrs.example.CC1_proto.Cookie> it = cookieList.iterator(); it.hasNext(); ) {\n")
+        .append("         jaxrs.example.CC1_proto.Cookie protoCookie = it.next();\n")
+        .append("         javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(protoCookie.getName(), protoCookie.getValue());\n")
+        .append("         cookie.setVersion(protoCookie.getVersion());\n")
+        .append("         cookie.setPath(protoCookie.getPath());\n")
+        .append("         cookie.setDomain(protoCookie.getDomain());\n")
+        .append("         cookieArray[i++] = cookie;\n")
+        .append("      }\n")
+        .append("      return cookieArray;\n")
         .append("   }\n\n")
         ;
 //        .append("   private static org_jboss_resteasy_plugins_grpc_sse___SseEvent transformSseEvent(ByteArrayInputStream bais) throws IOException {\n")
