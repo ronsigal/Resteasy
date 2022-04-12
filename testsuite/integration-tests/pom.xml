@@ -170,6 +170,12 @@
             <artifactId>resteasy-client</artifactId>
             <version>${version.resteasy.testsuite}</version>
             <scope>provided</scope>
+            <!--exclusions>
+               <exclusion>
+                  <groupId>javax.activation</groupId>
+                  <artifactId>javax.activation-api</artifactId>
+               </exclusion>
+            </exclusions-->
         </dependency>
 
         <dependency>
@@ -407,6 +413,39 @@
             <groupId>io.rest-assured</groupId>
             <artifactId>json-path</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-grpc-provider</artifactId>
+            <version>${version.resteasy.testsuite}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jaxrs.example</groupId>
+            <artifactId>jaxrs.example.grpc</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+        </dependency>       
     </dependencies>
 
     <build>

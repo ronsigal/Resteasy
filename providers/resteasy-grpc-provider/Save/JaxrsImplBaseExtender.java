@@ -239,7 +239,7 @@ public class JaxrsImplBaseExtender {
 
          */
         .append("         javax.servlet.http.Cookie[] cookies = convertCookies(param.getCookiesList());\n")
-        .append("         ServletContext servletContext = CC1_Server.getContext();\n")
+        .append("         ServletContext servletContext = ").append( CC1_Server.getContext();\n")
         .append("         HttpServletRequest request = new HttpServletRequestImpl(response, servletContext, \"").append(contextPath).append("\", url, \"").append(method).append("\", msis, \"").append(retn).append("\", headers, cookies);\n")
 //        .append("         HttpServletRequest request = getHttpServletRequest(\"").append(path).append("\", \"").append(method).append("\", msis, param.getClass().getName(), \"").append(retn).append("\");\n")
         .append("         HttpRequestContextImpl context = new HttpRequestContextImpl(\"/jaxrs.example.grpc-0.0.1-SNAPSHOT.war\");\n")

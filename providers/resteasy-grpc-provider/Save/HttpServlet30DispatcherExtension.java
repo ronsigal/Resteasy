@@ -20,7 +20,7 @@ public class HttpServlet30DispatcherExtension extends HttpServlet30Dispatcher {/
    }
 
    public void init(ServletConfig servletConfig) throws ServletException {
-//      super.init(servletConfig);
+      super.init(servletConfig);
       Map<Class<?>, Object> map = ResteasyContext.getContextDataMap();
       map.put(ServletContext.class, servletConfig.getServletContext());
       map.put(ServletConfig.class, servletConfig);

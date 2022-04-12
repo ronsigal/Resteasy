@@ -1030,6 +1030,12 @@
                 <artifactId>grpc-netty-shaded</artifactId>
                 <version>${version.io.grpc}</version>
             </dependency>
+
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-stub</artifactId>
+                <version>${version.io.grpc}</version>
+            </dependency>            
         </dependencies>
     </dependencyManagement>
 </project>
