@@ -18,6 +18,7 @@ public class ReaderWriterGenerator {
 
    static {
       primitives.put("gBoolean",   "boolean");
+      primitives.put("gByte",      "byte");
       primitives.put("gCharacter", "char");
       primitives.put("gDouble",    "double");
       primitives.put("gEmpty",     "ignore");

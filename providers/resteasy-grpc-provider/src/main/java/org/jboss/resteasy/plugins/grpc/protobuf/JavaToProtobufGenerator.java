@@ -218,6 +218,7 @@ public class JavaToProtobufGenerator {
       TYPE_MAP.put("String", "string");
       TYPE_MAP.put("java.lang.String", "string");
 
+      PRIMITIVE_WRAPPER_TYPES.put("byte",      "gByte");
       PRIMITIVE_WRAPPER_TYPES.put("short",     "gShort");
       PRIMITIVE_WRAPPER_TYPES.put("int",       "gInteger");
       PRIMITIVE_WRAPPER_TYPES.put("long",      "gLong");
@@ -226,6 +227,7 @@ public class JavaToProtobufGenerator {
       PRIMITIVE_WRAPPER_TYPES.put("boolean",   "gBoolean");
       PRIMITIVE_WRAPPER_TYPES.put("char",      "gCharacter");
       PRIMITIVE_WRAPPER_TYPES.put("string",    "gString");
+      PRIMITIVE_WRAPPER_TYPES.put("Byte",      "gByte");
       PRIMITIVE_WRAPPER_TYPES.put("Short",     "gShort");
       PRIMITIVE_WRAPPER_TYPES.put("Integer",   "gInteger");
       PRIMITIVE_WRAPPER_TYPES.put("Long",      "gLong");
@@ -235,6 +237,7 @@ public class JavaToProtobufGenerator {
       PRIMITIVE_WRAPPER_TYPES.put("Character", "gCharacter");
       PRIMITIVE_WRAPPER_TYPES.put("String",    "gString");
       PRIMITIVE_WRAPPER_TYPES.put("java.lang.String",    "gString");
+      PRIMITIVE_WRAPPER_TYPES.put("java.lang.Byte",      "gByte");
       PRIMITIVE_WRAPPER_TYPES.put("java.lang.Short",     "gShort");
       PRIMITIVE_WRAPPER_TYPES.put("java.lang.Integer",   "gInteger");
       PRIMITIVE_WRAPPER_TYPES.put("java.lang.Long",      "gLong");
@@ -244,6 +247,7 @@ public class JavaToProtobufGenerator {
       PRIMITIVE_WRAPPER_TYPES.put("java.lang.Character", "gCharacter");
       PRIMITIVE_WRAPPER_TYPES.put("java.lang.String",    "gString");
 
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Byte",      "message gByte      {int32  value = $V$;}");
       PRIMITIVE_WRAPPER_DEFINITIONS.put("Short",     "message gShort     {int32  value = $V$;}");
       PRIMITIVE_WRAPPER_DEFINITIONS.put("Integer",   "message gInteger   {int32  value = $V$;}");
       PRIMITIVE_WRAPPER_DEFINITIONS.put("Long",      "message gLong      {int64  value = $V$;}");

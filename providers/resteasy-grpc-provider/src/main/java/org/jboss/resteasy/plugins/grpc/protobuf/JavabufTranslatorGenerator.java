@@ -93,7 +93,8 @@ public class JavabufTranslatorGenerator {
    private static Map<String, String> GET_METHODS = new HashMap<String, String>();
 
    static {
-      PRIMITIVE_WRAPPER_TYPES.put("gShort",     short.class);
+      PRIMITIVE_WRAPPER_TYPES.put("gByte",      byte.class);
+	  PRIMITIVE_WRAPPER_TYPES.put("gShort",     short.class);
       PRIMITIVE_WRAPPER_TYPES.put("gInteger",   int.class);
       PRIMITIVE_WRAPPER_TYPES.put("gLong",      long.class);
       PRIMITIVE_WRAPPER_TYPES.put("gFloat",     float.class);
@@ -103,6 +104,7 @@ public class JavabufTranslatorGenerator {
       PRIMITIVE_WRAPPER_TYPES.put("gString",    String.class);
       PRIMITIVE_WRAPPER_TYPES.put("gEmpty",     void.class);
       
+      GET_METHODS.put("Byte",      ".byteValue()");
       GET_METHODS.put("Short",     ".shortValue()");
       GET_METHODS.put("Integer",   ".intValue()");
       GET_METHODS.put("Long",      ".longValue()");
@@ -419,15 +421,29 @@ public class JavabufTranslatorGenerator {
         .append("      private static Descriptor descriptor = ").append(clazz.getCanonicalName()).append(".getDescriptor();\n");
       if (PRIMITIVE_WRAPPER_TYPES.containsKey(originalName)) {
          String javaName = originalName.substring(1);
-         if ("gShort".equals(originalName)) {
-            originalName = "Integer"; // protobuf Short is represented as int32
-            javaName = "Integer";
+//         if ("gShort".equals(originalName)) {
+//            originalName = "Integer"; // protobuf Short is represented as int32
+//            javaName = "Integer";
+//         }
+         if ("gByte".equals(originalName)) {
+             sb.append("      public ").append(javaName).append(" assignFromJavabuf(Message message) {\n")
+               .append("         FieldDescriptor fd = descriptor.getFields().get(0);\n")
+               .append("         return ((Integer) message.getField(fd)).byteValue();\n")
+               .append("      }\n\n")
+               .append("      public void assignExistingFromJavabuf(Message message, Object obj) { }\n");
+          } else if ("gShort".equals(originalName)) {
+            sb.append("      public ").append(javaName).append(" assignFromJavabuf(Message message) {\n")
+              .append("         FieldDescriptor fd = descriptor.getFields().get(0);\n")
+              .append("         return ((Integer) message.getField(fd)).shortValue();\n")
+              .append("      }\n\n")
+              .append("      public void assignExistingFromJavabuf(Message message, Object obj) { }\n");
+         } else {
+            sb.append("      public ").append(javaName).append(" assignFromJavabuf(Message message) {\n")
+              .append("         FieldDescriptor fd = descriptor.getFields().get(0);\n")
+              .append("         return (").append(javaName).append(") message.getField(fd);\n")
+              .append("      }\n\n")
+              .append("      public void assignExistingFromJavabuf(Message message, Object obj) { }\n");
          }
-         sb.append("      public ").append(javaName).append(" assignFromJavabuf(Message message) {\n")
-           .append("         FieldDescriptor fd = descriptor.getFields().get(0);\n")
-           .append("         return (").append(javaName).append(") message.getField(fd);\n")
-           .append("      }\n\n")
-           .append("      public void assignExistingFromJavabuf(Message message, Object obj) { }\n");
       } else {
          sb.append("      private static List<AssignFromJavabuf> assignList = new ArrayList<AssignFromJavabuf>();\n\n")
            .append("      static {\n")
