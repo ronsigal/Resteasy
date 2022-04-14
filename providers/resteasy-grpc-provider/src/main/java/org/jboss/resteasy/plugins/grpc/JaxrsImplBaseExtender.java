@@ -17,6 +17,7 @@ public class JaxrsImplBaseExtender {
    private static Logger logger = Logger.getLogger(JaxrsImplBaseExtender.class);
    private static String contextPath = "";
 
+   private boolean inWildFly = true;
    private String packageName = "";
    private String outerClassName = "";
    private String serviceName = "";
@@ -24,11 +25,12 @@ public class JaxrsImplBaseExtender {
    private Set<String> imports = new HashSet<String>();
    
    public static void main(String[] args) {
-      if (args.length != 3) {
+      if (args.length != 3 && args.length != 4) {
          logger.info("need three args:");
          logger.info("  arg[0]: .proto file prefix");
          logger.info("  arg[1]: servlet name");
          logger.info("  arg[2]: context path");
+         logger.info("  arg[3]: in WildFly (optional)");
          return;
       }
       contextPath = args[2];
@@ -37,6 +39,9 @@ public class JaxrsImplBaseExtender {
 
    public JaxrsImplBaseExtender(String[] args) {
       servletName = args[1];
+      if (args.length == 4) {
+    	  inWildFly = Boolean.valueOf(args[3]);
+      }
       parse(args[0]);
    }
 
@@ -158,8 +163,10 @@ public class JaxrsImplBaseExtender {
    }
 
    private void service(Scanner scanner, StringBuilder sbHeader, StringBuilder sbBody, String root) {
-      sbBody.append("@GrpcService\n")
-            .append("public class ")
+	  if (inWildFly) {
+		  sbBody.append("@GrpcService\n");
+	  }
+      sbBody.append("public class ")
             .append(serviceName)
             .append("GrpcImpl extends ")
             .append(serviceName)
