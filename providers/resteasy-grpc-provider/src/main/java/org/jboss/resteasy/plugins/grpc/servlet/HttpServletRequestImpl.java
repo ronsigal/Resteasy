@@ -63,17 +63,19 @@ public class HttpServletRequestImpl implements HttpServletRequest {
       this.method = method;
       this.sis = sis;
       this.headers = headers;
-      List<String> list = new ArrayList<String>();
-      list.add("application/grpc-jaxrs");
-      list.add("*/*;grpc-jaxrs=true");
-      headers.put("Accept", list);
-      headers.put("Content-Type", list);
+      List<String> acceptList = new ArrayList<String>();
+      acceptList.add("application/grpc-jaxrs");
+      acceptList.add("*/*;grpc-jaxrs=true");
+      headers.put("Accept", acceptList);
+      List<String> contentTypeList = new ArrayList<String>();
+      contentTypeList.add("*/*;grpc-jaxrs=true");
+      headers.put("Content-Type", contentTypeList);
       //      headers.get("Accept").add("application/grpc-jaxrs");
       //      headers.get("Content-Type").add("application/grpc-jaxrs");
       if ("com.google.protobuf.Any".equals(retn)) {
-         list = new ArrayList<String>();
-         list.add("true");
-         headers.put(GRPC_RETURN_RESPONSE, list);
+         acceptList = new ArrayList<String>();
+         acceptList.add("true");
+         headers.put(GRPC_RETURN_RESPONSE, acceptList);
       }
       this.cookies = cookies;
    }
@@ -110,7 +112,7 @@ public class HttpServletRequestImpl implements HttpServletRequest {
 
    @Override
    public String getContentType() {
-      return "application/grpc-jaxrs";
+      return "*/*;grpc-jaxrs=true";
    }
 
    @Override

@@ -111,7 +111,7 @@ public class JavabufTranslatorGenerator {
       GET_METHODS.put("Float",     ".floatValue()");
       GET_METHODS.put("Double",    ".doubleValue()");
       GET_METHODS.put("Boolean",   ".booleanValue()");
-      GET_METHODS.put("Character", ".charValue()");
+      GET_METHODS.put("Character", ".toString()");
       GET_METHODS.put("String",    "");
    }
    
@@ -437,7 +437,13 @@ public class JavabufTranslatorGenerator {
               .append("         return ((Integer) message.getField(fd)).shortValue();\n")
               .append("      }\n\n")
               .append("      public void assignExistingFromJavabuf(Message message, Object obj) { }\n");
-         } else {
+          } else if ("gCharacter".equals(originalName)) {
+              sb.append("      public ").append(javaName).append(" assignFromJavabuf(Message message) {\n")
+                .append("         FieldDescriptor fd = descriptor.getFields().get(0);\n")
+                .append("         return ((String) message.getField(fd)).charAt(0);\n")
+                .append("      }\n\n")
+                .append("      public void assignExistingFromJavabuf(Message message, Object obj) { }\n");
+          } else {
             sb.append("      public ").append(javaName).append(" assignFromJavabuf(Message message) {\n")
               .append("         FieldDescriptor fd = descriptor.getFields().get(0);\n")
               .append("         return (").append(javaName).append(") message.getField(fd);\n")

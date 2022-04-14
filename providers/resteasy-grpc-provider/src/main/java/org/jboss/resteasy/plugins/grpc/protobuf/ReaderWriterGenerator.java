@@ -63,6 +63,7 @@ public class ReaderWriterGenerator {
         .append("import java.io.OutputStream;\n")
         .append("import java.lang.annotation.Annotation;\n")
         .append("import java.lang.reflect.Type;\n")
+        .append("import javax.annotation.Priority;\n")
         .append("import javax.servlet.ServletConfig;\n")
         .append("import javax.ws.rs.Consumes;\n")
         .append("import javax.ws.rs.Produces;\n")
@@ -105,8 +106,9 @@ public class ReaderWriterGenerator {
 
    private static void classBody(String[] args, Class<?> wrapperClass, StringBuilder sb) {
       sb.append("@Provider\n")
-        .append("@Consumes(\"application/grpc-jaxrs\")\n")
+        .append("@Consumes(\"application/grpc-jaxrs;grpc-jaxrs=true\")\n")
         .append("@Produces(\"*/*;grpc-jaxrs=true\")\n")
+        .append("@Priority(Integer.MIN_VALUE)\n")
         .append("@SuppressWarnings(\"rawtypes\")\n")
         .append("public class ").append(args[1]).append("MessageBodyReaderWriter implements MessageBodyReader<Object>, MessageBodyWriter<Object> {\n\n")
         .append("   @Override\n")

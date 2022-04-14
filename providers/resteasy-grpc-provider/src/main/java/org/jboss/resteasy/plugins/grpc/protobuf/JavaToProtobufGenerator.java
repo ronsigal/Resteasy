@@ -207,6 +207,7 @@ public class JavaToProtobufGenerator {
    private static String SSE_EVENT_CLASSNAME = "org_jboss_resteasy_plugins_grpc_sse___SseEvent";
 
    static {
+      TYPE_MAP.put("boolean", "bool");
       TYPE_MAP.put("byte", "int32");
       TYPE_MAP.put("short", "int32");
       TYPE_MAP.put("int", "int32");
@@ -218,6 +219,7 @@ public class JavaToProtobufGenerator {
       TYPE_MAP.put("String", "string");
       TYPE_MAP.put("java.lang.String", "string");
 
+      PRIMITIVE_WRAPPER_TYPES.put("boolean",   "gBoolean");
       PRIMITIVE_WRAPPER_TYPES.put("byte",      "gByte");
       PRIMITIVE_WRAPPER_TYPES.put("short",     "gShort");
       PRIMITIVE_WRAPPER_TYPES.put("int",       "gInteger");
@@ -227,6 +229,7 @@ public class JavaToProtobufGenerator {
       PRIMITIVE_WRAPPER_TYPES.put("boolean",   "gBoolean");
       PRIMITIVE_WRAPPER_TYPES.put("char",      "gCharacter");
       PRIMITIVE_WRAPPER_TYPES.put("string",    "gString");
+      PRIMITIVE_WRAPPER_TYPES.put("Boolean",   "gBoolean");
       PRIMITIVE_WRAPPER_TYPES.put("Byte",      "gByte");
       PRIMITIVE_WRAPPER_TYPES.put("Short",     "gShort");
       PRIMITIVE_WRAPPER_TYPES.put("Integer",   "gInteger");
@@ -247,14 +250,14 @@ public class JavaToProtobufGenerator {
       PRIMITIVE_WRAPPER_TYPES.put("java.lang.Character", "gCharacter");
       PRIMITIVE_WRAPPER_TYPES.put("java.lang.String",    "gString");
 
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Boolean",   "message gBoolean   {bool   value = $V$;}");
       PRIMITIVE_WRAPPER_DEFINITIONS.put("Byte",      "message gByte      {int32  value = $V$;}");
       PRIMITIVE_WRAPPER_DEFINITIONS.put("Short",     "message gShort     {int32  value = $V$;}");
       PRIMITIVE_WRAPPER_DEFINITIONS.put("Integer",   "message gInteger   {int32  value = $V$;}");
       PRIMITIVE_WRAPPER_DEFINITIONS.put("Long",      "message gLong      {int64  value = $V$;}");
       PRIMITIVE_WRAPPER_DEFINITIONS.put("Float",     "message gFloat     {float  value = $V$;}");
       PRIMITIVE_WRAPPER_DEFINITIONS.put("Double",    "message gDouble    {double value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Boolean",   "message gBoolean   {bool   value = $V$;}");
-      PRIMITIVE_WRAPPER_DEFINITIONS.put("Character", "message gCharacter {int32  value = $V$;}");
+      PRIMITIVE_WRAPPER_DEFINITIONS.put("Character", "message gCharacter {string value = $V$;}");
       PRIMITIVE_WRAPPER_DEFINITIONS.put("String",    "message gString    {string value = $V$;}");
 
       ANNOTATIONS.add("Context");
