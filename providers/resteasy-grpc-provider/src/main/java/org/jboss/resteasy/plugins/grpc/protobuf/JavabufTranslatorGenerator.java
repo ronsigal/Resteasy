@@ -94,7 +94,7 @@ public class JavabufTranslatorGenerator {
 
    static {
       PRIMITIVE_WRAPPER_TYPES.put("gByte",      byte.class);
-	  PRIMITIVE_WRAPPER_TYPES.put("gShort",     short.class);
+     PRIMITIVE_WRAPPER_TYPES.put("gShort",     short.class);
       PRIMITIVE_WRAPPER_TYPES.put("gInteger",   int.class);
       PRIMITIVE_WRAPPER_TYPES.put("gLong",      long.class);
       PRIMITIVE_WRAPPER_TYPES.put("gFloat",     float.class);
@@ -153,6 +153,7 @@ public class JavabufTranslatorGenerator {
         .append("import java.util.HashMap;\n")
         .append("import java.util.List;\n")
         .append("import java.util.Map;\n")
+        .append("import com.google.protobuf.Descriptors;\n")
         .append("import com.google.protobuf.Descriptors.Descriptor;\n")
         .append("import com.google.protobuf.Descriptors.FieldDescriptor;\n")
         .append("import com.google.protobuf.DynamicMessage;\n")
@@ -315,13 +316,27 @@ public class JavabufTranslatorGenerator {
         .append("                  Message superMessage = (Message) message.getField(sfd);\n")
         .append("                  t.assignExistingFromJavabuf(superMessage, object);\n")
         .append("               } else {\n")
+//        .append("                  String simpleName = message.getDescriptorForType().getFullName();\n")
+//        .append("                  simpleName = simpleName.lastIndexOf(\".\") >= 0 ? simpleName.substring(simpleName.lastIndexOf(\".\") + 1) : simpleName;\n")
+//        .append("                  String type = fd.getMessageType().getName();\n")
         .append("                  final Field field = javaClass.getDeclaredField(fd.getName());\n")
         .append("                  field.setAccessible(true);\n")
-        .append("                  if (fromJavabufMap.keySet().contains(field.getType())) {\n")
-        .append("                     Object obj = fromJavabufMap.get(field.getType()).assignFromJavabuf(message);\n")
+        .append("                  if (Descriptors.FieldDescriptor.Type.MESSAGE.equals(fd.getType())\n")
+        .append("                      && fromJavabufMap.keySet().contains(fd.getMessageType().getName())) {\n")
+//        .append("                  if (fromJavabufMap.keySet().contains(type)) {\n")
+        /*
+        Field field = javaClass.getDeclaredField(fd.getName());
+        field.setAccessible(true);
+        if (Descriptors.FieldDescriptor.Type.MESSAGE.equals(fd.getType())
+              && fromJavabufMap.keySet().contains(fd.getMessageType().getName())) {
+*/
+        .append("                     Message submessage = (Message) message.getField(fd);\n")
+        .append("                     Object obj = fromJavabufMap.get(fd.getMessageType().getName()).assignFromJavabuf(submessage);\n")
         .append("                     field.set(object, obj);\n")
         .append("                  } else {\n")
-        .append("                     field.set(object, message.getField(fd));\n")
+        .append("                     Object ooo = message.getField(fd);\n")
+        .append("                     field.set(object, ooo);\n")
+        //        .append("                     field.set(object, message.getField(fd));\n")
         .append("                  }\n")
         .append("               }\n")
         .append("            } catch (Exception e) {\n")
