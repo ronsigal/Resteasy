@@ -47,6 +47,11 @@ import jaxrs.example.CC1ServiceGrpc.CC1ServiceBlockingStub;
 import jaxrs.example.CC1ServiceGrpcImpl;
 import jaxrs.example.CC1_JavabufTranslator;
 import jaxrs.example.CC1_proto.GeneralEntityMessage;
+import jaxrs.example.CC1_proto.gString;
+import jaxrs.example.CC1_proto.org_jboss_resteasy_example___CC2;
+import jaxrs.example.CC1_proto.org_jboss_resteasy_example___CC3;
+import jaxrs.example.CC1_proto.org_jboss_resteasy_example___CC4;
+import jaxrs.example.CC1_proto.org_jboss_resteasy_example___CC5;
 import test.grpc.CC1_Server;
 
 /**
@@ -139,10 +144,33 @@ public class GrpcToJaxrsTest
       System.out.println("response: " + response.readEntity(String.class));
       Assert.assertEquals(200, response.getStatus());
 
+      channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+      blockingStub = CC1ServiceGrpc.newBlockingStub(channel);
       //http://localhost:8080/jaxrs.example.grpc-0.0.1-SNAPSHOT/root/grpcserver/start
+      int i = 0;
+      for (i = 0; i < 5; i++) {
+    	  try {
+    		  ready();
+    		  break;
+    	  } catch (Exception e) {
+    		  // keep trying
+    		  Thread.sleep(1000);
+    	  }
+      }
+      if (i == 5) {
+    	  throw new RuntimeException("can't connect to gRPC server");
+      }
       System.out.println("finished beforeClass()");
    }
-   
+
+   static void ready() {
+      System.out.println("in ready()");
+      jaxrs.example.CC1_proto.GeneralEntityMessage.Builder builder = jaxrs.example.CC1_proto.GeneralEntityMessage.newBuilder();
+      GeneralEntityMessage gem = builder.setURL("http://localhost:8080" + "/p/ready").build();
+      blockingStub.ready(gem);
+      System.out.println("ready");
+   }
+
    @Before
    public void before() {
       channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
@@ -155,9 +183,6 @@ public class GrpcToJaxrsTest
       System.out.println("finished afterClass()");
    }
 
-   @Test
-   public void dummy() {System.out.println("in dummy()");}
-   
    @Test
    public void testBoolean() throws Exception {
       System.out.println("running testBoolean()");
@@ -177,7 +202,7 @@ public class GrpcToJaxrsTest
          return;
       }
    }
-   
+
    @Test
    public void testBooleanWrapper() throws Exception {
       System.out.println("running testBooleanWrapper()");
@@ -237,7 +262,7 @@ public class GrpcToJaxrsTest
          return;
       }
    }
-   
+
    @Test
    public void testShort() throws Exception {
       System.out.println("running testShort()");
@@ -277,7 +302,7 @@ public class GrpcToJaxrsTest
          return;
       }
    }
-   
+
    @Test
    public void testInt() throws Exception {
       System.out.println("running testInt()");
@@ -297,7 +322,7 @@ public class GrpcToJaxrsTest
          return;
       }
    }
-   
+
    @Test
    public void testInteger() throws Exception {
       System.out.println("running testInteger()");
@@ -337,7 +362,7 @@ public class GrpcToJaxrsTest
          return;
       }
    }
-   
+
    @Test
    public void testLongWrapper() throws Exception {
       System.out.println("running testLongWrapper()");
@@ -516,7 +541,7 @@ public class GrpcToJaxrsTest
          return;
       }
    }
-   
+
    @Test
    public void testConsumes() throws Exception {
       System.out.println("running testConsumes()");
@@ -689,7 +714,7 @@ public class GrpcToJaxrsTest
    @Test
    public void testServletContext() throws Exception {
       System.out.println("running testServletContext()");
-      jaxrs.example.CC1_proto.GeneralEntityMessage.Builder messageBuilder = jaxrs.example.CC1_proto.GeneralEntityMessage.newBuilder();
+      GeneralEntityMessage.Builder messageBuilder = GeneralEntityMessage.newBuilder();
       messageBuilder.setURL("http://localhost:8080/p/context");
       GeneralEntityMessage gem = messageBuilder.build();
       System.out.println("gem: " + gem);
@@ -705,7 +730,7 @@ public class GrpcToJaxrsTest
       }
    }
 
-   //      //@Test
+   //      @Test
    //      public void testSSE() throws Exception {
    //         System.out.println("running testSSE()");
    //         jaxrs.example.CC1_proto.GeneralEntityMessage.Builder messageBuilder = jaxrs.example.CC1_proto.GeneralEntityMessage.newBuilder();
@@ -726,4 +751,50 @@ public class GrpcToJaxrsTest
    //            
    //         }
    //      }
+
+   @Test
+   public void testInheritance() throws Exception {
+      System.out.println("running testInheritance()");
+      org_jboss_resteasy_example___CC3 cc3 = org_jboss_resteasy_example___CC3.newBuilder().setS("thag").build();
+      org_jboss_resteasy_example___CC2 cc2 = org_jboss_resteasy_example___CC2.newBuilder().setJ(17).setCC3Super(cc3).build();
+      GeneralEntityMessage.Builder messageBuilder = GeneralEntityMessage.newBuilder();
+      messageBuilder.setURL("http://localhost:8080/p/inheritance").setOrgJbossResteasyExampleCC2Field(cc2);
+      GeneralEntityMessage gem = messageBuilder.build();
+      System.out.println("gem: " + gem);
+      org_jboss_resteasy_example___CC2 response;
+      try {
+         response = blockingStub.inheritance(gem);
+         System.out.println("response: " + response.toString());
+         cc3 = org_jboss_resteasy_example___CC3.newBuilder().setS("xthagy").build();
+         cc2 = org_jboss_resteasy_example___CC2.newBuilder().setJ(18).setCC3Super(cc3).build();
+         Assert.assertTrue(cc2.equals(response));
+      } catch (StatusRuntimeException e) {
+         e.printStackTrace();
+         Assert.fail("fail");
+         return;
+      }
+   }
+
+   @Test
+   public void testReferenceField() throws Exception {
+      System.out.println("running testReferenceField()");
+      org_jboss_resteasy_example___CC5 cc5 = org_jboss_resteasy_example___CC5.newBuilder().setK(11).build();
+      org_jboss_resteasy_example___CC4 cc4 = org_jboss_resteasy_example___CC4.newBuilder().setS("grog").setCc5(cc5).build();
+      GeneralEntityMessage.Builder messageBuilder = GeneralEntityMessage.newBuilder();
+      messageBuilder.setURL("http://localhost:8080/p/reference").setOrgJbossResteasyExampleCC4Field(cc4);
+      GeneralEntityMessage gem = messageBuilder.build();
+      System.out.println("gem: " + gem);
+      org_jboss_resteasy_example___CC4 response;
+      try {
+         response = blockingStub.referenceField(gem);
+         System.out.println("response: " + response.toString());
+         cc5 = org_jboss_resteasy_example___CC5.newBuilder().setK(12).build();
+         cc4 = org_jboss_resteasy_example___CC4.newBuilder().setS("xgrogy").setCc5(cc5).build();
+         Assert.assertTrue(cc4.equals(response));
+      } catch (StatusRuntimeException e) {
+         e.printStackTrace();
+         Assert.fail("fail");
+         return;
+      }
+   }
 }

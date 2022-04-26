@@ -86,7 +86,7 @@ public class ReaderWriterGenerator {
         .append("import org.jboss.resteasy.plugins.grpc.servlet.ServletConfigWrapper;\n")
         ;
       for (Class<?> clazz : wrapperClass.getClasses()) {
-         if (clazz.isInterface()) {
+         if (clazz.isInterface() || clazz.getName().endsWith("_Extension") || "MessageExtension".equals(clazz.getSimpleName())) {
             continue;
          }
          if (primitives.containsKey(clazz.getSimpleName())) {
@@ -165,7 +165,7 @@ public class ReaderWriterGenerator {
       Class<?>[] subclasses = wrapperClass.getClasses();
       boolean startElse = false;
       for (int i = 0; i < subclasses.length; i++) {
-         if (subclasses[i].isInterface()) {
+         if (subclasses[i].isInterface() || subclasses[i].getName().endsWith("_Extension") || "MessageExtension".equals(subclasses[i].getSimpleName())) {
             continue;
          }
          if (startElse) {
@@ -192,7 +192,7 @@ public class ReaderWriterGenerator {
       startElse = false;
       sb.append("   private static GeneratedMessageV3 unpackMessage(Class<?> clazz, Any any) throws IOException {\n");
       for (int i = 0; i < subclasses.length; i++) {
-         if (subclasses[i].isInterface()) {
+         if (subclasses[i].isInterface() || subclasses[i].getName().endsWith("_Extension") || "MessageExtension".equals(subclasses[i].getSimpleName())) {
             continue;
          }
          if (startElse) {

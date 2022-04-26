@@ -94,7 +94,7 @@ public class JavabufTranslatorGenerator {
 
    static {
       PRIMITIVE_WRAPPER_TYPES.put("gByte",      byte.class);
-     PRIMITIVE_WRAPPER_TYPES.put("gShort",     short.class);
+      PRIMITIVE_WRAPPER_TYPES.put("gShort",     short.class);
       PRIMITIVE_WRAPPER_TYPES.put("gInteger",   int.class);
       PRIMITIVE_WRAPPER_TYPES.put("gLong",      long.class);
       PRIMITIVE_WRAPPER_TYPES.put("gFloat",     float.class);
@@ -169,9 +169,14 @@ public class JavabufTranslatorGenerator {
          if (clazz.isInterface()) {
             continue;
          }
+         if (clazz.getSimpleName().endsWith("_Extension")) {
+            continue;
+         }
          String simpleName = clazz.getSimpleName();
          if (PRIMITIVE_WRAPPER_TYPES.containsKey(simpleName)) {
             sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
+//         } if (simpleName.endsWith("_Extension") && PRIMITIVE_WRAPPER_TYPES.containsKey(simpleName.substring(0, simpleName.indexOf("_Extension")))) {
+//             sb.append("import ").append(clazz.getName().replace("$", ".")).append(";\n");
          } else if ("GeneralEntityMessage".equals(simpleName)
                  || "GeneralReturnMessage".equals(simpleName)
                  || "Cookie".equals(simpleName)
@@ -208,6 +213,12 @@ public class JavabufTranslatorGenerator {
       sb.append("   static {\n");
       for (Class<?> clazz: classes) {
          if (clazz.isInterface()) {
+            continue;
+         }
+         if (clazz.getSimpleName().endsWith("_Extension")) {
+            continue;
+         }
+         if (clazz.getSimpleName().equals("MessageExtension")) {
             continue;
          }
          String simpleName = clazz.getSimpleName();
@@ -380,7 +391,9 @@ public class JavabufTranslatorGenerator {
    private static void createTranslatorToJavabuf(Class<?> clazz, StringBuilder sb) throws Exception {
       if ("gEmpty".equals(clazz.getSimpleName())
             || "Cookie".equals(clazz.getSimpleName())
-            || "Header".equals(clazz.getSimpleName())) {
+            || "Header".equals(clazz.getSimpleName())
+            || "MessageExtension".equals(clazz.getSimpleName())
+            || clazz.getSimpleName().endsWith("_Extension")) {
          return;
       }
       sb.append("   static class ")
@@ -428,7 +441,9 @@ public class JavabufTranslatorGenerator {
       }
       if ("AbstractMessage".equals(clazz.getSimpleName())
             || "Cookie".equals(clazz.getSimpleName())
-            || "Header".equals(clazz.getSimpleName())) {
+            || "Header".equals(clazz.getSimpleName())
+            || "MessageExtension".equals(clazz.getSimpleName())
+            || clazz.getSimpleName().endsWith("_Extension")) {
          return;
       }
       sb.append("   static class ")
@@ -549,6 +564,9 @@ public class JavabufTranslatorGenerator {
    }
 
    private static String originalClassName(String s) {
+      if (s.endsWith("MessageExtension")) {
+           return s.replace('$', '.');
+      }
       int i = s.indexOf("$");
       int j = s.lastIndexOf("___");
       j = j < 0 ? s.length() : j;

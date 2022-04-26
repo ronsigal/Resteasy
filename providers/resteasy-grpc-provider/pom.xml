@@ -347,6 +347,11 @@
                                    <includes>
                                        <include>**/I18nTestMessages_*.java</include>
                                    </includes>
+        <configuration>
+          <additionalClasspathElements>
+            <additionalClasspathElement>target/jaxrs.example.grpc-0.0.2-SNAPSHOT/WEB-INF/</additionalClasspathElement>
+          </additionalClasspathElements>
+        </configuration>
                                </configuration>
                            </execution>
                        </executions>

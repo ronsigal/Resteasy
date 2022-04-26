@@ -396,21 +396,32 @@ public class JavaToProtobufGenerator {
         .append("   string path = ").append(counter++).append(";\n")
         .append("   string domain = ").append(counter++).append(";\n")
         .append("}");
-      sb.append("\n\nmessage GeneralEntityMessage {\n")
+//      sb.append("\n\nmessage GeneralEntityMessage {\n")
+//        .append("   string URL = ").append(counter++).append(";\n")
+//        .append("   map<string, Header> headers = ").append(counter++).append(";\n")
+//        .append("   repeated Cookie cookies = ").append(counter++).append(";\n")
+//        .append("   oneof messageType {\n");
+      sb.append("\n\nmessage MessageExtension {\n")
         .append("   string URL = ").append(counter++).append(";\n")
         .append("   map<string, Header> headers = ").append(counter++).append(";\n")
         .append("   repeated Cookie cookies = ").append(counter++).append(";\n")
-        .append("   oneof messageType {\n");
-    for (String messageType : entityMessageTypes) {
-       sb.append("      ")
-         .append(messageType)
-         .append(" ")
-         .append(messageType).append("_field")
-         .append(" = ")
-         .append(counter++)
-         .append(";\n");
-    }
-    sb.append("   }\n}\n");
+        .append("}\n");
+//    for (String messageType : entityMessageTypes) {
+//       sb.append("      ")
+//         .append(messageType)
+//         .append(" ")
+//         .append(messageType).append("_field")
+//         .append(" = ")
+//         .append(counter++)
+//         .append(";\n");
+//    }
+      for (String messageType : entityMessageTypes) {
+         sb.append("\nmessage ").append(messageType).append("_Extension {\n")
+           .append("   MessageExtension messageExtension = ").append(counter++).append(";\n")
+           .append("   ").append(messageType).append(" value = ").append(counter++).append(";\n")
+           .append("}\n");
+      }
+//    sb.append("   }\n}\n");
    }
 
    private static void createGeneralReturnMessageType(StringBuilder sb) {
@@ -515,7 +526,8 @@ public class JavaToProtobufGenerator {
                sb.append("  rpc ")
                .append(md.getNameAsString())
                .append(" (")
-               .append("GeneralEntityMessage")
+//               .append("GeneralEntityMessage")
+               .append(entityType).append("_Extension")
                .append(") returns (")
                .append("sse".equals(syncType) ? "stream " : "")
                .append(returnType)
